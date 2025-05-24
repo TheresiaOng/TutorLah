@@ -18,25 +18,28 @@ const QuestionsScreen = () => {
       {role === "tutor" ? (
         <View className="space-y-4">
           <Text className="text-base text-[#333]">
-            1. What subjects can you teach?
+            Educational level
           </Text>
           <Text className="text-base text-[#333]">
-            2. What is your availability?
+            Education Institute Name
           </Text>
           <Text className="text-base text-[#333]">
-            3. What is your teaching experience?
+            Achievements
+          </Text>
+          <Text className="text-base text-[#333]">
+            Teachable Subjects
           </Text>
         </View>
       ) : (
         <View className="space-y-4">
           <Text className="text-base text-[#333]">
-            1. What subjects do you need help with?
+            Education Level
           </Text>
           <Text className="text-base text-[#333]">
-            2. What is your preferred learning time?
+            Education Institute Name
           </Text>
           <Text className="text-base text-[#333]">
-            3. Have you had a tutor before?
+            Subjects To Learn
           </Text>
         </View>
       )}
