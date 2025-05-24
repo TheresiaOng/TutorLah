@@ -5,6 +5,7 @@ import { Text, TouchableOpacity, View } from "react-native";
 import { auth } from "../firebase";
 
 const HomeScreen = () => {
+  // if the user is not logged in, redirect to login page
   const handleLogout = async () => {
     await signOut(auth);
     router.push("/");

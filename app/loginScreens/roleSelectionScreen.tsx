@@ -1,49 +1,70 @@
-import { router } from "expo-router";
-import React from "react";
+import React, { useState } from "react";
 import { Pressable, Text, View } from "react-native";
+import QuestionsScreen from "./questions";
 
 const RoleSelectionScreen = () => {
-  const handleSelection = (role: "tutor" | "tutee") => {
-    router.push({
-      pathname: "/loginScreens/questions", 
-      params: { role },
-    });
+  const handleSelection = (selectedRole: "tutor" | "tutee") => {
+    setRole((prev) => (prev === selectedRole ? "" : selectedRole));
   };
 
+  const [role, setRole] = useState("");
+
   return (
-    <View className="flex-1 bg-white">
+    <View className="flex-1 bg-primary">
       {/* Header section */}
-      <View className="bg-[#FFB42A] pt-20 pb-6 px-6 rounded-b-3xl items-center">
-        <Text className="text-3xl font-bold text-[#893B14]">
+      <View className="items-center">
+        <Text className="text-3xl font-bold p-20 items-center px-6 text-accent">
           You're almost done!
         </Text>
       </View>
 
       {/* Role selection */}
-      <View className="mt-16 items-center px-6">
-        <Text className="text-xl text-[#FFB42A] mb-6">
-          You're signing up as a...
-        </Text>
+      <View className="flex-grow bg-white rounded-t-3xl">
+        <View className="mt-16 items-center px-6">
+          <Text className="text-xl font-medium text-primary mb-6">
+            You're signing up as a...
+          </Text>
 
-        <View className="flex-row space-x-6">
-          <Pressable
-            onPress={() => handleSelection("tutor")}
-            className="bg-[#FFD85C] rounded-xl px-8 py-4"
-          >
-            <Text className="text-[#893B14] font-semibold text-lg">Tutor</Text>
-          </Pressable>
+          <View className="flex-row gap-6 space-x-6">
+            <Pressable
+              onPress={() => handleSelection("tutor")}
+              className={`rounded-xl px-8 py-4 ${
+                role === "tutor" ? "bg-primary" : "bg-lightGray"
+              }`}
+            >
+              <Text
+                className={`font-semibold text-lg ${
+                  role === "tutor" ? "text-accent" : "text-darkGray"
+                }`}
+              >
+                Tutor
+              </Text>
+            </Pressable>
 
-          <Pressable
-            onPress={() => handleSelection("tutee")}
-            className="bg-[#FFD85C] rounded-xl px-8 py-4"
-          >
-            <Text className="text-[#893B14] font-semibold text-lg">Tutee</Text>
-          </Pressable>
+            <Pressable
+              onPress={() => handleSelection("tutee")}
+              className={`rounded-xl px-8 py-4 ${
+                role === "tutee" ? "bg-primary" : "bg-lightGray"
+              }`}
+            >
+              <Text
+                className={`font-semibold text-lg ${
+                  role === "tutee" ? "text-accent" : "text-darkGray"
+                }`}
+              >
+                Tutee
+              </Text>
+            </Pressable>
+          </View>
+          {role == "" && (
+            <Text className="text-darkGray text-md mt-12 text-center px-6">
+              Please choose one to load the rest of the questions
+            </Text>
+          )}
+          {(role == "tutor" || role == "tutee") && (
+            <QuestionsScreen role={role as "tutor" | "tutee"} />
+          )}
         </View>
-
-        <Text className="text-gray-400 text-sm mt-12 text-center px-6">
-          Please choose one to load the rest of the questions
-        </Text>
       </View>
     </View>
   );
