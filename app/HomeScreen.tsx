@@ -18,7 +18,7 @@ const HomeScreen = () => {
         className="bg-primary p-4 rounded-lg mt-4"
         onPress={handleLogout}
       >
-        <Text className="text-white text-lg">Logout</Text>
+        <Text className="text-black text-lg">Logout</Text>
       </TouchableOpacity>
     </View>
   );
