@@ -2,6 +2,7 @@
 // (login and signup) and returns user-friendly messages.
 
 function errorhandling(error) {
+  console.log("errorHandling: checking for error");
   if (error.code === "auth/email-already-in-use") {
     return "Email already in use. Please use a different email address.";
   } else if (error.code === "auth/weak-password") {
@@ -12,6 +13,10 @@ function errorhandling(error) {
     return "Incorrect password. Please try again.";
   } else if (error.code === "auth/invalid-email") {
     return "Invalid email format. Please enter a valid email address.";
+  } else if (error.code === "auth/invalid-credential") {
+    return "Incorrect email or password. Please try again.";
+  } else {
+    return "An unexpected error occurred. Please try again.";
   }
 }
 
