@@ -2,7 +2,7 @@ import { auth } from "@/firebase";
 import { router } from "expo-router";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import React, { useState } from "react";
-import { Alert, Button, StyleSheet, Text, TextInput, View } from "react-native";
+import { Button, Text, TextInput, View } from "react-native";
 import errorhandling from "./errorhandling";
 
 const SignUp = () => {
@@ -11,23 +11,25 @@ const SignUp = () => {
   const [hidden, setHidden] = useState(true);
   const [errorMsg, setErrorMsg] = useState("");
 
-  const goLogin = () => {
-    setEmail("");
-    setPassword("");
-    router.push("/loginScreens/login");
+  // Navigate to the next page after successful sign up
+  // This function is called only when the user successfully signs up
+  const nextPage = () => {
+    router.push("/loginScreens/roleSelectionScreen");
   };
 
   const createAccount = async () => {
+    // Check if email and password are provided
     if (email && password) {
       try {
+        // Create a new user with email and password
         const userCredential = await createUserWithEmailAndPassword(
           auth,
           email,
           password
         );
         console.log(userCredential.user);
-        Alert.alert("Account created, please log in.");
-        goLogin();
+        // Call the nextPage function to navigate to the next screen
+        nextPage();
       } catch (error: any) {
         const errorMessage = errorhandling(error);
         setErrorMsg(errorMessage ?? "");
@@ -48,8 +50,10 @@ const SignUp = () => {
       {errorMsg != "" && (
         <Text className="text-sm m-4 text-red-500">{errorMsg}</Text>
       )}
+
+      {/* Input fields for email and password */}
       <TextInput
-        className="border-2 border-gray-300 p-2 mb-4 w-96"
+        className="border-2 border-gray p-2 mb-4 w-96"
         placeholder="Email"
         placeholderTextColor={"#000"}
         value={email}
@@ -58,7 +62,7 @@ const SignUp = () => {
       />
       <View className="flex flex-row items-center max-w-96">
         <TextInput
-          className="border-2 border-gray-300 p-2 mb-4 flex-1"
+          className="border-2 border-gray p-2 mb-4 flex-1"
           secureTextEntry={hidden}
           placeholder="Password"
           placeholderTextColor={"#000"}
@@ -80,5 +84,3 @@ const SignUp = () => {
 };
 
 export default SignUp;
-
-const styles = StyleSheet.create({});

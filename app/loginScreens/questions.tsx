@@ -1,48 +1,130 @@
-import { useLocalSearchParams } from "expo-router";
-import React from "react";
-import { ScrollView, Text, View } from "react-native";
+import { router } from "expo-router";
+import React, { useEffect, useState } from "react";
+import { Button, ScrollView, Text, TextInput, View } from "react-native";
 
-const QuestionsScreen = () => {
-  const { role } = useLocalSearchParams();
+type QuestionsScreenProps = {
+  role: "tutor" | "tutee";
+};
+
+const QuestionsScreen = ({ role }: QuestionsScreenProps) => {
+  const [educationLevel, setEducationLevel] = useState("");
+  const [educationInstitute, setEducationInstitute] = useState("");
+  const [achievements, setAchievements] = useState("");
+  const [teachableSubjects, setTeachableSubjects] = useState("");
+  const [subjectsToLearn, setSubjectsToLearn] = useState("");
+  const [errorMsg, setErrorMsg] = useState("");
+
+  // Reset fields when the role changes
+  // This effect runs when the component mounts and whenever the role changes
+  useEffect(() => {
+    setEducationLevel("");
+    setEducationInstitute("");
+    setAchievements("");
+    setTeachableSubjects("");
+    setSubjectsToLearn("");
+    setErrorMsg("");
+  }, [role]);
+
+  const handleNext = () => {
+    // Handle the next action based on the role and input values
+    if (role === "tutor") {
+      if (
+        !educationLevel ||
+        !achievements ||
+        !educationInstitute ||
+        !teachableSubjects
+      ) {
+        setErrorMsg("Please fill all fields for tutor.");
+      } else {
+        router.push("/HomeScreen");
+      }
+    } else {
+      if (!educationLevel || !educationInstitute || !subjectsToLearn) {
+        setErrorMsg("Please fill all fields for tutee.");
+      } else {
+        router.push("/HomeScreen");
+      }
+    }
+  };
 
   return (
-    <ScrollView className="flex-1 bg-white px-6 pt-20">
-      <Text className="text-3xl font-bold text-[#FFB42A] mb-4">
-        Welcome, {role === "tutor" ? "Tutor" : "Tutee"}!
-      </Text>
-
-      <Text className="text-lg text-[#893B14] mb-6">
-        Please answer the following questions:
-      </Text>
-
+    <ScrollView className="bg-white px-6 pt-10">
+      {errorMsg != "" && (
+        <Text className="text-center text-sm mb-6 text-red-500">
+          {errorMsg}
+        </Text>
+      )}
       {role === "tutor" ? (
         <View className="space-y-4">
-          <Text className="text-base text-[#333]">
-            Educational level
+          <Text className="text-base pl-4 font-medium text-darkPrimary">
+            Educational Level
           </Text>
-          <Text className="text-base text-[#333]">
+          <TextInput
+            className="border-2 rounded-full border-gray p-2 mb-4 w-96"
+            autoCapitalize="none"
+            value={educationLevel}
+            onChangeText={setEducationLevel}
+          />
+          <Text className="text-base pl-4 font-medium text-darkPrimary">
             Education Institute Name
           </Text>
-          <Text className="text-base text-[#333]">
+          <TextInput
+            className="border-2 rounded-full border-gray p-2 mb-4 w-96"
+            autoCapitalize="none"
+            value={educationInstitute}
+            onChangeText={setEducationInstitute}
+          />
+          <Text className="text-base pl-4 font-medium text-darkPrimary">
             Achievements
           </Text>
-          <Text className="text-base text-[#333]">
+          <TextInput
+            className="border-2 rounded-full border-gray p-2 mb-4 w-96"
+            autoCapitalize="none"
+            value={achievements}
+            onChangeText={setAchievements}
+          />
+          <Text className="text-base pl-4 font-medium text-darkPrimary">
             Teachable Subjects
           </Text>
+          <TextInput
+            className="border-2 rounded-full border-gray p-2 mb-4 w-96"
+            autoCapitalize="none"
+            value={teachableSubjects}
+            onChangeText={setTeachableSubjects}
+          />
         </View>
       ) : (
         <View className="space-y-4">
-          <Text className="text-base text-[#333]">
-            Education Level
+          <Text className="text-base pl-4 font-medium text-darkPrimary">
+            Educational Level
           </Text>
-          <Text className="text-base text-[#333]">
+          <TextInput
+            className="border-2 rounded-full border-gray p-2 mb-4 w-96"
+            autoCapitalize="none"
+            value={educationLevel}
+            onChangeText={setEducationLevel}
+          />
+          <Text className="text-base pl-4 font-medium text-darkPrimary">
             Education Institute Name
           </Text>
-          <Text className="text-base text-[#333]">
-            Subjects To Learn
+          <TextInput
+            className="border-2 rounded-full border-gray p-2 mb-4 w-96"
+            autoCapitalize="none"
+            value={educationInstitute}
+            onChangeText={setEducationInstitute}
+          />
+          <Text className="text-base pl-4 font-medium text-darkPrimary">
+            Subjects to Learn
           </Text>
+          <TextInput
+            className="border-2 rounded-full border-gray p-2 mb-4 w-96"
+            autoCapitalize="none"
+            value={subjectsToLearn}
+            onChangeText={setSubjectsToLearn}
+          />
         </View>
       )}
+      <Button title="Next" onPress={() => handleNext()}></Button>
     </ScrollView>
   );
 };
