@@ -1,57 +1,38 @@
-import { useAuth } from "@/contexts/authContext";
+import { auth } from "@/firebase";
 import { router } from "expo-router";
-import { signInWithEmailAndPassword } from "firebase/auth";
-import { doc, getDoc } from "firebase/firestore";
+import { createUserWithEmailAndPassword } from "firebase/auth";
 import React, { useState } from "react";
 import { Button, Text, TextInput, View } from "react-native";
-import { auth, db } from "../../firebase";
 import errorhandling from "./errorhandling";
 
-const Login = () => {
+const SignUp = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [hidden, setHidden] = useState(true);
   const [errorMsg, setErrorMsg] = useState("");
 
-  // Navigate to the home screen after successful login
-  // This function is called only when the user successfully logs in
-  const handleSuccess = async (uid: string) => {
-    try {
-      console.log("succesful sign in, checking for role");
-      const document = await getDoc(doc(db, "users/roles/tutors", uid));
-      if (document.exists()) {
-        setUserRole("tutor");
-        router.push("/HomeScreen");
-      } else {
-        setUserRole("tutee");
-        router.push("/HomeScreen");
-      }
-    } catch (error) {
-      console.log(error);
-    }
+  // Navigate to the next page after successful sign up
+  // This function is called only when the user successfully signs up
+  const nextPage = () => {
+    //   router.push("/loginScreens/roleSelectionScreen");
   };
 
-  const { setUserDocID, userDocID, setUserRole } = useAuth();
-
-  const loginEmailPassword = async () => {
-    if (email != "" && password != "") {
+  const createAccount = async () => {
+    // Check if email and password are provided
+    if (email && password) {
       try {
-        // Sign in with email and password
-        const userCredential = await signInWithEmailAndPassword(
+        // Create a new user with email and password
+        const userCredential = await createUserWithEmailAndPassword(
           auth,
           email,
           password
         );
-        // Set the user document in the auth context
-        setUserDocID(userCredential.user.uid);
         console.log(userCredential.user);
-        // Call the success function to navigate to the home screen
-        handleSuccess(userCredential.user.uid);
+        // Call the nextPage function to navigate to the next screen
+        nextPage();
       } catch (error: any) {
-        console.log(error);
         const errorMessage = errorhandling(error);
         setErrorMsg(errorMessage ?? "");
-        console.log(errorMessage);
       }
     } else {
       setErrorMsg("Please enter email and password.");
@@ -63,7 +44,9 @@ const Login = () => {
       <View className="absolute top-14 left-0 z-10 m-4 border-primary border-2 bg-primary rounded-lg">
         <Button color="black" title="Back" onPress={() => router.back()} />
       </View>
-      <Text className="text-4xl font-bold color-primary p-4">Login Screen</Text>
+      <Text className="text-4xl font-bold color-primary p-4">
+        Sign Up Screen
+      </Text>
       {errorMsg != "" && (
         <Text className="text-sm m-4 text-red-500">{errorMsg}</Text>
       )}
@@ -77,7 +60,7 @@ const Login = () => {
         onChangeText={setEmail}
         autoCapitalize="none"
       />
-      <View className="flex-row items-center max-w-96">
+      <View className="flex flex-row items-center max-w-96">
         <TextInput
           className="border-2 border-gray p-2 mb-4 flex-1"
           secureTextEntry={hidden}
@@ -95,9 +78,9 @@ const Login = () => {
           />
         </View>
       </View>
-      <Button title="Login" onPress={loginEmailPassword} />
+      <Button title="Sign Up" onPress={createAccount} />
     </View>
   );
 };
 
-export default Login;
+export default SignUp;

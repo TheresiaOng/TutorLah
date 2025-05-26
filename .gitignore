@@ -36,5 +36,5 @@ yarn-error.*
 # typescript
 *.tsbuildinfo
 
-# DONT DELETE
+# NEVER PUBLICIZE
 .env
