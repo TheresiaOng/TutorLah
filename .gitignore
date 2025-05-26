@@ -36,5 +36,5 @@ yarn-error.*
 # typescript
 *.tsbuildinfo
 
-# firebase / database
-firebase.js
+# DONT DELETE
+.env
