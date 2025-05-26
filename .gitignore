@@ -38,3 +38,5 @@ yarn-error.*
 
 # firebase / database
 firebase.js
+
+.env
