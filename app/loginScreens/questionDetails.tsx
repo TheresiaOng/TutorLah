@@ -5,7 +5,7 @@ import { createUserWithEmailAndPassword } from "firebase/auth";
 import { collection, doc, setDoc } from "firebase/firestore";
 import React, { useEffect, useState } from "react";
 import { Button, ScrollView, Text, TextInput, View } from "react-native";
-import errorhandling from "./errorHandling";
+import errorhandling from "./errorhandling";
 
 type QuestionDetailsProps = {
   role: "tutor" | "tutee";

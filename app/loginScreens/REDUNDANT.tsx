@@ -3,7 +3,7 @@ import { router } from "expo-router";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import React, { useState } from "react";
 import { Button, Text, TextInput, View } from "react-native";
-import errorhandling from "./errorHandling";
+import errorhandling from "./errorhandling";
 
 const SignUp = () => {
   const [email, setEmail] = useState("");

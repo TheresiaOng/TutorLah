@@ -5,7 +5,7 @@ import { doc, getDoc } from "firebase/firestore";
 import React, { useState } from "react";
 import { Button, Text, TextInput, View } from "react-native";
 import { auth, db } from "../../firebase";
-import errorhandling from "./errorHandling";
+import errorhandling from "./errorhandling";
 
 const Login = () => {
   const [email, setEmail] = useState("");
