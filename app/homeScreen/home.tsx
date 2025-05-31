@@ -57,17 +57,35 @@ const HomeScreen = () => {
   return (
     <View className="flex-1 bg-white justify-center items-center">
       {/* Header */}
-      <View className="border-8 border-primary bg-primary w-full justify-center items-center h-1/4">
-        <View className="flex-row w-11/12 items-center inset-y-6">
-          <Image
-            source={require("../../assets/images/hatLogo.png")}
-            className="h-20 w-20 bg-white rounded-full p-3"
-          />
-          <Text className="text-6xl inset-y-1.5 pl-4 color-accent font-bold">
-            {userDoc ? userDoc.name : "User"}
-          </Text>
+      {userRole === "tutor" ? (
+        <View className="border-8 border-primaryBlue bg-primaryBlue w-full justify-center items-center h-1/4">
+          <View className="flex-row w-11/12 items-center inset-y-6">
+            <View className="w-20 h-20 bg-white items-center rounded-full">
+              <Image
+                source={require("../../assets/images/hatLogo.png")}
+                className="h-20 w-20 rounded-full mt-1 p-2"
+              />
+            </View>
+            <Text className="text-4xl w-4/5 pl-4 font-asap-bold color-white">
+              {userDoc ? userDoc.name : "User"}
+            </Text>
+          </View>
         </View>
-      </View>
+      ) : (
+        <View className="border-8 border-primaryOrange bg-primaryOrange w-full justify-center items-center h-1/4">
+          <View className="flex-row w-11/12 items-center inset-y-6">
+            <View className="w-20 h-20 bg-white items-center rounded-full">
+              <Image
+                source={require("../../assets/images/hatLogo.png")}
+                className="h-20 w-20 rounded-full mt-1 p-2"
+              />
+            </View>
+            <Text className="text-4xl w-4/5 pl-4 color-darkBrown font-asap-bold">
+              {userDoc ? userDoc.name : "User"}
+            </Text>
+          </View>
+        </View>
+      )}
 
       {/* Card display logic */}
       <View className="h-4/6 w-full items-center">
@@ -79,12 +97,13 @@ const HomeScreen = () => {
               ? ({ item }) => <TuteeCard item={item} />
               : ({ item }) => <TutorCard item={item} />
           }
-          className="p-4"
+          className="m-6"
+          ItemSeparatorComponent={() => <View className="h-6" />} // Adds vertical spacing
         />
       </View>
 
       {/* Footer */}
-      <Footer />
+      {userRole && <Footer role={userRole} />}
     </View>
   );
 };

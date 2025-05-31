@@ -6,14 +6,25 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        primary: '#FFAF2F',
-        darkPrimary: '#E9901B',
-        secondary: '#FFD256',
-        paleYellow: '#FFEFC3',
-        accent: '#8B402E',
+        primaryOrange: '#FFAF2F',
+        darkPrimaryOrange: '#E9901B',
+        secondaryOrange: '#FFD256',
+        paleOrange: '#FFEFC3',
+        darkBrown: '#8B402E',
+        primaryBlue: '#2C69A2',
+        darkPrimaryBlue: '#14317A',
+        secondaryBlue: '#59AEFF',
+        paleBlue: '#D8ECFF',
         darkGray: '#5d5d5d',
         gray: '#8e8e93',
         lightGray: '#ebebeb'
+      },
+      fontFamily: {
+        "asap-regular": ["Asap-Regular"],
+        "asap-medium": ["Asap-Medium"],
+        "asap-semibold": ["Asap-SemiBold"],
+        "asap-bold": ["Asap-Bold"],
+        "luckiest-guy": ["LuckiestGuy"]
       }
     },
   },

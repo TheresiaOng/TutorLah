@@ -3,8 +3,13 @@ import { auth, db } from "@/firebase";
 import { router } from "expo-router";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { collection, doc, setDoc } from "firebase/firestore";
-import React, { useEffect, useState } from "react";
-import { Button, ScrollView, Text, TextInput, View } from "react-native";
+import React, {
+  forwardRef,
+  useEffect,
+  useImperativeHandle,
+  useState,
+} from "react";
+import { Text, TextInput, View } from "react-native";
 import errorhandling from "./errorhandling";
 
 type QuestionDetailsProps = {
@@ -12,81 +17,103 @@ type QuestionDetailsProps = {
   email: string;
   password: string;
   onError?: (error: string) => void;
+  next: () => void;
 };
 
-const QuestionDetails = ({
-  email,
-  password,
-  role,
-  onError,
-}: QuestionDetailsProps) => {
-  const [name, setName] = useState("");
-  const [educationLevel, setEducationLevel] = useState("");
-  const [educationInstitute, setEducationInstitute] = useState("");
-  const [achievements, setAchievements] = useState("");
-  const [teachableSubjects, setTeachableSubjects] = useState("");
-  const [subjectsToLearn, setSubjectsToLearn] = useState("");
+export type QuestionDetailsRef = {
+  submit: () => void;
+};
 
-  const usersRef = collection(db, "users");
-  const rolesRef = collection(
-    usersRef,
-    role === "tutor" ? "roles/tutors" : "roles/tutees"
-  );
+const QuestionDetails = forwardRef<QuestionDetailsRef, QuestionDetailsProps>(
+  ({ role, email, password, onError, next }, ref) => {
+    const [name, setName] = useState("");
+    const [educationLevel, setEducationLevel] = useState("");
+    const [educationInstitute, setEducationInstitute] = useState("");
+    const [achievements, setAchievements] = useState("");
+    const [teachableSubjects, setTeachableSubjects] = useState("");
+    const [subjectsToLearn, setSubjectsToLearn] = useState("");
 
-  const { setUserDocID, setUserRole } = useAuth();
+    const usersRef = collection(db, "users");
+    const rolesRef = collection(
+      usersRef,
+      role === "tutor" ? "roles/tutors" : "roles/tutees"
+    );
 
-  // Reset fields when the role changes
-  // This effect runs when the component mounts and whenever the role changes
-  useEffect(() => {
-    setEducationLevel("");
-    setEducationInstitute("");
-    setAchievements("");
-    setTeachableSubjects("");
-    setSubjectsToLearn("");
-    setName("");
-  }, [role]);
+    const { setUserDocID, setUserRole } = useAuth();
 
-  const nextPage = () => {
-    router.push("/homeScreen/home");
-  };
+    // Reset fields when the role changes
+    // This effect runs when the component mounts and whenever the role changes
+    useEffect(() => {
+      setAchievements("");
+      setTeachableSubjects("");
+      setSubjectsToLearn("");
+    }, [role]);
 
-  const handleNext = async () => {
-    // Handle the next action based on the role and input values
-    if (role === "tutor") {
-      if (
-        !educationLevel ||
-        !achievements ||
-        !educationInstitute ||
-        !teachableSubjects ||
-        !name
-      ) {
-        onError?.("Please fill all fields for tutor.");
-      } else {
-        if (email && password) {
+    const nextPage = () => {
+      router.push("/homeScreen/home");
+    };
+
+    const handleNext = async () => {
+      if (role === "tutor") {
+        if (
+          !educationLevel ||
+          !achievements ||
+          !educationInstitute ||
+          !teachableSubjects ||
+          !name
+        ) {
+          onError?.("Please fill all fields for tutor.");
+        } else if (email && password) {
           try {
-            // Create a new user with email and password
             const userCredential = await createUserWithEmailAndPassword(
               auth,
               email,
               password
             );
-
             const docRef = doc(rolesRef, userCredential.user.uid);
-
-            // Add the user details to the Firestore collection
             await setDoc(docRef, {
-              email: email,
-              name: name,
-              educationLevel: educationLevel,
-              educationInstitute: educationInstitute,
-              achievements: achievements,
-              teachableSubjects: teachableSubjects,
+              email,
+              name,
+              educationLevel,
+              educationInstitute,
+              achievements,
+              teachableSubjects,
             });
-            // Set the user document ID and role in the auth context
             setUserDocID(docRef.id);
             setUserRole(role);
-            console.log(userCredential.user);
-            // Call the nextPage function to navigate to the next screen
+            nextPage();
+          } catch (error: any) {
+            const errorMessage = errorhandling(error);
+            onError?.(errorMessage ?? "");
+          }
+        } else {
+          onError?.("Please enter email and password.");
+        }
+      } else {
+        if (
+          !educationLevel ||
+          !educationInstitute ||
+          !subjectsToLearn ||
+          !name
+        ) {
+          onError?.("Please fill all fields for tutee.");
+        } else if (email && password) {
+          try {
+            const userCredential = await createUserWithEmailAndPassword(
+              auth,
+              email,
+              password
+            );
+            const docRef = doc(rolesRef, userCredential.user.uid);
+            await setDoc(docRef, {
+              email,
+              name,
+              educationLevel,
+              educationInstitute,
+              subjectsToLearn,
+            });
+            setUserDocID(docRef.id);
+            setUserRole(role);
             nextPage();
           } catch (error: any) {
             const errorMessage = errorhandling(error);
@@ -96,139 +123,105 @@ const QuestionDetails = ({
           onError?.("Please enter email and password.");
         }
       }
-    } else {
-      if (!educationLevel || !educationInstitute || !subjectsToLearn || !name) {
-        onError?.("Please fill all fields for tutee.");
-      } else {
-        if (email && password) {
-          try {
-            // Create a new user with email and password
-            const userCredential = await createUserWithEmailAndPassword(
-              auth,
-              email,
-              password
-            );
+    };
 
-            const docRef = doc(rolesRef, userCredential.user.uid);
-            // Add the user details to the Firestore collection
-            await setDoc(docRef, {
-              email: email,
-              name: name,
-              educationLevel: educationLevel,
-              educationInstitute: educationInstitute,
-              subjectsToLearn: subjectsToLearn,
-            });
+    useImperativeHandle(ref, () => ({
+      submit: handleNext,
+    }));
 
-            // Set the user document ID in the auth context
-            setUserDocID(docRef.id);
-            setUserRole(role);
-            console.log(userCredential.user);
-            // Call the nextPage function to navigate to the next screen
-            nextPage();
-          } catch (error: any) {
-            const errorMessage = errorhandling(error);
-            onError?.(errorMessage ?? "");
-          }
-        } else {
-          onError?.("Please enter email and password.");
-        }
-      }
-    }
-  };
-
-  return (
-    <ScrollView className="bg-white px-6 pt-8">
-      {role === "tutor" ? (
-        <View className="space-y-4">
-          <Text className="text-base pl-4 font-medium text-darkPrimary">
-            Name
-          </Text>
-          <TextInput
-            className="border-2 rounded-full border-gray p-2 mb-4 w-96"
-            autoCapitalize="none"
-            value={name}
-            onChangeText={setName}
-          />
-          <Text className="text-base pl-4 font-medium text-darkPrimary">
-            Educational Level
-          </Text>
-          <TextInput
-            className="border-2 rounded-full border-gray p-2 mb-4 w-96"
-            autoCapitalize="none"
-            value={educationLevel}
-            onChangeText={setEducationLevel}
-          />
-          <Text className="text-base pl-4 font-medium text-darkPrimary">
-            Education Institute Name
-          </Text>
-          <TextInput
-            className="border-2 rounded-full border-gray p-2 mb-4 w-96"
-            autoCapitalize="none"
-            value={educationInstitute}
-            onChangeText={setEducationInstitute}
-          />
-          <Text className="text-base pl-4 font-medium text-darkPrimary">
-            Achievements
-          </Text>
-          <TextInput
-            className="border-2 rounded-full border-gray p-2 mb-4 w-96"
-            autoCapitalize="none"
-            value={achievements}
-            onChangeText={setAchievements}
-          />
-          <Text className="text-base pl-4 font-medium text-darkPrimary">
-            Teachable Subjects
-          </Text>
-          <TextInput
-            className="border-2 rounded-full border-gray p-2 mb-4 w-96"
-            autoCapitalize="none"
-            value={teachableSubjects}
-            onChangeText={setTeachableSubjects}
-          />
-        </View>
-      ) : (
-        <View className="space-y-4">
-          <Text className="text-base pl-4 font-medium text-darkPrimary">
-            Name
-          </Text>
-          <TextInput
-            className="border-2 rounded-full border-gray p-2 mb-4 w-96"
-            autoCapitalize="none"
-            value={name}
-            onChangeText={setName}
-          />
-          <Text className="text-base pl-4 font-medium text-darkPrimary">
-            Educational Level
-          </Text>
-          <TextInput
-            className="border-2 rounded-full border-gray p-2 mb-4 w-96"
-            autoCapitalize="none"
-            value={educationLevel}
-            onChangeText={setEducationLevel}
-          />
-          <Text className="text-base pl-4 font-medium text-darkPrimary">
-            Education Institute Name
-          </Text>
-          <TextInput
-            className="border-2 rounded-full border-gray p-2 mb-4 w-96"
-            autoCapitalize="none"
-            value={educationInstitute}
-            onChangeText={setEducationInstitute}
-          />
-          <Text className="text-base pl-4 font-medium text-darkPrimary">
-            Subjects to Learn
-          </Text>
-          <TextInput
-            className="border-2 rounded-full border-gray p-2 mb-4 w-96"
-            autoCapitalize="none"
-            value={subjectsToLearn}
-            onChangeText={setSubjectsToLearn}
-          />
-        </View>
-      )}
-      <Button title="Sign Up" onPress={() => handleNext()}></Button>
-    </ScrollView>
-  );
-};
+    return (
+      <View className="items-center">
+        {role === "tutor" ? (
+          <View className="space-y-4">
+            <Text className="text-sm pl-4 font-asap-medium text-darkPrimaryBlue">
+              Name
+            </Text>
+            <TextInput
+              className="border-2 font-asap-regular rounded-full border-gray p-2 mb-4 w-96"
+              autoCapitalize="none"
+              value={name}
+              onChangeText={setName}
+            />
+            <Text className="text-sm  pl-4 font-asap-medium text-darkPrimaryBlue">
+              Educational Level
+            </Text>
+            <TextInput
+              className="border-2 font-asap-regular rounded-full border-gray p-2 mb-4 w-96"
+              autoCapitalize="none"
+              value={educationLevel}
+              onChangeText={setEducationLevel}
+            />
+            <Text className="text-sm  pl-4 font-asap-medium text-darkPrimaryBlue">
+              Education Institute Name
+            </Text>
+            <TextInput
+              className="border-2 font-asap-regular rounded-full border-gray p-2 mb-4 w-96"
+              autoCapitalize="none"
+              value={educationInstitute}
+              onChangeText={setEducationInstitute}
+            />
+            <Text className="text-sm  pl-4 font-asap-medium text-darkPrimaryBlue">
+              Achievements
+            </Text>
+            <TextInput
+              className="border-2 font-asap-regular rounded-full border-gray p-2 mb-4 w-96"
+              autoCapitalize="none"
+              value={achievements}
+              onChangeText={setAchievements}
+            />
+            <Text className="text-sm pl-4 font-asap-medium text-darkPrimaryBlue">
+              Teachable Subjects
+            </Text>
+            <TextInput
+              className="border-2 font-asap-regular rounded-full border-gray p-2 mb-4 w-96"
+              autoCapitalize="none"
+              value={teachableSubjects}
+              onChangeText={setTeachableSubjects}
+            />
+          </View>
+        ) : (
+          <View className="space-y-4">
+            <Text className="text-sm  pl-4 font-asap-medium text-darkPrimaryOrange">
+              Name
+            </Text>
+            <TextInput
+              className="border-2 font-asap-regular rounded-full border-gray p-2 mb-4 w-96"
+              autoCapitalize="none"
+              value={name}
+              onChangeText={setName}
+            />
+            <Text className="text-sm  pl-4 font-asap-medium text-darkPrimaryOrange">
+              Educational Level
+            </Text>
+            <TextInput
+              className="border-2 font-asap-regular rounded-full border-gray p-2 mb-4 w-96"
+              autoCapitalize="none"
+              value={educationLevel}
+              onChangeText={setEducationLevel}
+            />
+            <Text className="text-sm  pl-4 font-asap-medium text-darkPrimaryOrange">
+              Education Institute Name
+            </Text>
+            <TextInput
+              className="border-2 font-asap-regular rounded-full border-gray p-2 mb-4 w-96"
+              autoCapitalize="none"
+              value={educationInstitute}
+              onChangeText={setEducationInstitute}
+            />
+            <Text className="text-sm pl-4 font-asap-medium text-darkPrimaryOrange">
+              Subjects to Learn
+            </Text>
+            <TextInput
+              className="border-2 font-asap-regular rounded-full border-gray p-2 mb-4 w-96"
+              autoCapitalize="none"
+              value={subjectsToLearn}
+              onChangeText={setSubjectsToLearn}
+            />
+          </View>
+        )}
+      </View>
+    );
+  }
+);
 
 export default QuestionDetails;

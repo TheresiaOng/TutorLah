@@ -6,7 +6,7 @@ export default {
     slug: "TutorLah",
     version: "1.0.0",
     orientation: "portrait",
-    icon: "./assets/images/icon.png",
+    icon: "./assets/images/TutorLahLogo.png",
     scheme: "tutorlah",
     userInterfaceStyle: "automatic",
     newArchEnabled: true,
@@ -15,7 +15,7 @@ export default {
     },
     android: {
       adaptiveIcon: {
-        foregroundImage: "./assets/images/adaptive-icon.png",
+        foregroundImage: "./assets/images/TutorLahLogo.png",
         backgroundColor: "#ffffff",
       },
       edgeToEdgeEnabled: true,
@@ -23,14 +23,14 @@ export default {
     web: {
       bundler: "metro",
       output: "static",
-      favicon: "./assets/images/favicon.png",
+      favicon: "./assets/images/TutorLahLogo.png",
     },
     plugins: [
       "expo-router",
       [
         "expo-splash-screen",
         {
-          image: "./assets/images/splash-icon.png",
+          image: "./assets/images/TutorLahLogo.png",
           imageWidth: 200,
           resizeMode: "contain",
           backgroundColor: "#ffffff",
