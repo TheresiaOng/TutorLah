@@ -204,7 +204,7 @@ const RoleSelectionScreen = () => {
                 Already have an account?
               </Text>
               <TouchableOpacity
-                onPress={() => router.push("/loginScreen/login")}
+                onPress={() => router.push("/loginScreens/login")}
               >
                 <Text className="font-asap-semibold text-primaryOrange mt-2">
                   Log In

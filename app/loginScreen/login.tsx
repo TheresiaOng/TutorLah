@@ -139,7 +139,7 @@ const Login = () => {
               Don't have an account?
             </Text>
             <TouchableOpacity
-              onPress={() => router.push("/loginScreen/signup")}
+              onPress={() => router.push("/loginScreens/login")}
             >
               <Text className="font-asap-semibold text-primaryOrange mt-2">
                 Sign Up
