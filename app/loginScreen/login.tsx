@@ -21,10 +21,10 @@ const Login = () => {
       const document = await getDoc(doc(db, "users/roles/tutors", uid));
       if (document.exists()) {
         setUserRole("tutor");
-        router.push("/HomeScreen");
+        router.push("/homeScreen/home");
       } else {
         setUserRole("tutee");
-        router.push("/HomeScreen");
+        router.push("/homeScreen/home");
       }
     } catch (error) {
       console.log(error);

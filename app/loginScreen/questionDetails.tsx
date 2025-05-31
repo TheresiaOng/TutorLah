@@ -47,7 +47,7 @@ const QuestionDetails = ({
   }, [role]);
 
   const nextPage = () => {
-    router.push("/HomeScreen");
+    router.push("/homeScreen/home");
   };
 
   const handleNext = async () => {

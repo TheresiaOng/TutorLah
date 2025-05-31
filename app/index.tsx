@@ -12,13 +12,13 @@ export default function Index() {
         /* These buttons will navigate to the respective screens when pressed */}
         <TouchableOpacity
           className="bg-primary p-4 rounded-lg mt-4"
-          onPress={() => router.push("/loginScreens/login")}
+          onPress={() => router.push("/loginScreen/login")}
         >
           <Text>Login</Text>
         </TouchableOpacity>
         <TouchableOpacity
           className="bg-primary p-4 rounded-lg mt-4"
-          onPress={() => router.push("/loginScreens/signup")}
+          onPress={() => router.push("/loginScreen/signup")}
         >
           <Text>Sign Up</Text>
         </TouchableOpacity>
