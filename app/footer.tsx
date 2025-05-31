@@ -4,7 +4,11 @@ import { signOut } from "firebase/auth";
 import React from "react";
 import { Image, Text, TouchableOpacity, View } from "react-native";
 
-const Footer = () => {
+type footerProps = {
+  role: "tutor" | "tutee";
+};
+
+const Footer = ({ role }: footerProps) => {
   // if the user is not logged in, redirect to login page
   const handleLogout = async () => {
     await signOut(auth);
@@ -20,9 +24,23 @@ const Footer = () => {
     }
   };
 
+  const handleProfile = () => {
+    if (
+      pathname !== "/profileScreen/tuteeProfile" &&
+      pathname !== "/profileScreen/tutorProfile"
+    ) {
+      if (role === "tutor") router.push("/profileScreen/tutorProfile");
+      else if (role === "tutee") router.push("/profileScreen/tuteeProfile");
+    }
+  };
+
   return (
     <View
-      className="bg-primary border-8 border-primary rounded-xl w-full items-center h-1/6"
+      className={
+        role === "tutor"
+          ? "bg-primaryBlue border-8 border-primaryBlue rounded-xl w-full items-center h-1/6"
+          : "bg-primaryOrange border-8 border-primaryOrange rounded-xl w-full items-center h-1/6"
+      }
       style={{
         shadowColor: "#000",
         shadowOffset: { width: 0, height: -4 }, // top shadow
@@ -39,12 +57,22 @@ const Footer = () => {
           />
         </TouchableOpacity>
         <TouchableOpacity
-          className="bg-secondary border-8 h-4/6 border-secondary rounded-lg justify-center"
+          className={
+            role === "tutor"
+              ? "bg-secondaryBlue border-8 h-4/6 border-secondaryBlue rounded-lg justify-center"
+              : "bg-secondaryOrange border-8 h-4/6 border-secondaryOrange rounded-lg justify-center"
+          }
           onPress={handleLogout}
         >
-          <Text className="text-black text-lg">Logout</Text>
+          <Text
+            className={`${
+              role == "tutor" ? "text-darkPrimaryBlue" : "text-darkBrown"
+            } font-asap-medium text-lg`}
+          >
+            Logout
+          </Text>
         </TouchableOpacity>
-        <TouchableOpacity>
+        <TouchableOpacity onPress={handleProfile}>
           <Image
             source={require("../assets/images/profile.png")}
             className="h-10 w-10"
