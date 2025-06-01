@@ -4,7 +4,7 @@ import { db } from "@/firebase";
 import { doc, DocumentData, getDoc } from "firebase/firestore";
 import React, { useState } from "react";
 import { Image, ScrollView, Text, View } from "react-native";
-import Footer from "../footer";
+import Footer from "../../components/footer";
 
 const TutorProfile = () => {
   const [userDoc, setUserDoc] = useState<DocumentData | null>(null);

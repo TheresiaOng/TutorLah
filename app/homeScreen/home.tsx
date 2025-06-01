@@ -12,7 +12,7 @@ import { FlatList, Image, Text, View } from "react-native";
 import { db } from "../../firebase";
 
 import type { DocumentData } from "firebase/firestore";
-import Footer from "../footer";
+import Footer from "../../components/footer";
 import TuteeCard from "./tuteeCard";
 import TutorCard from "./tutorCard";
 
