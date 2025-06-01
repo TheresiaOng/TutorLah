@@ -80,7 +80,7 @@ const RoleSelectionScreen = () => {
               <Pressable
                 onPress={() => handleSelection("tutee")}
                 className={`rounded-xl px-8 py-4 ${
-                  role === "tutee" ? "bg-primaryOrange" : "bg-lightGray"
+                  role === "tutee" ? "bg-secondaryOrange" : "bg-lightGray"
                 }`}
               >
                 <Text
@@ -206,7 +206,13 @@ const RoleSelectionScreen = () => {
               <TouchableOpacity
                 onPress={() => router.push("/loginScreen/login")}
               >
-                <Text className="font-asap-semibold text-primaryOrange mt-2">
+                <Text
+                  className={`font-asap-semibold mt-2 ${
+                    role === "tutor"
+                      ? "text-secondaryBlue"
+                      : "text-secondaryOrange"
+                  }`}
+                >
                   Log In
                 </Text>
               </TouchableOpacity>
