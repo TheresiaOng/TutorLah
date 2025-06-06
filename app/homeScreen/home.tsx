@@ -139,7 +139,7 @@ const HomeScreen = () => {
       </View>
 
       {/* Footer */}
-      {userRole && <Footer role={userRole} />}
+      {userRole && <Footer id={userDocID} role={userRole} />}
     </View>
   );
 };
