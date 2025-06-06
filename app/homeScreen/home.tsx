@@ -12,7 +12,7 @@ import { FlatList, Image, Text, View } from "react-native";
 import { db } from "../../firebase";
 
 import type { DocumentData } from "firebase/firestore";
-import Footer from "../footer";
+import Footer from "../../components/footer";
 import TuteeCard from "./tuteeCard";
 import TutorCard from "./tutorCard";
 
@@ -128,9 +128,9 @@ const HomeScreen = () => {
             if (item.id === userDocID) return null; // skip user's card
 
             return item.role === "tutee" ? (
-              <TuteeCard item={item} />
+              <TuteeCard item={item} id={item.id} role={item.role} />
             ) : (
-              <TutorCard item={item} />
+              <TutorCard item={item} id={item.id} role={item.role} />
             );
           }}
           className="m-6"

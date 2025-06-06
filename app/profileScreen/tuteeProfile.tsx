@@ -1,21 +1,23 @@
 import OrangeCard from "@/components/orangeCard";
-import { useAuth } from "@/contexts/authContext";
 import { db } from "@/firebase";
+import { router } from "expo-router";
+import { useSearchParams } from "expo-router/build/hooks";
 import { doc, DocumentData, getDoc } from "firebase/firestore";
 import React, { useState } from "react";
-import { Image, ScrollView, Text, View } from "react-native";
-import Footer from "../footer";
+import { Image, ScrollView, Text, TouchableOpacity, View } from "react-native";
+import Footer from "../../components/footer";
 
 const TuteeProfile = () => {
+  const params = useSearchParams();
+  const id = params.get("id") as string;
+  const role = params.get("role") as "tutor" | "tutee";
   const [userDoc, setUserDoc] = useState<DocumentData | null>(null);
-  const { userDocID, userRole } = useAuth();
 
   // retrieve collection path based on user's role
-  const path =
-    userRole === "tutor" ? "users/roles/tutors" : "users/roles/tutees";
+  const path = role === "tutor" ? "users/roles/tutors" : "users/roles/tutees";
 
   // retrieve user's document
-  const docRef = doc(db, path, userDocID);
+  const docRef = doc(db, path, id);
 
   // retrieve user's document snapshot
   // The doc.data() can later be used to retrieve specific fields
@@ -34,14 +36,26 @@ const TuteeProfile = () => {
     <View className="flex-1 bg-white justify-center items-center">
       {/* Header */}
       <View className="border-8 border-primaryOrange bg-primaryOrange w-full justify-center items-center h-1/4">
-        <View className="flex-row w-11/12 items-center inset-y-6">
+        {/* Profile pic and Name */}
+        <View className="flex-row w-11/12 items-center inset-y-9">
+          <TouchableOpacity
+            onPress={() => router.back()}
+            className="items-center justify-center mr-2"
+          >
+            <Image
+              className="w-10"
+              resizeMode="contain"
+              source={require("../../assets/images/arrowBack.png")}
+            />
+          </TouchableOpacity>
+
           <View className="w-20 h-20 bg-white items-center rounded-full">
             <Image
               source={require("../../assets/images/hatLogo.png")}
               className="h-20 w-20 rounded-full mt-1 p-2"
             />
           </View>
-          <Text className="text-4xl w-4/5 pl-4 text-darkBrown font-asap-bold">
+          <Text className="text-4xl w-3/5 pl-4 flex-wrap text-darkBrown font-asap-bold">
             {userDoc ? userDoc.name : "User"}
           </Text>
         </View>
@@ -95,7 +109,7 @@ const TuteeProfile = () => {
         </ScrollView>
       </View>
 
-      {userRole && <Footer role={userRole} />}
+      {role && <Footer id={id} role={role} />}
     </View>
   );
 };
