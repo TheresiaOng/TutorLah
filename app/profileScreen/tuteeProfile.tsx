@@ -67,14 +67,6 @@ const TuteeProfile = () => {
                 : {userDoc?.educationLevel}
               </Text>
             </View>
-            <View className="flex-row items-start">
-              <Text className="font-asap-semibold my-4 w-40 text-darkBrown">
-                Subjects Wanted
-              </Text>
-              <Text className="font-asap-regular my-4 flex-shrink text-darkBrown">
-                : {userDoc?.subjectsToLearn}
-              </Text>
-            </View>
           </OrangeCard>
 
           {/* Listing Section */}

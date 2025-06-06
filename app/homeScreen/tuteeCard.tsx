@@ -1,4 +1,4 @@
-import BlueCard from "@/components/blueCard";
+import OrangeCard from "@/components/orangeCard";
 import React from "react";
 import { Text, View } from "react-native";
 
@@ -6,36 +6,26 @@ const TuteeCard = ({ item }: any) => {
   return (
     // Since these cards will be displayed on
     // tutor's page, they will be blue
-    <BlueCard>
-      <Text className="font-asap-bold text-xl text-darkPrimaryBlue">
-        {item.name}
-      </Text>
-      <View className="border-b border-darkPrimaryBlue border-2 mt-2" />
+    <OrangeCard>
+      <Text className="font-asap-bold text-xl text-darkBrown">{item.name}</Text>
+      <View className="border-b border-secondaryOrange border-2 mt-2" />
       <View className="flex-row items-start">
-        <Text className="font-asap-regular my-4 w-40 text-darkPrimaryBlue">
+        <Text className="font-asap-regular my-4 w-40 text-darkBrown">
           Education Level
         </Text>
-        <Text className="font-asap-regular my-4 flex-shrink text-darkPrimaryBlue">
+        <Text className="font-asap-regular my-4 flex-shrink text-darkBrown">
           : {item.educationLevel}
         </Text>
       </View>
       <View className="flex-row items-start">
-        <Text className="font-asap-regular my-4 w-40 text-darkPrimaryBlue">
-          Subjects Wanted
-        </Text>
-        <Text className="font-asap-regular flex-shrink my-4 text-darkPrimaryBlue">
-          : {item.subjectsToLearn}
-        </Text>
-      </View>
-      <View className="flex-row items-start">
-        <Text className="font-asap-regular my-4 w-40 text-darkPrimaryBlue">
+        <Text className="font-asap-regular my-4 w-40 text-darkBrown">
           Price
         </Text>
-        <Text className="font-asap-regular my-4 flex-shrink text-darkPrimaryBlue">
+        <Text className="font-asap-regular my-4 flex-shrink text-darkBrown">
           : S$50/hr
         </Text>
       </View>
-    </BlueCard>
+    </OrangeCard>
   );
 };
 

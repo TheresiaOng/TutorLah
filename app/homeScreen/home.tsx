@@ -16,18 +16,21 @@ import Footer from "../footer";
 import TuteeCard from "./tuteeCard";
 import TutorCard from "./tutorCard";
 
+type User = {
+  id: string;
+  name: string;
+  role: "tutee" | "tutor";
+  // add more fields if needed
+};
+
 const HomeScreen = () => {
   const [userDoc, setUserDoc] = useState<DocumentData | null>(null);
-  const [cardsCollection, setCardCollection] = useState<DocumentData[]>([]);
+  const [cardsCollection, setCardCollection] = useState<User[]>([]);
   const { userDocID, userRole } = useAuth();
 
   // retrieve collection path based on user's role
   const path =
     userRole === "tutor" ? "users/roles/tutors" : "users/roles/tutees";
-
-  // retrieve collection path of user's opposite role
-  const cardsPath =
-    userRole === "tutor" ? "users/roles/tutees" : "users/roles/tutors";
 
   // retrieve user's document
   const docRef = doc(db, path, userDocID);
@@ -46,12 +49,41 @@ const HomeScreen = () => {
   docSnapshot();
 
   useEffect(() => {
-    const q = query(collection(db, cardsPath), orderBy("name"));
-    const unsub = onSnapshot(q, (snapshot) => {
-      const data = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-      setCardCollection(data);
+    const tuteeQuery = query(
+      collection(db, "users/roles/tutees"),
+      orderBy("name")
+    );
+    const tutorQuery = query(
+      collection(db, "users/roles/tutors"),
+      orderBy("name")
+    );
+
+    const unsubTutee = onSnapshot(tuteeQuery, (tuteeSnap) => {
+      const tutees: User[] = tuteeSnap.docs.map((doc) => ({
+        id: doc.id,
+        role: "tutee",
+        ...(doc.data() as Omit<User, "id" | "role">),
+      }));
+
+      const unsubTutor = onSnapshot(tutorQuery, (tutorSnap) => {
+        const tutors: User[] = tutorSnap.docs.map((doc) => ({
+          id: doc.id,
+          role: "tutor",
+          ...(doc.data() as Omit<User, "id" | "role">),
+        }));
+
+        const combined = [...tutees, ...tutors].sort((a, b) =>
+          a.name.localeCompare(b.name)
+        );
+        setCardCollection(combined);
+      });
+
+      // Clean up tutor listener when tutee listener is cleaned up
+      return () => unsubTutor();
     });
-    return () => unsub(); // unsubscribe on unmount
+
+    // Clean up tutee listener on unmount
+    return () => unsubTutee();
   }, []);
 
   return (
@@ -92,11 +124,15 @@ const HomeScreen = () => {
         <FlatList
           data={cardsCollection}
           keyExtractor={(item) => item.id}
-          renderItem={
-            userRole == "tutor"
-              ? ({ item }) => <TuteeCard item={item} />
-              : ({ item }) => <TutorCard item={item} />
-          }
+          renderItem={({ item }) => {
+            if (item.id === userDocID) return null; // skip user's card
+
+            return item.role === "tutee" ? (
+              <TuteeCard item={item} />
+            ) : (
+              <TutorCard item={item} />
+            );
+          }}
           className="m-6"
           ItemSeparatorComponent={() => <View className="h-6" />} // Adds vertical spacing
         />

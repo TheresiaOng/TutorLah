@@ -75,14 +75,6 @@ const TutorProfile = () => {
                 : {userDoc?.achievements}
               </Text>
             </View>
-            <View className="flex-row items-start">
-              <Text className="font-asap-semibold my-4 w-40 text-darkPrimaryBlue">
-                Teaching Subjects
-              </Text>
-              <Text className="font-asap-regular my-4 flex-shrink text-darkPrimaryBlue">
-                : {userDoc?.teachableSubjects}
-              </Text>
-            </View>
           </BlueCard>
 
           {/* Reviews Section */}
