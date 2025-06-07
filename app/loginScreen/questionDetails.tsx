@@ -30,8 +30,6 @@ const QuestionDetails = forwardRef<QuestionDetailsRef, QuestionDetailsProps>(
     const [educationLevel, setEducationLevel] = useState("");
     const [educationInstitute, setEducationInstitute] = useState("");
     const [achievements, setAchievements] = useState("");
-    const [teachableSubjects, setTeachableSubjects] = useState("");
-    const [subjectsToLearn, setSubjectsToLearn] = useState("");
 
     const usersRef = collection(db, "users");
     const rolesRef = collection(
@@ -45,8 +43,6 @@ const QuestionDetails = forwardRef<QuestionDetailsRef, QuestionDetailsProps>(
     // This effect runs when the component mounts and whenever the role changes
     useEffect(() => {
       setAchievements("");
-      setTeachableSubjects("");
-      setSubjectsToLearn("");
     }, [role]);
 
     const nextPage = () => {
@@ -55,13 +51,7 @@ const QuestionDetails = forwardRef<QuestionDetailsRef, QuestionDetailsProps>(
 
     const handleNext = async () => {
       if (role === "tutor") {
-        if (
-          !educationLevel ||
-          !achievements ||
-          !educationInstitute ||
-          !teachableSubjects ||
-          !name
-        ) {
+        if (!educationLevel || !achievements || !educationInstitute || !name) {
           onError?.("Please fill all fields for tutor.");
         } else if (email && password) {
           try {
@@ -77,7 +67,6 @@ const QuestionDetails = forwardRef<QuestionDetailsRef, QuestionDetailsProps>(
               educationLevel,
               educationInstitute,
               achievements,
-              teachableSubjects,
             });
             setUserDocID(docRef.id);
             setUserRole(role);
@@ -90,12 +79,7 @@ const QuestionDetails = forwardRef<QuestionDetailsRef, QuestionDetailsProps>(
           onError?.("Please enter email and password.");
         }
       } else {
-        if (
-          !educationLevel ||
-          !educationInstitute ||
-          !subjectsToLearn ||
-          !name
-        ) {
+        if (!educationLevel || !educationInstitute || !name) {
           onError?.("Please fill all fields for tutee.");
         } else if (email && password) {
           try {
@@ -110,7 +94,6 @@ const QuestionDetails = forwardRef<QuestionDetailsRef, QuestionDetailsProps>(
               name,
               educationLevel,
               educationInstitute,
-              subjectsToLearn,
             });
             setUserDocID(docRef.id);
             setUserRole(role);
@@ -169,15 +152,6 @@ const QuestionDetails = forwardRef<QuestionDetailsRef, QuestionDetailsProps>(
               value={achievements}
               onChangeText={setAchievements}
             />
-            <Text className="text-sm pl-4 font-asap-medium text-darkPrimaryBlue">
-              Teachable Subjects
-            </Text>
-            <TextInput
-              className="border-2 font-asap-regular rounded-full border-gray p-2 mb-4 w-96"
-              autoCapitalize="none"
-              value={teachableSubjects}
-              onChangeText={setTeachableSubjects}
-            />
           </View>
         ) : (
           <View className="space-y-4">
@@ -207,15 +181,6 @@ const QuestionDetails = forwardRef<QuestionDetailsRef, QuestionDetailsProps>(
               autoCapitalize="none"
               value={educationInstitute}
               onChangeText={setEducationInstitute}
-            />
-            <Text className="text-sm pl-4 font-asap-medium text-darkPrimaryOrange">
-              Subjects to Learn
-            </Text>
-            <TextInput
-              className="border-2 font-asap-regular rounded-full border-gray p-2 mb-4 w-96"
-              autoCapitalize="none"
-              value={subjectsToLearn}
-              onChangeText={setSubjectsToLearn}
             />
           </View>
         )}

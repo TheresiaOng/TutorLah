@@ -141,7 +141,7 @@ const Login = () => {
             <TouchableOpacity
               onPress={() => router.push("/loginScreen/signup")}
             >
-              <Text className="font-asap-semibold text-primaryOrange mt-2">
+              <Text className="font-asap-semibold text-secondaryOrange mt-2">
                 Sign Up
               </Text>
             </TouchableOpacity>
