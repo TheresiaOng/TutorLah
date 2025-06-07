@@ -1,3 +1,4 @@
+import { useAuth } from "@/contexts/authContext";
 import { auth } from "@/firebase";
 import { router, usePathname } from "expo-router";
 import { signOut } from "firebase/auth";
@@ -5,10 +6,12 @@ import React from "react";
 import { Image, Text, TouchableOpacity, View } from "react-native";
 
 type footerProps = {
+  id: string;
   role: "tutor" | "tutee";
 };
 
-const Footer = ({ role }: footerProps) => {
+const Footer = ({ id, role }: footerProps) => {
+  const { userDocID } = useAuth();
   // if the user is not logged in, redirect to login page
   const handleLogout = async () => {
     await signOut(auth);
@@ -26,11 +29,14 @@ const Footer = ({ role }: footerProps) => {
 
   const handleProfile = () => {
     if (
-      pathname !== "/profileScreen/tuteeProfile" &&
-      pathname !== "/profileScreen/tutorProfile"
+      id !== userDocID ||
+      (pathname !== "/profileScreen/tuteeProfile" &&
+        pathname !== "/profileScreen/tutorProfile")
     ) {
-      if (role === "tutor") router.push("/profileScreen/tutorProfile");
-      else if (role === "tutee") router.push("/profileScreen/tuteeProfile");
+      router.push({
+        pathname: `/profileScreen/${role}Profile`,
+        params: { id: userDocID, role },
+      });
     }
   };
 
