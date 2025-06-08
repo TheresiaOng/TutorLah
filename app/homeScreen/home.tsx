@@ -1,32 +1,20 @@
 import { useAuth } from "@/contexts/authContext";
-import {
-  collection,
-  doc,
-  getDoc,
-  onSnapshot,
-  orderBy,
-  query,
-} from "firebase/firestore";
+import { collection, doc, onSnapshot, query } from "firebase/firestore";
 import React, { useEffect, useState } from "react";
 import { FlatList, Image, Text, View } from "react-native";
 import { db } from "../../firebase";
 
-import type { DocumentData } from "firebase/firestore";
-import Footer from "../../components/footer";
 import TuteeCard from "./tuteeCard";
 import TutorCard from "./tutorCard";
 
-type User = {
-  id: string;
-  name: string;
-  role: "tutee" | "tutor";
-  // add more fields if needed
+type Listing = {
+  listId: string;
+  userRole: "tutor" | "tutee";
 };
 
 const HomeScreen = () => {
-  const [userDoc, setUserDoc] = useState<DocumentData | null>(null);
-  const [cardsCollection, setCardCollection] = useState<User[]>([]);
-  const { userDocID, userRole } = useAuth();
+  const [listings, setListings] = useState<Listing[]>([]);
+  const { userDocID, userRole, userDoc } = useAuth();
 
   // retrieve collection path based on user's role
   const path =
@@ -35,55 +23,18 @@ const HomeScreen = () => {
   // retrieve user's document
   const docRef = doc(db, path, userDocID);
 
-  // retrieve user's document snapshot
-  // The doc.data() can later be used to retrieve specific fields
-  const docSnapshot = async () => {
-    const doc = await getDoc(docRef);
-    if (doc.exists()) {
-      setUserDoc(doc.data());
-    } else {
-      console.log("home: No such document!");
-    }
-  };
-
-  docSnapshot();
-
   useEffect(() => {
-    const tuteeQuery = query(
-      collection(db, "users/roles/tutees"),
-      orderBy("name")
-    );
-    const tutorQuery = query(
-      collection(db, "users/roles/tutors"),
-      orderBy("name")
-    );
+    const listingsQuery = query(collection(db, "listings"));
 
-    const unsubTutee = onSnapshot(tuteeQuery, (tuteeSnap) => {
-      const tutees: User[] = tuteeSnap.docs.map((doc) => ({
-        id: doc.id,
-        role: "tutee",
-        ...(doc.data() as Omit<User, "id" | "role">),
+    const unsubscribe = onSnapshot(listingsQuery, (snapshot) => {
+      const fetchedListings: Listing[] = snapshot.docs.map((doc) => ({
+        listId: doc.id,
+        ...(doc.data() as Omit<Listing, "listId">),
       }));
-
-      const unsubTutor = onSnapshot(tutorQuery, (tutorSnap) => {
-        const tutors: User[] = tutorSnap.docs.map((doc) => ({
-          id: doc.id,
-          role: "tutor",
-          ...(doc.data() as Omit<User, "id" | "role">),
-        }));
-
-        const combined = [...tutees, ...tutors].sort((a, b) =>
-          a.name.localeCompare(b.name)
-        );
-        setCardCollection(combined);
-      });
-
-      // Clean up tutor listener when tutee listener is cleaned up
-      return () => unsubTutor();
+      setListings(fetchedListings);
     });
 
-    // Clean up tutee listener on unmount
-    return () => unsubTutee();
+    return () => unsubscribe(); // Cleanup listener on unmount
   }, []);
 
   return (
@@ -118,28 +69,24 @@ const HomeScreen = () => {
           </View>
         </View>
       )}
-
       {/* Card display logic */}
-      <View className="h-4/6 w-full items-center">
+      <View className="h-5/6 w-full items-center">
         <FlatList
-          data={cardsCollection}
-          keyExtractor={(item) => item.id}
+          data={listings}
+          keyExtractor={(item) => item.listId}
           renderItem={({ item }) => {
-            if (item.id === userDocID) return null; // skip user's card
+            if (item.listId === userDocID) return null; // skip user's card
 
-            return item.role === "tutee" ? (
-              <TuteeCard item={item} id={item.id} role={item.role} />
+            return item.userRole === "tutee" ? (
+              <TuteeCard item={item} listId={item.listId} />
             ) : (
-              <TutorCard item={item} id={item.id} role={item.role} />
+              <TutorCard item={item} listId={item.listId} />
             );
           }}
           className="m-6"
           ItemSeparatorComponent={() => <View className="h-6" />} // Adds vertical spacing
         />
       </View>
-
-      {/* Footer */}
-      {userRole && <Footer id={userDocID} role={userRole} />}
     </View>
   );
 };

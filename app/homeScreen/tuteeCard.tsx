@@ -5,23 +5,20 @@ import { Text, TouchableOpacity, View } from "react-native";
 
 type cardProps = {
   item: any;
-  id: string;
-  role: "tutor" | "tutee";
+  listId: string;
 };
 
-const TuteeCard = ({ item, id, role }: cardProps) => {
+const TuteeCard = ({ item, listId }: cardProps) => {
   return (
-    // Since these cards will be displayed on
-    // tutor's page, they will be blue
-    <OrangeCard id={id} role={role}>
+    <OrangeCard id={item.userId} role={item.userRole}>
       <TouchableOpacity
         onPress={() =>
           router.push({
             pathname:
-              role === "tutor"
+              item.userRole === "tutor"
                 ? "/profileScreen/tutorProfile"
                 : "/profileScreen/tuteeProfile",
-            params: { id: id, role },
+            params: { id: item.userId, role: item.userRole },
           })
         }
       >
@@ -35,15 +32,23 @@ const TuteeCard = ({ item, id, role }: cardProps) => {
           Education Level
         </Text>
         <Text className="font-asap-regular my-4 flex-shrink text-darkBrown">
-          : {item.educationLevel}
+          : {item.education}
         </Text>
       </View>
       <View className="flex-row items-start">
         <Text className="font-asap-regular my-4 w-40 text-darkBrown">
-          Price
+          Subjects Wanted
+        </Text>
+        <Text className="font-asap-regular flex-shrink my-4 text-darkBrown">
+          : {item.subjects}
+        </Text>
+      </View>
+      <View className="flex-row items-start">
+        <Text className="font-asap-regular my-4 w-40 text-darkBrown">
+          Price Range
         </Text>
         <Text className="font-asap-regular my-4 flex-shrink text-darkBrown">
-          : S$50/hr
+          : S${item.startPrice} - S${item.endPrice}
         </Text>
       </View>
     </OrangeCard>

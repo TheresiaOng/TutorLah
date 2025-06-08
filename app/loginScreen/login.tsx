@@ -13,6 +13,8 @@ const Login = () => {
   const [hidden, setHidden] = useState(true);
   const [errorMsg, setErrorMsg] = useState("");
 
+  const { setUserDocID, userDocID, setUserRole, userRole } = useAuth();
+
   // Navigate to the home screen after successful login
   // This function is called only when the user successfully logs in
   const handleSuccess = async (uid: string) => {
@@ -21,17 +23,18 @@ const Login = () => {
       const document = await getDoc(doc(db, "users/roles/tutors", uid));
       if (document.exists()) {
         setUserRole("tutor");
-        router.push("/homeScreen/home");
       } else {
         setUserRole("tutee");
-        router.push("/homeScreen/home");
       }
+
+      router.push({
+        pathname: "/homeScreen/home",
+        params: { id: userDocID, role: userRole },
+      });
     } catch (error) {
       console.log(error);
     }
   };
-
-  const { setUserDocID, userDocID, setUserRole } = useAuth();
 
   const loginEmailPassword = async () => {
     if (email != "" && password != "") {
@@ -79,7 +82,7 @@ const Login = () => {
             {errorMsg}
           </Text>
         )}
-        <View className="items-start">
+        <View className="justify-center w-full px-6 items-start">
           <Text
             className={
               "text-sm pl-4 font-medium font-asap-medium text-darkPrimaryOrange"
@@ -88,7 +91,7 @@ const Login = () => {
             Email Address
           </Text>
           <TextInput
-            className="border-2 border-gray font-asap-regular rounded-full p-2 mb-4 w-96"
+            className="border-2 border-gray font-asap-regular rounded-full p-2 mb-4 w-full"
             placeholderTextColor={"#000"}
             value={email}
             onChangeText={setEmail}
@@ -101,7 +104,7 @@ const Login = () => {
           >
             Password
           </Text>
-          <View className="flex flex-row items-center max-w-96">
+          <View className="flex flex-row items-center w-full">
             <TextInput
               className="border-2 border-gray p-2 font-asap-regular rounded-full mb-4 flex-1"
               secureTextEntry={hidden}
@@ -126,15 +129,16 @@ const Login = () => {
               />
             </TouchableOpacity>
           </View>
+          {/* Log In button */}
           <TouchableOpacity
             onPress={loginEmailPassword}
             className={
-              "bg-secondaryOrange w-96 mt-4 items-center p-3 rounded-xl"
+              "bg-secondaryOrange w-full mt-4 items-center p-3 rounded-xl"
             }
           >
             <Text className={"text-darkBrown font-asap-bold"}>Log In</Text>
           </TouchableOpacity>
-          <View className="flex-row w-96 justify-center gap-1">
+          <View className="flex-row w-full justify-center gap-1">
             <Text className="font-asap-semibold text-darkBrown mt-2">
               Don't have an account?
             </Text>

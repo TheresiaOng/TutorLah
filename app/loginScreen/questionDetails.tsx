@@ -39,7 +39,7 @@ const QuestionDetails = forwardRef<QuestionDetailsRef, QuestionDetailsProps>(
       role === "tutor" ? "roles/tutors" : "roles/tutees"
     );
 
-    const { setUserDocID, setUserRole } = useAuth();
+    const { setUserDocID, setUserRole, userDocID, userRole } = useAuth();
 
     // Reset fields when the role changes
     // This effect runs when the component mounts and whenever the role changes
@@ -50,7 +50,10 @@ const QuestionDetails = forwardRef<QuestionDetailsRef, QuestionDetailsProps>(
     }, [role]);
 
     const nextPage = () => {
-      router.push("/homeScreen/home");
+      router.push({
+        pathname: "/homeScreen/home",
+        params: { id: userDocID, role: userRole },
+      });
     };
 
     const handleNext = async () => {
@@ -132,12 +135,12 @@ const QuestionDetails = forwardRef<QuestionDetailsRef, QuestionDetailsProps>(
     return (
       <View className="items-center">
         {role === "tutor" ? (
-          <View className="space-y-4">
+          <View className="space-y-4 w-full">
             <Text className="text-sm pl-4 font-asap-medium text-darkPrimaryBlue">
               Name
             </Text>
             <TextInput
-              className="border-2 font-asap-regular rounded-full border-gray p-2 mb-4 w-96"
+              className="border-2 font-asap-regular rounded-full border-gray p-2 mb-4"
               autoCapitalize="none"
               value={name}
               onChangeText={setName}
@@ -146,7 +149,7 @@ const QuestionDetails = forwardRef<QuestionDetailsRef, QuestionDetailsProps>(
               Educational Level
             </Text>
             <TextInput
-              className="border-2 font-asap-regular rounded-full border-gray p-2 mb-4 w-96"
+              className="border-2 font-asap-regular rounded-full border-gray p-2 mb-4"
               autoCapitalize="none"
               value={educationLevel}
               onChangeText={setEducationLevel}
@@ -155,7 +158,7 @@ const QuestionDetails = forwardRef<QuestionDetailsRef, QuestionDetailsProps>(
               Education Institute Name
             </Text>
             <TextInput
-              className="border-2 font-asap-regular rounded-full border-gray p-2 mb-4 w-96"
+              className="border-2 font-asap-regular rounded-full border-gray p-2 mb-4"
               autoCapitalize="none"
               value={educationInstitute}
               onChangeText={setEducationInstitute}
@@ -164,7 +167,7 @@ const QuestionDetails = forwardRef<QuestionDetailsRef, QuestionDetailsProps>(
               Achievements
             </Text>
             <TextInput
-              className="border-2 font-asap-regular rounded-full border-gray p-2 mb-4 w-96"
+              className="border-2 font-asap-regular rounded-full border-gray p-2 mb-4"
               autoCapitalize="none"
               value={achievements}
               onChangeText={setAchievements}
@@ -173,19 +176,19 @@ const QuestionDetails = forwardRef<QuestionDetailsRef, QuestionDetailsProps>(
               Teachable Subjects
             </Text>
             <TextInput
-              className="border-2 font-asap-regular rounded-full border-gray p-2 mb-4 w-96"
+              className="border-2 font-asap-regular rounded-full border-gray p-2 mb-4"
               autoCapitalize="none"
               value={teachableSubjects}
               onChangeText={setTeachableSubjects}
             />
           </View>
         ) : (
-          <View className="space-y-4">
+          <View className="space-y-4 w-full">
             <Text className="text-sm  pl-4 font-asap-medium text-darkPrimaryOrange">
               Name
             </Text>
             <TextInput
-              className="border-2 font-asap-regular rounded-full border-gray p-2 mb-4 w-96"
+              className="border-2 font-asap-regular rounded-full border-gray p-2 mb-4"
               autoCapitalize="none"
               value={name}
               onChangeText={setName}
@@ -194,7 +197,7 @@ const QuestionDetails = forwardRef<QuestionDetailsRef, QuestionDetailsProps>(
               Educational Level
             </Text>
             <TextInput
-              className="border-2 font-asap-regular rounded-full border-gray p-2 mb-4 w-96"
+              className="border-2 font-asap-regular rounded-full border-gray p-2 mb-4"
               autoCapitalize="none"
               value={educationLevel}
               onChangeText={setEducationLevel}
@@ -203,7 +206,7 @@ const QuestionDetails = forwardRef<QuestionDetailsRef, QuestionDetailsProps>(
               Education Institute Name
             </Text>
             <TextInput
-              className="border-2 font-asap-regular rounded-full border-gray p-2 mb-4 w-96"
+              className="border-2 font-asap-regular rounded-full border-gray p-2 mb-4"
               autoCapitalize="none"
               value={educationInstitute}
               onChangeText={setEducationInstitute}
@@ -212,7 +215,7 @@ const QuestionDetails = forwardRef<QuestionDetailsRef, QuestionDetailsProps>(
               Subjects to Learn
             </Text>
             <TextInput
-              className="border-2 font-asap-regular rounded-full border-gray p-2 mb-4 w-96"
+              className="border-2 font-asap-regular rounded-full border-gray p-2 mb-4"
               autoCapitalize="none"
               value={subjectsToLearn}
               onChangeText={setSubjectsToLearn}

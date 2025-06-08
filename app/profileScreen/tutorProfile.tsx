@@ -1,23 +1,34 @@
 import BlueCard from "@/components/blueCard";
-import { db } from "@/firebase";
+import { useAuth } from "@/contexts/authContext";
+import { auth, db } from "@/firebase";
 import { router } from "expo-router";
-import { useSearchParams } from "expo-router/build/hooks";
+import { useGlobalSearchParams } from "expo-router/build/hooks";
+import { signOut } from "firebase/auth";
 import { doc, DocumentData, getDoc } from "firebase/firestore";
 import React, { useState } from "react";
 import { Image, ScrollView, Text, TouchableOpacity, View } from "react-native";
-import Footer from "../../components/footer";
 
 const TutorProfile = () => {
-  const params = useSearchParams();
-  const id = params.get("id") as string;
-  const role = params.get("role") as "tutor" | "tutee";
   const [userDoc, setUserDoc] = useState<DocumentData | null>(null);
+  const { userDocID, userRole } = useAuth();
+  const { id: viewingId, role: viewingRole } = useGlobalSearchParams();
+  const effectiveRole = viewingRole ?? userRole; // use viewingRole id available, otherwise use user's role
+  const effectiveId = Array.isArray(viewingId) // Ensure effectiveId is always a string
+    ? viewingId[0]
+    : viewingId ?? userDocID;
+
+  // if the user is not logged in, redirect to login page
+  const handleLogout = async () => {
+    await signOut(auth);
+    router.push("/");
+  };
 
   // retrieve collection path based on user's role
-  const path = role === "tutor" ? "users/roles/tutors" : "users/roles/tutees";
+  const path =
+    effectiveRole === "tutor" ? "users/roles/tutors" : "users/roles/tutees";
 
   // retrieve user's document
-  const docRef = doc(db, path, id);
+  const docRef = doc(db, path, effectiveId);
 
   // retrieve user's document snapshot
   // The doc.data() can later be used to retrieve specific fields
@@ -62,38 +73,40 @@ const TutorProfile = () => {
       </View>
 
       {/* Personal Info Card */}
-      <View className="h-4/6 w-full items-center">
+      <View className="h-5/6 w-full items-center">
         <ScrollView className="w-full px-4">
-          <BlueCard className="mt-4">
-            <View className="flex-row items-start">
-              <Text className="font-asap-semibold my-4 w-40 text-darkPrimaryBlue">
-                Education Institute
-              </Text>
-              <Text className="font-asap-regular my-4 flex-shrink text-darkPrimaryBlue">
-                : {userDoc?.educationInstitute}
-              </Text>
-            </View>
-            <View className="flex-row items-start">
-              <Text className="font-asap-semibold my-4 w-40 text-darkPrimaryBlue">
-                Education Level
-              </Text>
-              <Text className="font-asap-regular my-4 flex-shrink text-darkPrimaryBlue">
-                : {userDoc?.educationLevel}
-              </Text>
-            </View>
-            <View className="flex-row items-start">
-              <Text className="font-asap-semibold my-4 w-40 text-darkPrimaryBlue">
-                Achievements
-              </Text>
-              <Text className="font-asap-regular my-4 flex-shrink text-darkPrimaryBlue">
-                : {userDoc?.achievements}
-              </Text>
-            </View>
-          </BlueCard>
+          <View className="items-center">
+            <BlueCard className="mt-4">
+              <View className="flex-row items-start">
+                <Text className="font-asap-semibold my-4 w-40 text-darkBlue">
+                  Education Institute
+                </Text>
+                <Text className="font-asap-regular my-4 flex-shrink text-darkBlue">
+                  : {userDoc?.educationInstitute}
+                </Text>
+              </View>
+              <View className="flex-row items-start">
+                <Text className="font-asap-semibold my-4 w-40 text-darkBlue">
+                  Education Level
+                </Text>
+                <Text className="font-asap-regular my-4 flex-shrink text-darkBlue">
+                  : {userDoc?.educationLevel}
+                </Text>
+              </View>
+              <View className="flex-row items-start">
+                <Text className="font-asap-semibold my-4 w-40 text-darkBlue">
+                  Achievements
+                </Text>
+                <Text className="font-asap-regular my-4 flex-shrink text-darkBlue">
+                  : {userDoc?.achievements}
+                </Text>
+              </View>
+            </BlueCard>
+          </View>
 
           {/* Reviews Section */}
-          <View className="flex-col border-darkPrimaryBlue border-t-2 pt-2 mx-2 mt-4">
-            <Text className="color-darkPrimaryBlue text-2xl font-asap-bold">
+          <View className="flex-col border-primaryBlue border-t-2 pt-2 mx-2 mt-4">
+            <Text className="color-darkBlue text-2xl font-asap-bold">
               Reviews
             </Text>
             <View className="flex-row gap-2">
@@ -105,11 +118,11 @@ const TutorProfile = () => {
             <View className="items-center">
               <BlueCard className="w-11/12">
                 <View>
-                  <Text className="font-asap-semibold text-darkPrimaryBlue">
+                  <Text className="font-asap-semibold text-darkBlue">
                     Harry Potter
                   </Text>
                   <Text className="color-primaryOrange">★ ★ ★ ★ ★</Text>
-                  <Text className="mt-2 font-asap-regular text-darkPrimaryBlue">
+                  <Text className="mt-2 font-asap-regular text-darkBlue">
                     "Amazing teacher 😊🪄"
                   </Text>
                 </View>
@@ -118,8 +131,8 @@ const TutorProfile = () => {
           </View>
 
           {/* Listing Section */}
-          <View className="flex-col border-darkPrimaryBlue border-t-2 pt-2 mx-2 mt-4">
-            <Text className="color-darkPrimaryBlue text-2xl font-asap-bold">
+          <View className="flex-col border-primaryBlue border-t-2 pt-2 mx-2 mt-4">
+            <Text className="color-darkBlue text-2xl font-asap-bold">
               Your Listing
             </Text>
             <View className="items-center">
@@ -127,11 +140,27 @@ const TutorProfile = () => {
                 You have no listing right now
               </Text>
             </View>
+
+            {/* Logout Button */}
+            {effectiveId === userDocID && (
+              <View className="flex-row items-center justify-center">
+                <TouchableOpacity
+                  className={
+                    "bg-secondaryBlue border-8 w-full h-3/5 border-secondaryBlue rounded-lg items-center justify-center"
+                  }
+                  onPress={handleLogout}
+                >
+                  <Text
+                    className={`${"text-darkBlue"} font-asap-medium text-lg`}
+                  >
+                    Logout
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            )}
           </View>
         </ScrollView>
       </View>
-
-      {role && <Footer id={id} role={role} />}
     </View>
   );
 };

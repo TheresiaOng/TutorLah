@@ -12,9 +12,10 @@ module.exports = {
         paleOrange: '#FFEFC3',
         darkBrown: '#8B402E',
         primaryBlue: '#2C69A2',
-        darkPrimaryBlue: '#14317A',
+        darkPrimaryBlue: '#1A4F82',
         secondaryBlue: '#59AEFF',
         paleBlue: '#D8ECFF',
+        darkBlue: '#14317A',
         darkGray: '#5d5d5d',
         gray: '#8e8e93',
         lightGray: '#ebebeb'
@@ -25,6 +26,9 @@ module.exports = {
         "asap-semibold": ["Asap-SemiBold"],
         "asap-bold": ["Asap-Bold"],
         "luckiest-guy": ["LuckiestGuy"]
+      },
+      height: {
+        "1/8": "12.5%",
       }
     },
   },
