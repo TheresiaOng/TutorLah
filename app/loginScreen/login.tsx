@@ -1,10 +1,8 @@
-import { useAuth } from "@/contexts/authContext";
 import { router } from "expo-router";
 import { signInWithEmailAndPassword } from "firebase/auth";
-import { doc, getDoc } from "firebase/firestore";
 import React, { useState } from "react";
 import { Image, Text, TextInput, TouchableOpacity, View } from "react-native";
-import { auth, db } from "../../firebase";
+import { auth } from "../../firebase";
 import errorhandling from "./errorhandling";
 
 const Login = () => {
@@ -12,29 +10,6 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [hidden, setHidden] = useState(true);
   const [errorMsg, setErrorMsg] = useState("");
-
-  const { setUserDocID, userDocID, setUserRole, userRole } = useAuth();
-
-  // Navigate to the home screen after successful login
-  // This function is called only when the user successfully logs in
-  const handleSuccess = async (uid: string) => {
-    try {
-      console.log("succesful sign in, checking for role");
-      const document = await getDoc(doc(db, "users/roles/tutors", uid));
-      if (document.exists()) {
-        setUserRole("tutor");
-      } else {
-        setUserRole("tutee");
-      }
-
-      router.push({
-        pathname: "/homeScreen/home",
-        params: { id: userDocID, role: userRole },
-      });
-    } catch (error) {
-      console.log(error);
-    }
-  };
 
   const loginEmailPassword = async () => {
     if (email != "" && password != "") {
@@ -45,11 +20,8 @@ const Login = () => {
           email,
           password
         );
-        // Set the user document in the auth context
-        setUserDocID(userCredential.user.uid);
         console.log(userCredential.user);
-        // Call the success function to navigate to the home screen
-        handleSuccess(userCredential.user.uid);
+        router.push("/homeScreen/home");
       } catch (error: any) {
         console.log(error);
         const errorMessage = errorhandling(error);

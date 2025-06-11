@@ -1,10 +1,9 @@
-import { db } from "@/firebase";
+import { auth, db } from "@/firebase";
+import { onAuthStateChanged, User } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
 import {
   createContext,
-  Dispatch,
   ReactNode,
-  SetStateAction,
   useContext,
   useEffect,
   useState,
@@ -14,31 +13,26 @@ import {
 // state needed using useAuth();
 
 type AuthContextType = {
-  userDocID: any;
-  setUserDocID: Dispatch<SetStateAction<any>>;
-  userRole: "tutor" | "tutee" | null;
-  setUserRole: Dispatch<SetStateAction<"tutor" | "tutee" | null>>;
   userDoc: any;
-  fetchUserDoc: () => Promise<void>;
+  fetchUserDoc: (uid?: string) => Promise<void>;
 };
 
 const authContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   // the states that can be shared/used globally
-  const [userDocID, setUserDocID] = useState<any>(null);
-  const [userRole, setUserRole] = useState<"tutor" | "tutee" | null>(null);
   const [userDoc, setUserDoc] = useState<any>(null);
 
-  const fetchUserDoc = async () => {
-    if (!userDocID || !userRole) return;
+  const fetchUserDoc = async (uid?: string) => {
+    if (!uid) {
+      console.log("fetchUserDoc skipped: userId is null");
+      return;
+    }
 
-    // retrieve collection path based on user's role
-    const path =
-      userRole === "tutor" ? "users/roles/tutors" : "users/roles/tutees";
+    console.log("fetchUserDoc: fetching for userId =", uid);
 
     try {
-      const docRef = doc(db, path, userDocID);
+      const docRef = doc(db, "users", uid);
       const snapshot = await getDoc(docRef);
       if (snapshot.exists()) {
         setUserDoc(snapshot.data());
@@ -51,16 +45,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   useEffect(() => {
-    fetchUserDoc();
-  }, [userDocID, userRole]);
+    const unsubscribe = onAuthStateChanged(auth, async (user: User | null) => {
+      if (user) {
+        await fetchUserDoc(user.uid);
+      } else {
+        setUserDoc(null);
+      }
+    });
+
+    return unsubscribe;
+  }, []);
 
   return (
     <authContext.Provider
       value={{
-        userDocID,
-        setUserDocID,
-        userRole,
-        setUserRole,
         userDoc,
         fetchUserDoc,
       }}

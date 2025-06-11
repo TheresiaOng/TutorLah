@@ -30,7 +30,7 @@ const CreateListing = () => {
     { label: "No", value: "no" },
   ]);
   const [errorMsg, setErrorMsg] = useState("");
-  const { userRole, userDoc, userDocID } = useAuth();
+  const { userDoc } = useAuth();
 
   const MAX_WORDS = 10;
 
@@ -51,7 +51,7 @@ const CreateListing = () => {
   const listingRef = collection(db, "listings");
 
   const post = async () => {
-    if (userRole === "tutor") {
+    if (userDoc?.role === "tutor") {
       if (!subjects || !price || !negotiable) {
         setErrorMsg("Please fill all fields before posting");
         return;
@@ -71,8 +71,8 @@ const CreateListing = () => {
       try {
         const newListing = await addDoc(listingRef, {
           name: userDoc.name,
-          userId: userDocID,
-          userRole,
+          userId: userDoc.userId,
+          role: userDoc.role,
           subjects: formattedSubjects,
           price,
           negotiable,
@@ -113,8 +113,8 @@ const CreateListing = () => {
       try {
         const newListing = await addDoc(listingRef, {
           name: userDoc.name,
-          userId: userDocID,
-          userRole,
+          userId: userDoc.userId,
+          role: userDoc.role,
           subjects: formattedSubjects,
           startPrice,
           endPrice,
@@ -140,7 +140,7 @@ const CreateListing = () => {
         <View
           className={`border-8 w-full justify-center items-center h-1/6
         ${
-          userRole === "tutor"
+          userDoc?.role === "tutor"
             ? "border-primaryBlue bg-primaryBlue"
             : "border-primaryOrange bg-primaryOrange"
         }`}
@@ -158,7 +158,7 @@ const CreateListing = () => {
             </TouchableOpacity>
             <Text
               className={`${
-                userRole === "tutor" ? "text-white" : "text-darkBrown"
+                userDoc?.role === "tutor" ? "text-white" : "text-darkBrown"
               } font-asap-bold text-3xl`}
             >
               Create Listing
@@ -180,7 +180,7 @@ const CreateListing = () => {
               <View className="items-start w-full">
                 <Text
                   className={`text-sm pl-4 font-asap-medium ${
-                    userRole === "tutor"
+                    userDoc?.role === "tutor"
                       ? "text-darkPrimaryBlue"
                       : "text-darkPrimaryOrange"
                   }`}
@@ -205,12 +205,12 @@ const CreateListing = () => {
                 )}
                 <Text
                   className={`text-sm pl-4 font-asap-medium ${
-                    userRole === "tutor"
+                    userDoc?.role === "tutor"
                       ? "text-darkPrimaryBlue"
                       : "text-darkPrimaryOrange"
                   }`}
                 >
-                  {userRole === "tutor"
+                  {userDoc?.role === "tutor"
                     ? "Teaching Subjects"
                     : "Subjects Wanted"}
                 </Text>
@@ -228,7 +228,7 @@ const CreateListing = () => {
                   <View className="items-start w-1/3">
                     <Text
                       className={`text-xs pl-4 pt-2 font-asap-medium ${
-                        userRole === "tutor"
+                        userDoc?.role === "tutor"
                           ? "text-darkBlue"
                           : "text-darkBrown"
                       }`}
@@ -239,7 +239,7 @@ const CreateListing = () => {
                   <View className="items-end w-2/3">
                     <Text
                       className={`text-xs pr-4 pt-2 font-asap-medium ${
-                        userRole === "tutor"
+                        userDoc?.role === "tutor"
                           ? "text-darkBlue"
                           : "text-darkBrown"
                       }`}
@@ -249,10 +249,10 @@ const CreateListing = () => {
                   </View>
                 </View>
               </View>
-              {userRole === "tutor" ? (
+              {userDoc?.role === "tutor" ? (
                 <View className="items-start w-full">
                   <Text className="text-sm pl-4 font-asap-medium text-darkPrimaryBlue">
-                    Pricing
+                    Pricing per Hour
                   </Text>
                   <View className="flex-row items-center border-2 h-14 border-gray mb-8 rounded-2xl p-2 w-full">
                     <Text className="text-lg font-asap-regular mr-1">S$</Text>
@@ -269,7 +269,7 @@ const CreateListing = () => {
                   <View className="items-start w-full">
                     <Text
                       className={`text-sm pl-4 font-asap-medium ${
-                        userRole === "tutor"
+                        userDoc?.role === "tutor"
                           ? "text-darkPrimaryBlue"
                           : "text-darkPrimaryOrange"
                       }`}
@@ -303,7 +303,7 @@ const CreateListing = () => {
               ) : (
                 <View className="items-start w-full">
                   <Text className="text-sm pl-4 font-asap-medium text-darkPrimaryOrange">
-                    Price Range
+                    Price Range per Hour
                   </Text>
                   <View className="flex-row items-center justify-center w-full">
                     <View className="flex-row items-center border-2 h-14 border-gray mb-8 rounded-2xl p-2 w-2/5">
@@ -347,13 +347,15 @@ const CreateListing = () => {
           <View className="px-6 w-full">
             <TouchableOpacity
               className={`${
-                userRole === "tutor" ? "bg-secondaryBlue" : "bg-secondaryOrange"
+                userDoc?.role === "tutor"
+                  ? "bg-secondaryBlue"
+                  : "bg-secondaryOrange"
               } w-full items-center py-3 rounded-xl`}
               onPress={post}
             >
               <Text
                 className={`${
-                  userRole === "tutor" ? "text-darkBlue" : "text-darkBrown"
+                  userDoc?.role === "tutor" ? "text-darkBlue" : "text-darkBrown"
                 } font-asap-bold`}
               >
                 Post

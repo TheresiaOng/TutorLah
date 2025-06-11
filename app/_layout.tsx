@@ -8,7 +8,7 @@ import "./globals.css";
 
 function LayoutWithFooter() {
   const pathname = usePathname();
-  const { userRole, userDocID } = useAuth();
+  const { userDoc } = useAuth();
 
   const hideFooter =
     pathname === "/" ||
@@ -18,7 +18,7 @@ function LayoutWithFooter() {
   return (
     <View style={{ flex: 1 }}>
       <Stack screenOptions={{ headerShown: false, gestureEnabled: false }} />
-      {!hideFooter && userRole && userDocID && <Footer />}
+      {!hideFooter && userDoc && <Footer />}
     </View>
   );
 }

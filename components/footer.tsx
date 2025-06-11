@@ -1,16 +1,51 @@
 import { useAuth } from "@/contexts/authContext";
+import { db } from "@/firebase";
 import { router, useGlobalSearchParams, usePathname } from "expo-router";
-import React from "react";
+import { doc, getDoc } from "firebase/firestore";
+import React, { useEffect, useState } from "react";
 import { Image, TouchableOpacity, View } from "react-native";
 
 const Footer = () => {
-  const { userDocID, userRole } = useAuth();
+  const [currentDoc, setCurrentDoc] = useState<any>(null);
+  const { userDoc } = useAuth();
 
   // Get the current pathname
   const pathname = usePathname();
-  const { id: viewingId, role: viewingRole } = useGlobalSearchParams();
-  const effectiveRole = viewingRole ?? userRole; // use viewingRole id available, otherwise use user's role
-  const effectiveId = viewingId ?? userDocID; // use viewingId id available, otherwise use user's Id
+  const { id: viewingUserId } = useGlobalSearchParams();
+  const otherUserId = Array.isArray(viewingUserId)
+    ? viewingUserId[0]
+    : viewingUserId;
+
+  useEffect(() => {
+    const fetchProfileDoc = async () => {
+      const userIdToView = otherUserId ?? userDoc?.userId;
+      if (!userIdToView) return;
+      if (userIdToView == userDoc?.userId) {
+        setCurrentDoc(userDoc);
+        return;
+      }
+
+      try {
+        const docRef = doc(db, "users", userIdToView);
+        const snapshot = await getDoc(docRef);
+        if (snapshot.exists()) {
+          setCurrentDoc(snapshot.data());
+        } else {
+          console.log("No such document!");
+        }
+      } catch (err) {
+        console.error("Failed to fetch user profile:", err);
+      }
+    };
+
+    fetchProfileDoc();
+  }, [viewingUserId, userDoc]);
+
+  if (!currentDoc) {
+    return null;
+  }
+
+  const isOwnProfile = !currentDoc || currentDoc?.userId === userDoc?.userId;
 
   const handleHome = () => {
     if (pathname !== "/homeScreen/home") {
@@ -22,24 +57,22 @@ const Footer = () => {
     if (pathname !== "/createListingScreen/createListing") {
       router.push({
         pathname: "/createListingScreen/createListing",
-        params: { id: userDocID, userRole },
       });
     }
   };
 
   const handleProfile = () => {
     if (
-      effectiveId !== userDocID ||
+      !isOwnProfile ||
       (pathname !== "/profileScreen/tuteeProfile" &&
         pathname !== "/profileScreen/tutorProfile")
     ) {
       const profilePath =
-        userRole === "tutor"
+        userDoc.role === "tutor"
           ? "/profileScreen/tutorProfile"
           : "/profileScreen/tuteeProfile";
       router.push({
         pathname: profilePath,
-        params: { id: userDocID, userRole },
       });
     }
   };
@@ -47,7 +80,7 @@ const Footer = () => {
   return (
     <View
       className={
-        effectiveRole === "tutor"
+        currentDoc.role === "tutor"
           ? "bg-primaryBlue border-8 border-primaryBlue w-full pt-4 items-center h-1/8"
           : "bg-primaryOrange border-8 border-primaryOrange w-full pt-4 items-center h-1/8"
       }
@@ -65,7 +98,7 @@ const Footer = () => {
             source={require("../assets/images/home.png")}
             className={`h-14 w-14 rounded-full p-3 ${
               pathname === "/homeScreen/home"
-                ? effectiveRole === "tutor"
+                ? currentDoc?.role === "tutor"
                   ? "bg-darkPrimaryBlue"
                   : "bg-darkPrimaryOrange"
                 : ""
@@ -77,7 +110,7 @@ const Footer = () => {
             source={require("../assets/images/plus.png")}
             className={`h-14 w-14 rounded-full p-3 ${
               pathname === "/createListingScreen/createListing"
-                ? effectiveRole === "tutor"
+                ? currentDoc?.role === "tutor"
                   ? "bg-darkPrimaryBlue"
                   : "bg-darkPrimaryOrange"
                 : ""
@@ -88,8 +121,8 @@ const Footer = () => {
           <Image
             source={require("../assets/images/profile.png")}
             className={`h-14 w-14 rounded-full p-3 ${
-              pathname.startsWith("/profileScreen") && effectiveId === userDocID
-                ? effectiveRole === "tutor"
+              pathname.startsWith("/profileScreen") && isOwnProfile
+                ? currentDoc?.role === "tutor"
                   ? "bg-darkPrimaryBlue"
                   : "bg-darkPrimaryOrange"
                 : ""

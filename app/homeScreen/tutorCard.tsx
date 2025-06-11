@@ -8,17 +8,17 @@ type cardProps = {
   listId: string;
 };
 
-const TutorCard = ({ item, listId }: cardProps) => {
+const TutorCard = ({ item }: cardProps) => {
   return (
-    <BlueCard id={item.userId} role={item.userRole}>
+    <BlueCard id={item.userId}>
       <TouchableOpacity
         onPress={() =>
           router.push({
             pathname:
-              item.userRole === "tutor"
+              item.role === "tutor"
                 ? "/profileScreen/tutorProfile"
                 : "/profileScreen/tuteeProfile",
-            params: { id: item.userId, role: item.userRole },
+            params: { id: item.userId },
           })
         }
       >
@@ -46,7 +46,7 @@ const TutorCard = ({ item, listId }: cardProps) => {
       <View className="flex-row items-start">
         <Text className="font-asap-regular my-4 w-40 text-darkBlue">Price</Text>
         <Text className="font-asap-regular my-4 flex-shrink text-darkBlue">
-          : S${item.price} {item.negotiable == "yes" && "[Negotiable]"}
+          : S${item.price} /hr {item.negotiable == "yes" && "[Negotiable]"}
         </Text>
       </View>
     </BlueCard>
