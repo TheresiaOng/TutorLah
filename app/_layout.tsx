@@ -1,9 +1,27 @@
-import { AuthProvider } from "@/contexts/authContext";
+import Footer from "@/components/footer";
+import { AuthProvider, useAuth } from "@/contexts/authContext";
 import { useFonts } from "expo-font";
-import { Stack } from "expo-router";
+import { Stack, usePathname } from "expo-router";
 import React from "react";
-import { Text } from "react-native";
+import { Text, View } from "react-native";
 import "./globals.css";
+
+function LayoutWithFooter() {
+  const pathname = usePathname();
+  const { userRole, userDocID } = useAuth();
+
+  const hideFooter =
+    pathname === "/" ||
+    pathname.startsWith("/loginScreen") ||
+    pathname.startsWith("/createListingScreen");
+
+  return (
+    <View style={{ flex: 1 }}>
+      <Stack screenOptions={{ headerShown: false, gestureEnabled: false }} />
+      {!hideFooter && userRole && userDocID && <Footer />}
+    </View>
+  );
+}
 
 export default function RootLayout() {
   const [fonstLoaded] = useFonts({
@@ -20,7 +38,7 @@ export default function RootLayout() {
 
   return (
     <AuthProvider>
-      <Stack screenOptions={{ headerShown: false, gestureEnabled: false }} />
+      <LayoutWithFooter />
     </AuthProvider>
   );
 }

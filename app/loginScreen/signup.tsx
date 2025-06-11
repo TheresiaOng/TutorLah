@@ -70,7 +70,7 @@ const RoleSelectionScreen = () => {
               >
                 <Text
                   className={`font-asap-semibold text-lg ${
-                    role === "tutor" ? "text-darkPrimaryBlue" : "text-darkGray"
+                    role === "tutor" ? "text-darkBlue" : "text-darkGray"
                   }`}
                 >
                   Tutor
@@ -101,7 +101,7 @@ const RoleSelectionScreen = () => {
             <ScrollView className="h-3/5 w-full my-4 mt-6 px-6">
               <View className="justify-center items-center">
                 {/* Input fields for email and password */}
-                <View className="items-start">
+                <View className="items-start w-full">
                   <Text
                     className={`text-sm pl-4 font-asap-medium ${
                       role === "tutor"
@@ -112,7 +112,7 @@ const RoleSelectionScreen = () => {
                     Email Address
                   </Text>
                   <TextInput
-                    className="border-2 border-gray font-asap-regular rounded-full p-2 mb-4 w-96"
+                    className="border-2 border-gray font-asap-regular rounded-full p-2 mb-4 w-full"
                     placeholderTextColor={"#000"}
                     value={email}
                     onChangeText={setEmail}
@@ -127,7 +127,7 @@ const RoleSelectionScreen = () => {
                   >
                     Password
                   </Text>
-                  <View className="flex flex-row items-center max-w-96">
+                  <View className="flex flex-row items-center">
                     <TextInput
                       className="border-2 border-gray p-2 font-asap-regular rounded-full mb-4 flex-1"
                       secureTextEntry={hidden}
@@ -172,33 +172,35 @@ const RoleSelectionScreen = () => {
                 />
               )}
             </ScrollView>
-            <TouchableOpacity
-              disabled={role === ""}
-              onPress={() => questionRef.current?.submit()}
-              className={`${
-                role !== ""
-                  ? role === "tutor"
-                    ? "bg-secondaryBlue"
-                    : "bg-secondaryOrange"
-                  : "bg-lightGray"
-              } w-96 items-center p-3 rounded-xl`}
-            >
-              <Text
+            <View className="px-6 w-full">
+              <TouchableOpacity
+                disabled={role === ""}
+                onPress={() => questionRef.current?.submit()}
                 className={`${
                   role !== ""
                     ? role === "tutor"
-                      ? "text-darkPrimaryBlue"
-                      : "text-darkBrown"
-                    : "text-darkGray"
-                } font-asap-bold`}
+                      ? "bg-secondaryBlue"
+                      : "bg-secondaryOrange"
+                    : "bg-lightGray"
+                } w-full items-center py-3 rounded-xl`}
               >
-                Sign Up
-              </Text>
-            </TouchableOpacity>
-            <View className="flex-row gap-1">
+                <Text
+                  className={`${
+                    role !== ""
+                      ? role === "tutor"
+                        ? "text-darkBlue"
+                        : "text-darkBrown"
+                      : "text-darkGray"
+                  } font-asap-bold`}
+                >
+                  Sign Up
+                </Text>
+              </TouchableOpacity>
+            </View>
+            <View className="flex-row w-full items-center justify-center gap-1">
               <Text
                 className={`font-asap-semibold ${
-                  role == "tutor" ? "text-darkPrimaryBlue" : "text-darkBrown"
+                  role == "tutor" ? "text-darkBlue" : "text-darkBrown"
                 } mt-2`}
               >
                 Already have an account?

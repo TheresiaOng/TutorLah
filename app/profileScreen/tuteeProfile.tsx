@@ -1,25 +1,35 @@
 import OrangeCard from "@/components/orangeCard";
-import { db } from "@/firebase";
+import { useAuth } from "@/contexts/authContext";
+import { auth, db } from "@/firebase";
 import { router } from "expo-router";
-import { useSearchParams } from "expo-router/build/hooks";
+import { useGlobalSearchParams } from "expo-router/build/hooks";
+import { signOut } from "firebase/auth";
 import { doc, DocumentData, getDoc } from "firebase/firestore";
 import React, { useState } from "react";
 import { Image, ScrollView, Text, TouchableOpacity, View } from "react-native";
-import Footer from "../../components/footer";
 
 const TuteeProfile = () => {
-  const params = useSearchParams();
-  const id = params.get("id") as string;
-  const role = params.get("role") as "tutor" | "tutee";
   const [userDoc, setUserDoc] = useState<DocumentData | null>(null);
+  const { userDocID, userRole } = useAuth();
+  const { id: viewingId, role: viewingRole } = useGlobalSearchParams();
+  const effectiveRole = viewingRole ?? userRole; // use viewingRole id available, otherwise use user's role
+  const effectiveId = Array.isArray(viewingId) // Ensure effectiveId is always a string
+    ? viewingId[0]
+    : viewingId ?? userDocID;
 
-  // retrieve collection path based on user's role
-  const path = role === "tutor" ? "users/roles/tutors" : "users/roles/tutees";
+  // if the user is not logged in, redirect to login page
+  const handleLogout = async () => {
+    await signOut(auth);
+    router.push("/");
+  };
 
-  // retrieve user's document
-  const docRef = doc(db, path, id);
+  const path =
+    effectiveRole === "tutor" ? "users/roles/tutors" : "users/roles/tutees";
 
-  // retrieve user's document snapshot
+  // retrieve user on screen document
+  const docRef = doc(db, path, effectiveId);
+
+  // retrieve user on screen document snapshot
   // The doc.data() can later be used to retrieve specific fields
   const docSnapshot = async () => {
     const doc = await getDoc(docRef);
@@ -62,28 +72,30 @@ const TuteeProfile = () => {
       </View>
 
       {/* Personal Info Card */}
-      <View className="h-4/6 w-full items-center">
+      <View className="h-5/6 w-full items-center">
         <ScrollView className="w-full px-4">
-          <OrangeCard className="mt-4">
-            <View className="flex-row items-start">
-              <Text className="font-asap-semibold my-4 w-40 text-darkBrown">
-                Education Institute
-              </Text>
-              <Text className="font-asap-regular my-4 flex-shrink text-darkBrown">
-                : {userDoc?.educationInstitute}
-              </Text>
-            </View>
-            <View className="flex-row items-start">
-              <Text className="font-asap-semibold my-4 w-40 text-darkBrown">
-                Education Level
-              </Text>
-              <Text className="font-asap-regular my-4 flex-shrink text-darkBrown">
-                : {userDoc?.educationLevel}
-              </Text>
-            </View>
-          </OrangeCard>
+          <View className="items-center">
+            <OrangeCard className="mt-4">
+              <View className="flex-row items-start">
+                <Text className="font-asap-semibold my-4 w-40 text-darkBrown">
+                  Education Institute
+                </Text>
+                <Text className="font-asap-regular my-4 flex-shrink text-darkBrown">
+                  : {userDoc?.educationInstitute}
+                </Text>
+              </View>
+              <View className="flex-row items-start">
+                <Text className="font-asap-semibold my-4 w-40 text-darkBrown">
+                  Education Level
+                </Text>
+                <Text className="font-asap-regular my-4 flex-shrink text-darkBrown">
+                  : {userDoc?.educationLevel}
+                </Text>
+              </View>
+            </OrangeCard>
+          </View>
 
-          {/* Listing Section */}
+          {/* Following Section */}
           <View className="flex-col border-primaryOrange border-t-2 pt-2 mx-2 mt-4">
             <Text className="color-darkBrown text-2xl font-asap-bold">
               Following
@@ -105,11 +117,27 @@ const TuteeProfile = () => {
                 You have no listing right now
               </Text>
             </View>
+
+            {/* Logout Button */}
+            {effectiveId === userDocID && (
+              <View className="flex-row items-center justify-center">
+                <TouchableOpacity
+                  className={
+                    "bg-secondaryOrange border-8 h-3/5 w-full border-secondaryOrange rounded-lg items-center justify-center"
+                  }
+                  onPress={handleLogout}
+                >
+                  <Text
+                    className={`${"text-darkBrown"} font-asap-medium text-lg`}
+                  >
+                    Logout
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            )}
           </View>
         </ScrollView>
       </View>
-
-      {role && <Footer id={id} role={role} />}
     </View>
   );
 };
