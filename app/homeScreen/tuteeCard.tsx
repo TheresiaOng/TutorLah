@@ -8,9 +8,9 @@ type cardProps = {
   listId: string;
 };
 
-const TuteeCard = ({ item, listId }: cardProps) => {
+const TuteeCard = ({ item }: cardProps) => {
   return (
-    <OrangeCard id={item.userId} role={item.userRole}>
+    <OrangeCard id={item.userId}>
       <TouchableOpacity
         onPress={() =>
           router.push({
@@ -18,7 +18,7 @@ const TuteeCard = ({ item, listId }: cardProps) => {
               item.userRole === "tutor"
                 ? "/profileScreen/tutorProfile"
                 : "/profileScreen/tuteeProfile",
-            params: { id: item.userId, role: item.userRole },
+            params: { id: item.userId },
           })
         }
       >
@@ -48,7 +48,7 @@ const TuteeCard = ({ item, listId }: cardProps) => {
           Price Range
         </Text>
         <Text className="font-asap-regular my-4 flex-shrink text-darkBrown">
-          : S${item.startPrice} - S${item.endPrice}
+          : S${item.startPrice} - S${item.endPrice} /hr
         </Text>
       </View>
     </OrangeCard>

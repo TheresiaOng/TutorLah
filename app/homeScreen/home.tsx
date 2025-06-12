@@ -1,5 +1,5 @@
 import { useAuth } from "@/contexts/authContext";
-import { collection, doc, onSnapshot, query } from "firebase/firestore";
+import { collection, onSnapshot, query } from "firebase/firestore";
 import React, { useEffect, useState } from "react";
 import { FlatList, Image, Text, View } from "react-native";
 import { db } from "../../firebase";
@@ -9,19 +9,12 @@ import TutorCard from "./tutorCard";
 
 type Listing = {
   listId: string;
-  userRole: "tutor" | "tutee";
+  role: "tutor" | "tutee";
 };
 
 const HomeScreen = () => {
   const [listings, setListings] = useState<Listing[]>([]);
-  const { userDocID, userRole, userDoc } = useAuth();
-
-  // retrieve collection path based on user's role
-  const path =
-    userRole === "tutor" ? "users/roles/tutors" : "users/roles/tutees";
-
-  // retrieve user's document
-  const docRef = doc(db, path, userDocID);
+  const { userDoc } = useAuth();
 
   useEffect(() => {
     const listingsQuery = query(collection(db, "listings"));
@@ -40,7 +33,7 @@ const HomeScreen = () => {
   return (
     <View className="flex-1 bg-white justify-center items-center">
       {/* Header */}
-      {userRole === "tutor" ? (
+      {userDoc?.role === "tutor" ? (
         <View className="border-8 border-primaryBlue bg-primaryBlue w-full justify-center items-center h-1/4">
           <View className="flex-row w-11/12 items-center inset-y-6">
             <View className="w-20 h-20 bg-white items-center rounded-full">
@@ -75,9 +68,7 @@ const HomeScreen = () => {
           data={listings}
           keyExtractor={(item) => item.listId}
           renderItem={({ item }) => {
-            if (item.listId === userDocID) return null; // skip user's card
-
-            return item.userRole === "tutee" ? (
+            return item.role === "tutee" ? (
               <TuteeCard item={item} listId={item.listId} />
             ) : (
               <TutorCard item={item} listId={item.listId} />

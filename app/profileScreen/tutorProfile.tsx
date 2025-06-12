@@ -5,43 +5,49 @@ import { router } from "expo-router";
 import { useGlobalSearchParams } from "expo-router/build/hooks";
 import { signOut } from "firebase/auth";
 import { doc, DocumentData, getDoc } from "firebase/firestore";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Image, ScrollView, Text, TouchableOpacity, View } from "react-native";
 
 const TutorProfile = () => {
-  const [userDoc, setUserDoc] = useState<DocumentData | null>(null);
-  const { userDocID, userRole } = useAuth();
-  const { id: viewingId, role: viewingRole } = useGlobalSearchParams();
-  const effectiveRole = viewingRole ?? userRole; // use viewingRole id available, otherwise use user's role
-  const effectiveId = Array.isArray(viewingId) // Ensure effectiveId is always a string
-    ? viewingId[0]
-    : viewingId ?? userDocID;
+  const [currentDoc, setCurrentDoc] = useState<DocumentData | null>(null);
+  const { userDoc } = useAuth();
+  const { id: viewingUserId } = useGlobalSearchParams();
+  const otherUserId = Array.isArray(viewingUserId)
+    ? viewingUserId[0]
+    : viewingUserId;
+
+  useEffect(() => {
+    const fetchProfileDoc = async () => {
+      const userIdToView = otherUserId ?? userDoc?.userId;
+      if (!userIdToView) return;
+      if (userIdToView === userDoc?.userId) {
+        setCurrentDoc(userDoc);
+        return;
+      }
+
+      try {
+        const docRef = doc(db, "users", userIdToView);
+        const snapshot = await getDoc(docRef);
+        if (snapshot.exists()) {
+          setCurrentDoc(snapshot.data());
+        } else {
+          console.log("No such document!");
+        }
+      } catch (err) {
+        console.error("Failed to fetch user profile:", err);
+      }
+    };
+
+    fetchProfileDoc();
+  }, [viewingUserId, userDoc]);
+
+  const isOwnProfile = !viewingUserId || viewingUserId === userDoc?.userId;
 
   // if the user is not logged in, redirect to login page
   const handleLogout = async () => {
     await signOut(auth);
-    router.push("/");
+    router.replace("/");
   };
-
-  // retrieve collection path based on user's role
-  const path =
-    effectiveRole === "tutor" ? "users/roles/tutors" : "users/roles/tutees";
-
-  // retrieve user's document
-  const docRef = doc(db, path, effectiveId);
-
-  // retrieve user's document snapshot
-  // The doc.data() can later be used to retrieve specific fields
-  const docSnapshot = async () => {
-    const doc = await getDoc(docRef);
-    if (doc.exists()) {
-      setUserDoc(doc.data());
-    } else {
-      console.log("home: No such document!");
-    }
-  };
-
-  docSnapshot();
 
   return (
     <View className="flex-1 bg-white justify-center items-center">
@@ -67,7 +73,7 @@ const TutorProfile = () => {
             />
           </View>
           <Text className="text-4xl w-3/5 pl-4 flex-wrap text-white font-asap-bold">
-            {userDoc ? userDoc.name : "User"}
+            {currentDoc ? currentDoc.name : "User"}
           </Text>
         </View>
       </View>
@@ -82,7 +88,7 @@ const TutorProfile = () => {
                   Education Institute
                 </Text>
                 <Text className="font-asap-regular my-4 flex-shrink text-darkBlue">
-                  : {userDoc?.educationInstitute}
+                  : {currentDoc?.educationInstitute}
                 </Text>
               </View>
               <View className="flex-row items-start">
@@ -90,7 +96,7 @@ const TutorProfile = () => {
                   Education Level
                 </Text>
                 <Text className="font-asap-regular my-4 flex-shrink text-darkBlue">
-                  : {userDoc?.educationLevel}
+                  : {currentDoc?.educationLevel}
                 </Text>
               </View>
               <View className="flex-row items-start">
@@ -98,7 +104,7 @@ const TutorProfile = () => {
                   Achievements
                 </Text>
                 <Text className="font-asap-regular my-4 flex-shrink text-darkBlue">
-                  : {userDoc?.achievements}
+                  : {currentDoc?.achievements}
                 </Text>
               </View>
             </BlueCard>
@@ -133,16 +139,18 @@ const TutorProfile = () => {
           {/* Listing Section */}
           <View className="flex-col border-primaryBlue border-t-2 pt-2 mx-2 mt-4">
             <Text className="color-darkBlue text-2xl font-asap-bold">
-              Your Listing
+              {isOwnProfile ? "Your Listing" : "Listing"}
             </Text>
             <View className="items-center">
               <Text className="p-8 font-asap-regular text-darkGray">
-                You have no listing right now
+                {isOwnProfile
+                  ? "You have no listing right now"
+                  : "No listing at the moment"}
               </Text>
             </View>
 
             {/* Logout Button */}
-            {effectiveId === userDocID && (
+            {isOwnProfile && (
               <View className="flex-row items-center justify-center">
                 <TouchableOpacity
                   className={

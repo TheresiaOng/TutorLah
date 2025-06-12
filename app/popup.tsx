@@ -14,7 +14,7 @@ export default function PaymentPopup({
 
       <View style={styles.row}>
         <Image
-          source={require("../../assets/images/hatLogo.png")}
+          source={require("../assets/images/hatLogo.png")}
           style={styles.avatar}
         />
         <Text style={styles.label}>Paid To</Text>
@@ -23,7 +23,7 @@ export default function PaymentPopup({
 
       <View style={styles.row}>
         <Image
-          source={require("../../assets/images/hatLogo.png")}
+          source={require("../assets/images/hatLogo.png")}
           style={styles.avatar}
         />
         <Text style={styles.label}>Paid By</Text>
