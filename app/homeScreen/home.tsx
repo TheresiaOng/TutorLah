@@ -1,4 +1,4 @@
-import { useAuth } from "@/contexts/authContext";
+import { useAuth } from "@/contexts/AuthProvider";
 import { collection, onSnapshot, query } from "firebase/firestore";
 import React, { useEffect, useState } from "react";
 import { FlatList, Image, Text, View } from "react-native";

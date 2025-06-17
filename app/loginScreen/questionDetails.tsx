@@ -44,11 +44,14 @@ const QuestionDetails = forwardRef<QuestionDetailsRef, QuestionDetailsProps>(
           onError?.("Please fill all fields for tutor.");
         } else if (email && password) {
           try {
+            // Creating user for firebase auth
             const userCredential = await createUserWithEmailAndPassword(
               auth,
               email,
               password
             );
+
+            // Storing user data in firestore
             const docRef = doc(usersRef, userCredential.user.uid);
             await setDoc(docRef, {
               userId: userCredential.user.uid,
@@ -59,6 +62,27 @@ const QuestionDetails = forwardRef<QuestionDetailsRef, QuestionDetailsProps>(
               educationInstitute,
               achievements,
             });
+
+            // Creating user for Stream
+            const streamUser = await fetch(
+              "https://ynikykgyystdyitckguc.supabase.co/functions/v1/create-stream-user",
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  Authorization: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InluaWt5a2d5eXN0ZHlpdGNrZ3VjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAwMDY2MjQsImV4cCI6MjA2NTU4MjYyNH0._fFlVovJ6dO7XdPXG9BwAgCyONTJEJakRnWefN51L7c`,
+                },
+                body: JSON.stringify({
+                  id: userCredential.user.uid,
+                  name,
+                  role,
+                }),
+              }
+            );
+
+            const result = await streamUser.json();
+            console.log("Stream user created:", result);
+
             router.push("/homeScreen/home");
           } catch (error: any) {
             const errorMessage = errorhandling(error);
@@ -72,11 +96,14 @@ const QuestionDetails = forwardRef<QuestionDetailsRef, QuestionDetailsProps>(
           onError?.("Please fill all fields for tutee.");
         } else if (email && password) {
           try {
+            // Creating user for firebase auth
             const userCredential = await createUserWithEmailAndPassword(
               auth,
               email,
               password
             );
+
+            // Storing user data in firestore
             const docRef = doc(usersRef, userCredential.user.uid);
             await setDoc(docRef, {
               userId: userCredential.user.uid,
@@ -86,6 +113,27 @@ const QuestionDetails = forwardRef<QuestionDetailsRef, QuestionDetailsProps>(
               educationLevel,
               educationInstitute,
             });
+
+            // Creating user for Stream
+            const streamUser = await fetch(
+              "https://ynikykgyystdyitckguc.supabase.co/functions/v1/create-stream-user",
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  Authorization: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InluaWt5a2d5eXN0ZHlpdGNrZ3VjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAwMDY2MjQsImV4cCI6MjA2NTU4MjYyNH0._fFlVovJ6dO7XdPXG9BwAgCyONTJEJakRnWefN51L7c`,
+                },
+                body: JSON.stringify({
+                  id: userCredential.user.uid,
+                  name,
+                  role,
+                }),
+              }
+            );
+
+            const result = await streamUser.json();
+            console.log("Stream user created:", result);
+
             router.push("/homeScreen/home");
           } catch (error: any) {
             const errorMessage = errorhandling(error);

@@ -1,4 +1,4 @@
-import { useAuth } from "@/contexts/authContext";
+import { useAuth } from "@/contexts/AuthProvider";
 import { db } from "@/firebase";
 import { router } from "expo-router";
 import { addDoc, collection } from "firebase/firestore";
@@ -112,13 +112,13 @@ const CreateListing = () => {
 
       try {
         const newListing = await addDoc(listingRef, {
-          name: userDoc.name,
-          userId: userDoc.userId,
-          role: userDoc.role,
+          name: userDoc?.name,
+          userId: userDoc?.userId,
+          role: userDoc?.role,
           subjects: formattedSubjects,
           startPrice,
           endPrice,
-          education: `${userDoc.educationInstitute} ${userDoc.educationLevel}`,
+          education: `${userDoc?.educationInstitute} ${userDoc?.educationLevel}`,
         });
         Alert.alert("Success", "Your listing has been created successfully!");
       } catch (error) {
@@ -191,7 +191,7 @@ const CreateListing = () => {
                   className={`border-2 justify-center border-gray flex-wrap font-asap-regular h-14 bg-lightGray rounded-2xl p-2 mb-8 w-full`}
                 >
                   <Text className="font-asap-regular">
-                    {userDoc.educationInstitute} {userDoc.educationLevel}
+                    {userDoc?.educationInstitute} {userDoc?.educationLevel}
                   </Text>
                 </View>
               </View>
