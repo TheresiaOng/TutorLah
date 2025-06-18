@@ -1,46 +1,137 @@
+import { useAuth } from "@/contexts/authContext";
+import { db } from "@/firebase";
+import { router } from "expo-router";
+import { addDoc, collection } from "firebase/firestore";
+import React, { useState } from "react";
 import {
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  Alert,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 
 export default function PaymentCreation() {
+  const [paidTo, setPaidTo] = useState('');
+  const [paidBy, setPaidBy] = useState('');
+  const [subject, setSubject] = useState('');
+  const [date, setDate] = useState('');
+  const [startTime, setStartTime] = useState('');
+  const [endTime, setEndTime] = useState('');
+  const [costPerHour, setCostPerHour] = useState('');
+  const [totalCost, setTotalCost] = useState('');
+  const [errorMsg, setErrorMsg] = useState('');
+  const { userDoc } = useAuth();
+
+  async function handleSend() {
+    if (
+      !paidTo.trim() ||
+      !paidBy.trim() ||
+      !subject.trim() ||
+      !date.trim() ||
+      !startTime.trim() ||
+      !endTime.trim() ||
+      !costPerHour.trim() ||
+      !totalCost.trim()
+    ) {
+      setErrorMsg("Please fill in all fields.");
+      return;
+    }
+    setErrorMsg('');
+    const paymentRef = collection(db, "payments");
+
+    try {
+      await addDoc(paymentRef, {
+        paidTo: userDoc.name,
+        paidBy,
+        subject,
+        date,
+        startTime,
+        endTime,
+        costPerHour,
+        totalCost,
+        isPaid: false,
+      });
+      Alert.alert("Success", "Payment details saved.");
+      router.back();
+    } catch (error) {
+      Alert.alert("Error", "Failed to save payment details.");
+      console.error("Error adding document: ", error);
+    }
+  }
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.header}>Payment Details</Text>
 
-      <LabelledInput label="Paid To:" />
-      <LabelledInput label="Paid By:" />
-      <LabelledInput label="Subject:" />
-      <LabelledInput label="Date of Lesson:" />
+      <LabelledInput label="Paid To:" value={paidTo} onChangeText={setPaidTo} />
+      <LabelledInput label="Paid By:" value={paidBy} onChangeText={setPaidBy} />
+      <LabelledInput label="Subject:" value={subject} onChangeText={setSubject} />
+      <LabelledInput label="Date of Lesson:" value={date} onChangeText={setDate} />
 
       <Text style={styles.label}>Timing:</Text>
       <View style={styles.timingRow}>
-        <TextInput style={styles.timingBox} />
+        <TextInput
+          style={styles.timingBox}
+          placeholder="Start"
+          value={startTime}
+          onChangeText={setStartTime}
+        />
         <Text style={styles.dash}>-</Text>
-        <TextInput style={styles.timingBox} />
+        <TextInput
+          style={styles.timingBox}
+          placeholder="End"
+          value={endTime}
+          onChangeText={setEndTime}
+        />
       </View>
 
       <Text style={styles.label}>Cost/hr:</Text>
-      <TextInput style={styles.input} placeholder="S$" placeholderTextColor="#0077aa" />
+      <TextInput
+        style={styles.input}
+        placeholder="S$"
+        placeholderTextColor="#0077aa"
+        keyboardType="numeric"
+        value={costPerHour}
+        onChangeText={setCostPerHour}
+      />
 
       <Text style={styles.label}>Total cost:</Text>
-      <TextInput style={styles.input} placeholder="S$" placeholderTextColor="#0077aa" />
+      <TextInput
+        style={styles.input}
+        placeholder="S$"
+        placeholderTextColor="#0077aa"
+        keyboardType="numeric"
+        value={totalCost}
+        onChangeText={setTotalCost}
+      />
 
-      <TouchableOpacity style={styles.postButton}>
-        <Text style={styles.postButtonText}>Post</Text>
+      {errorMsg !== "" && (
+        <Text style={{ color: 'red', textAlign: 'center', marginTop: 10 }}>
+          {errorMsg}
+        </Text>
+      )}
+
+      <TouchableOpacity style={styles.sendButton} onPress={handleSend}>
+        <Text style={styles.sendButtonText}>Send</Text>
       </TouchableOpacity>
     </ScrollView>
   );
 }
 
-const LabelledInput = ({ label }: { label: string }) => (
+const LabelledInput = ({
+  label,
+  value,
+  onChangeText,
+}: {
+  label: string;
+  value: string;
+  onChangeText: (text: string) => void;
+}) => (
   <>
     <Text style={styles.label}>{label}</Text>
-    <TextInput style={styles.input} />
+    <TextInput style={styles.input} value={value} onChangeText={onChangeText} />
   </>
 );
 
@@ -88,14 +179,14 @@ const styles = StyleSheet.create({
     fontSize: 18,
     color: '#2D6FA2',
   },
-  postButton: {
+  sendButton: {
     marginTop: 65,
     backgroundColor: '#4DA8FF',
     paddingVertical: 15,
     borderRadius: 10,
     alignItems: 'center',
   },
-  postButtonText: {
+  sendButtonText: {
     fontWeight: 'bold',
     fontSize: 18,
     color: '#153A7D',
