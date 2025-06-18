@@ -1,7 +1,7 @@
 import { useAuth } from "@/contexts/authContext";
 import { db } from "@/firebase";
 import { router } from "expo-router";
-import { addDoc, collection } from "firebase/firestore";
+import { addDoc, arrayUnion, collection, doc, updateDoc } from "firebase/firestore";
 import React, { useState } from "react";
 import {
   Alert,
@@ -13,7 +13,8 @@ import {
   View,
 } from 'react-native';
 
-export default function PaymentCreation() {
+export default function PaymentCreation() { // This component allows users to create a new payment record
+  // State variables to hold payment details
   const [paidTo, setPaidTo] = useState('');
   const [paidBy, setPaidBy] = useState('');
   const [subject, setSubject] = useState('');
@@ -36,14 +37,14 @@ export default function PaymentCreation() {
       !costPerHour.trim() ||
       !totalCost.trim()
     ) {
-      setErrorMsg("Please fill in all fields.");
+      setErrorMsg("Please fill in all fields."); // Validate that all fields are filled
       return;
     }
     setErrorMsg('');
     const paymentRef = collection(db, "payments");
 
     try {
-      await addDoc(paymentRef, {
+      const paymentDoc = await addDoc(paymentRef, { // Create a new payment document
         paidTo: userDoc.name,
         paidBy,
         subject,
@@ -54,6 +55,12 @@ export default function PaymentCreation() {
         totalCost,
         isPaid: false,
       });
+
+      const userDocRef = doc(db, "users", userDoc.userId); 
+      await updateDoc(userDocRef, { 
+      paymentIds: arrayUnion(paymentDoc.id) // Add the new payment ID to the user's paymentIds array
+    });
+
       Alert.alert("Success", "Payment details saved.");
       router.back();
     } catch (error) {
