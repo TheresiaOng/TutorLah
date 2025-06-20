@@ -30,7 +30,7 @@ const CreateListing = () => {
     { label: "No", value: "no" },
   ]);
   const [errorMsg, setErrorMsg] = useState("");
-  const { userDoc } = useAuth();
+  const { userDoc } = useAuth(); //current user's doc info
 
   const MAX_WORDS = 10;
 
@@ -48,7 +48,7 @@ const CreateListing = () => {
     setWordCount(nonEmptyWords.length);
   };
 
-  const listingRef = collection(db, "listings");
+  const listingRef = collection(db, "listings"); // name of the collection in Firestore
 
   const post = async () => {
     if (userDoc?.role === "tutor") {
@@ -66,7 +66,7 @@ const CreateListing = () => {
             trimmed.charAt(0).toUpperCase() + trimmed.slice(1).toLowerCase()
           );
         })
-        .join(", ");
+        .join(", "); //check for error
 
       try {
         const newListing = await addDoc(listingRef, {
@@ -76,7 +76,7 @@ const CreateListing = () => {
           subjects: formattedSubjects,
           price,
           negotiable,
-          education: `${userDoc.educationInstitute} ${userDoc.educationLevel}`,
+          education: `${userDoc.educationInstitute} ${userDoc.educationLevel}`, //creation of doc
         });
         Alert.alert("Success", "Your listing has been created successfully!");
       } catch (error) {
@@ -86,7 +86,7 @@ const CreateListing = () => {
         );
         console.error("Error creating listing:", error);
       } finally {
-        router.push("/homeScreen/home");
+        router.push("/homeScreen/home"); //where it should go
       }
     } else {
       if (!subjects || !startPrice || !endPrice) {
