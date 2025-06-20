@@ -53,6 +53,19 @@ const Footer = () => {
     }
   };
 
+const handleCalendar = () => {
+  if (
+    pathname !== "/scheduleScreen/tutorSchedule" &&
+    pathname !== "/scheduleScreen/tuteeSchedule"
+  ) {
+    const schedulePath =
+      userDoc.role === "tutor"
+        ? "/scheduleScreen/tutorSchedule"
+        : "/scheduleScreen/tuteeSchedule";
+    router.push(schedulePath);
+  }
+};
+
   const handleCreate = () => {
     if (pathname !== "/createListingScreen/createListing") {
       router.push({
@@ -105,6 +118,19 @@ const Footer = () => {
             }`}
           />
         </TouchableOpacity>
+          <TouchableOpacity onPress={handleCalendar}>
+              <Image
+                source={require("../assets/images/calendar.png")}
+                className={`h-14 w-14 rounded-full p-3 ${
+                  (pathname === "/scheduleScreen/tutorSchedule" && currentDoc?.role === "tutor") ||
+                  (pathname === "/scheduleScreen/tuteeSchedule" && currentDoc?.role === "tutee")
+                    ? currentDoc?.role === "tutor"
+                      ? "bg-darkPrimaryBlue"
+                      : "bg-darkPrimaryOrange"
+                    : ""
+                }`}
+              />
+            </TouchableOpacity>
         <TouchableOpacity onPress={() => handleCreate()}>
           <Image
             source={require("../assets/images/plus.png")}
