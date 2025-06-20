@@ -1,0 +1,10 @@
+{
+  "version": "5",
+  "workspace": {
+    "packageJson": {
+      "dependencies": [
+        "npm:stream-chat@^9.6.1"
+      ]
+    }
+  }
+}

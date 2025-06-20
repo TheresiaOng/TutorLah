@@ -1,7 +1,11 @@
+import CustomButton from "@/components/customButton";
 import OrangeCard from "@/components/orangeCard";
+import { useAuth } from "@/contexts/AuthProvider";
+import { useChat } from "@/contexts/ChatProvider";
 import { router } from "expo-router";
 import React from "react";
 import { Text, TouchableOpacity, View } from "react-native";
+import GetOrCreateChannel from "../chatScreen/getOrCreateChannel";
 
 type cardProps = {
   item: any;
@@ -9,6 +13,26 @@ type cardProps = {
 };
 
 const TuteeCard = ({ item }: cardProps) => {
+  const { userDoc } = useAuth();
+  const { client, setChannel } = useChat();
+
+  const handleChatPress = async () => {
+    if (userDoc?.userId === item.userId) return;
+
+    try {
+      const channel = await GetOrCreateChannel({
+        client,
+        currentUserId: userDoc.userId,
+        otherUserId: item.userId,
+      });
+
+      setChannel(channel);
+      router.push(`/chatScreen/${channel.cid}`);
+    } catch (error) {
+      console.error("Failed to start or load chat:", error);
+    }
+  };
+
   return (
     <OrangeCard id={item.userId}>
       <TouchableOpacity
@@ -51,6 +75,9 @@ const TuteeCard = ({ item }: cardProps) => {
           : S${item.startPrice} - S${item.endPrice} /hr
         </Text>
       </View>
+      {item.userId !== userDoc?.userId && (
+        <CustomButton title="Chat" onPress={handleChatPress} role="tutee" />
+      )}
     </OrangeCard>
   );
 };
