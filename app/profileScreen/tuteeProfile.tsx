@@ -1,12 +1,15 @@
+import CustomButton from "@/components/customButton";
 import OrangeCard from "@/components/orangeCard";
-import { useAuth } from "@/contexts/authContext";
+import { useAuth } from "@/contexts/AuthProvider";
 import { auth, db } from "@/firebase";
+import Constants from "expo-constants";
 import { router } from "expo-router";
 import { useGlobalSearchParams } from "expo-router/build/hooks";
 import { signOut } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
 import React, { useEffect, useState } from "react";
 import { Image, ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { StreamChat } from "stream-chat";
 
 const TuteeProfile = () => {
   const [currentDoc, setCurrentDoc] = useState<any>(null);
@@ -15,6 +18,16 @@ const TuteeProfile = () => {
   const otherUserId = Array.isArray(viewingUserId)
     ? viewingUserId[0]
     : viewingUserId;
+
+  function getStreamApiKey(): string {
+    const key = Constants.expoConfig?.extra?.streamApiKey;
+    if (!key) {
+      throw new Error("Missing STREAM_API_KEY in app.config.js or .env");
+    }
+    return key;
+  }
+
+  const client = StreamChat.getInstance(getStreamApiKey());
 
   useEffect(() => {
     const fetchProfileDoc = async () => {
@@ -46,6 +59,7 @@ const TuteeProfile = () => {
   // if the user is not logged in, redirect to login page
   const handleLogout = async () => {
     await signOut(auth);
+    await client.disconnectUser();
     router.push("/");
   };
 
@@ -131,20 +145,11 @@ const TuteeProfile = () => {
 
             {/* Logout Button */}
             {isOwnProfile && (
-              <View className="flex-row items-center justify-center">
-                <TouchableOpacity
-                  className={
-                    "bg-secondaryOrange border-8 h-3/5 w-full border-secondaryOrange rounded-lg items-center justify-center"
-                  }
-                  onPress={handleLogout}
-                >
-                  <Text
-                    className={`${"text-darkBrown"} font-asap-medium text-lg`}
-                  >
-                    Logout
-                  </Text>
-                </TouchableOpacity>
-              </View>
+              <CustomButton
+                title="Logout"
+                onPress={handleLogout}
+                role="tutee"
+              />
             )}
           </View>
         </ScrollView>
