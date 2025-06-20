@@ -17,7 +17,7 @@ type AuthContextType = {
   fetchUserDoc: (uid?: string) => Promise<void>;
 };
 
-const authContext = createContext<AuthContextType | undefined>(undefined);
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   // the states that can be shared/used globally
@@ -35,12 +35,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const docRef = doc(db, "users", uid);
       const snapshot = await getDoc(docRef);
       if (snapshot.exists()) {
-        setUserDoc(snapshot.data());
+        setUserDoc(snapshot.data()); // set the userDoc state with the fetched data
       } else {
-        console.log("authContext: No such user document found.");
+        console.log("AuthContext: No such user document found.");
       }
     } catch (error) {
-      console.error("authContext: Failed to fetch user document: ", error);
+      console.error("AuthContext: Failed to fetch user document: ", error);
     }
   };
 
@@ -57,19 +57,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   return (
-    <authContext.Provider
+    <AuthContext.Provider
       value={{
         userDoc,
         fetchUserDoc,
       }}
     >
       {children}
-    </authContext.Provider>
+    </AuthContext.Provider>
   );
 };
 
 export const useAuth = () => {
-  const context = useContext(authContext);
+  const context = useContext(AuthContext);
   if (context === undefined) {
     throw new Error("useAuth must be used within an AuthProvider");
   }

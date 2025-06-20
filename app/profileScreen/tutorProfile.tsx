@@ -1,5 +1,7 @@
 import BlueCard from "@/components/blueCard";
-import { useAuth } from "@/contexts/authContext";
+import CustomButton from "@/components/customButton";
+import { useAuth } from "@/contexts/AuthProvider";
+import { useChat } from "@/contexts/ChatProvider";
 import { auth, db } from "@/firebase";
 import { router } from "expo-router";
 import { useGlobalSearchParams } from "expo-router/build/hooks";
@@ -15,6 +17,8 @@ const TutorProfile = () => {
   const otherUserId = Array.isArray(viewingUserId)
     ? viewingUserId[0]
     : viewingUserId;
+
+  const { client } = useChat();
 
   useEffect(() => {
     const fetchProfileDoc = async () => {
@@ -46,6 +50,7 @@ const TutorProfile = () => {
   // if the user is not logged in, redirect to login page
   const handleLogout = async () => {
     await signOut(auth);
+    await client.disconnectUser();
     router.replace("/");
   };
 
@@ -151,20 +156,11 @@ const TutorProfile = () => {
 
             {/* Logout Button */}
             {isOwnProfile && (
-              <View className="flex-row items-center justify-center">
-                <TouchableOpacity
-                  className={
-                    "bg-secondaryBlue border-8 w-full h-3/5 border-secondaryBlue rounded-lg items-center justify-center"
-                  }
-                  onPress={handleLogout}
-                >
-                  <Text
-                    className={`${"text-darkBlue"} font-asap-medium text-lg`}
-                  >
-                    Logout
-                  </Text>
-                </TouchableOpacity>
-              </View>
+              <CustomButton
+                title="Logout"
+                onPress={handleLogout}
+                role="tutor"
+              />
             )}
           </View>
         </ScrollView>

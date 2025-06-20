@@ -1,4 +1,4 @@
-import { useAuth } from "@/contexts/authContext";
+import { useAuth } from "@/contexts/AuthProvider";
 import { db } from "@/firebase";
 import { router } from "expo-router";
 import { addDoc, collection } from "firebase/firestore";
@@ -30,7 +30,7 @@ const CreateListing = () => {
     { label: "No", value: "no" },
   ]);
   const [errorMsg, setErrorMsg] = useState("");
-  const { userDoc } = useAuth();
+  const { userDoc } = useAuth(); //current user's doc info
 
   const MAX_WORDS = 10;
 
@@ -48,7 +48,7 @@ const CreateListing = () => {
     setWordCount(nonEmptyWords.length);
   };
 
-  const listingRef = collection(db, "listings");
+  const listingRef = collection(db, "listings"); // name of the collection in Firestore
 
   const post = async () => {
     if (userDoc?.role === "tutor") {
@@ -66,7 +66,7 @@ const CreateListing = () => {
             trimmed.charAt(0).toUpperCase() + trimmed.slice(1).toLowerCase()
           );
         })
-        .join(", ");
+        .join(", "); //check for error
 
       try {
         const newListing = await addDoc(listingRef, {
@@ -76,7 +76,7 @@ const CreateListing = () => {
           subjects: formattedSubjects,
           price,
           negotiable,
-          education: `${userDoc.educationInstitute} ${userDoc.educationLevel}`,
+          education: `${userDoc.educationInstitute} ${userDoc.educationLevel}`, //creation of doc
         });
         Alert.alert("Success", "Your listing has been created successfully!");
       } catch (error) {
@@ -86,7 +86,7 @@ const CreateListing = () => {
         );
         console.error("Error creating listing:", error);
       } finally {
-        router.push("/homeScreen/home");
+        router.push("/homeScreen/home"); //where it should go
       }
     } else {
       if (!subjects || !startPrice || !endPrice) {
@@ -112,13 +112,13 @@ const CreateListing = () => {
 
       try {
         const newListing = await addDoc(listingRef, {
-          name: userDoc.name,
-          userId: userDoc.userId,
-          role: userDoc.role,
+          name: userDoc?.name,
+          userId: userDoc?.userId,
+          role: userDoc?.role,
           subjects: formattedSubjects,
           startPrice,
           endPrice,
-          education: `${userDoc.educationInstitute} ${userDoc.educationLevel}`,
+          education: `${userDoc?.educationInstitute} ${userDoc?.educationLevel}`,
         });
         Alert.alert("Success", "Your listing has been created successfully!");
       } catch (error) {
@@ -191,7 +191,7 @@ const CreateListing = () => {
                   className={`border-2 justify-center border-gray flex-wrap font-asap-regular h-14 bg-lightGray rounded-2xl p-2 mb-8 w-full`}
                 >
                   <Text className="font-asap-regular">
-                    {userDoc.educationInstitute} {userDoc.educationLevel}
+                    {userDoc?.educationInstitute} {userDoc?.educationLevel}
                   </Text>
                 </View>
               </View>

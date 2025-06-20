@@ -1,4 +1,4 @@
-import { useAuth } from "@/contexts/authContext";
+import { useAuth } from "@/contexts/AuthProvider";
 import { collection, onSnapshot, query } from "firebase/firestore";
 import React, { useEffect, useState } from "react";
 import { FlatList, Image, Text, View } from "react-native";
@@ -13,13 +13,15 @@ type Listing = {
 };
 
 const HomeScreen = () => {
-  const [listings, setListings] = useState<Listing[]>([]);
+  const [listings, setListings] = useState<Listing[]>([]); // State to hold listings
   const { userDoc } = useAuth();
 
   useEffect(() => {
-    const listingsQuery = query(collection(db, "listings"));
+    const listingsQuery = query(collection(db, "listings")); // Query to fetch all listings
+    // Listen for real-time updates to the listings collection
+    // This will automatically update the listings state whenever there are changes in the database
 
-    const unsubscribe = onSnapshot(listingsQuery, (snapshot) => {
+    const unsubscribe = onSnapshot(listingsQuery, (snapshot) => { // each specific document in the collection
       const fetchedListings: Listing[] = snapshot.docs.map((doc) => ({
         listId: doc.id,
         ...(doc.data() as Omit<Listing, "listId">),
@@ -62,11 +64,11 @@ const HomeScreen = () => {
           </View>
         </View>
       )}
-      {/* Card display logic */}
+      {/* Card display logic */} 
       <View className="h-5/6 w-full items-center">
         <FlatList
-          data={listings}
-          keyExtractor={(item) => item.listId}
+          data={listings} //get everything from listings
+          keyExtractor={(item) => item.listId} //every flatlist need a unique key id
           renderItem={({ item }) => {
             return item.role === "tutee" ? (
               <TuteeCard item={item} listId={item.listId} />
