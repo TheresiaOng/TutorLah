@@ -1,4 +1,4 @@
-import { useAuth } from "@/contexts/authContext";
+import { useAuth } from "@/contexts/AuthProvider";
 import { db } from "@/firebase";
 import { router, useGlobalSearchParams, usePathname } from "expo-router";
 import { doc, getDoc } from "firebase/firestore";
@@ -53,18 +53,11 @@ const Footer = () => {
     }
   };
 
-const handleCalendar = () => {
-  if (
-    pathname !== "/scheduleScreen/tutorSchedule" &&
-    pathname !== "/scheduleScreen/tuteeSchedule"
-  ) {
-    const schedulePath =
-      userDoc.role === "tutor"
-        ? "/scheduleScreen/tutorSchedule"
-        : "/scheduleScreen/tuteeSchedule";
-    router.push(schedulePath);
-  }
-};
+  const handleChat = () => {
+    if (pathname !== "/chatScreen/channelListScreen") {
+      router.push("/chatScreen/channelListScreen");
+    }
+  };
 
   const handleCreate = () => {
     if (pathname !== "/createListingScreen/createListing") {
@@ -118,19 +111,18 @@ const handleCalendar = () => {
             }`}
           />
         </TouchableOpacity>
-          <TouchableOpacity onPress={handleCalendar}>
-              <Image
-                source={require("../assets/images/calendar.png")}
-                className={`h-14 w-14 rounded-full p-3 ${
-                  (pathname === "/scheduleScreen/tutorSchedule" && currentDoc?.role === "tutor") ||
-                  (pathname === "/scheduleScreen/tuteeSchedule" && currentDoc?.role === "tutee")
-                    ? currentDoc?.role === "tutor"
-                      ? "bg-darkPrimaryBlue"
-                      : "bg-darkPrimaryOrange"
-                    : ""
-                }`}
-              />
-            </TouchableOpacity>
+        <TouchableOpacity onPress={handleChat}>
+          <Image
+            source={require("../assets/images/chatBubble.png")}
+            className={`h-14 w-14 rounded-full p-3 ${
+              pathname.startsWith("/chatScreen")
+                ? currentDoc?.role === "tutor"
+                  ? "bg-darkPrimaryBlue"
+                  : "bg-darkPrimaryOrange"
+                : ""
+            }`}
+          />
+        </TouchableOpacity>
         <TouchableOpacity onPress={() => handleCreate()}>
           <Image
             source={require("../assets/images/plus.png")}
