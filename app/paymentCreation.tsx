@@ -1,7 +1,13 @@
-import { useAuth } from "@/contexts/authContext";
+import { useAuth } from "@/contexts/AuthProvider";
 import { db } from "@/firebase";
 import { router } from "expo-router";
-import { addDoc, arrayUnion, collection, doc, updateDoc } from "firebase/firestore";
+import {
+  addDoc,
+  arrayUnion,
+  collection,
+  doc,
+  updateDoc,
+} from "firebase/firestore";
 import React, { useState } from "react";
 import {
   Alert,
@@ -11,19 +17,20 @@ import {
   TextInput,
   TouchableOpacity,
   View,
-} from 'react-native';
+} from "react-native";
 
-export default function PaymentCreation() { // This component allows users to create a new payment record
+export default function PaymentCreation() {
+  // This component allows users to create a new payment record
   // State variables to hold payment details
-  const [paidTo, setPaidTo] = useState('');
-  const [paidBy, setPaidBy] = useState('');
-  const [subject, setSubject] = useState('');
-  const [date, setDate] = useState('');
-  const [startTime, setStartTime] = useState('');
-  const [endTime, setEndTime] = useState('');
-  const [costPerHour, setCostPerHour] = useState('');
-  const [totalCost, setTotalCost] = useState('');
-  const [errorMsg, setErrorMsg] = useState('');
+  const [paidTo, setPaidTo] = useState("");
+  const [paidBy, setPaidBy] = useState("");
+  const [subject, setSubject] = useState("");
+  const [date, setDate] = useState("");
+  const [startTime, setStartTime] = useState("");
+  const [endTime, setEndTime] = useState("");
+  const [costPerHour, setCostPerHour] = useState("");
+  const [totalCost, setTotalCost] = useState("");
+  const [errorMsg, setErrorMsg] = useState("");
   const { userDoc } = useAuth();
 
   async function handleSend() {
@@ -40,11 +47,12 @@ export default function PaymentCreation() { // This component allows users to cr
       setErrorMsg("Please fill in all fields."); // Validate that all fields are filled
       return;
     }
-    setErrorMsg('');
+    setErrorMsg("");
     const paymentRef = collection(db, "payments");
 
     try {
-      const paymentDoc = await addDoc(paymentRef, { // Create a new payment document
+      const paymentDoc = await addDoc(paymentRef, {
+        // Create a new payment document
         paidTo: userDoc.name,
         paidBy,
         subject,
@@ -56,10 +64,10 @@ export default function PaymentCreation() { // This component allows users to cr
         isPaid: false,
       });
 
-      const userDocRef = doc(db, "users", userDoc.userId); 
-      await updateDoc(userDocRef, { 
-      paymentIds: arrayUnion(paymentDoc.id) // Add the new payment ID to the user's paymentIds array
-    });
+      const userDocRef = doc(db, "users", userDoc.userId);
+      await updateDoc(userDocRef, {
+        paymentIds: arrayUnion(paymentDoc.id), // Add the new payment ID to the user's paymentIds array
+      });
 
       Alert.alert("Success", "Payment details saved.");
       router.back();
@@ -74,8 +82,16 @@ export default function PaymentCreation() { // This component allows users to cr
 
       <LabelledInput label="Paid To:" value={paidTo} onChangeText={setPaidTo} />
       <LabelledInput label="Paid By:" value={paidBy} onChangeText={setPaidBy} />
-      <LabelledInput label="Subject:" value={subject} onChangeText={setSubject} />
-      <LabelledInput label="Date of Lesson:" value={date} onChangeText={setDate} />
+      <LabelledInput
+        label="Subject:"
+        value={subject}
+        onChangeText={setSubject}
+      />
+      <LabelledInput
+        label="Date of Lesson:"
+        value={date}
+        onChangeText={setDate}
+      />
 
       <Text style={styles.label}>Timing:</Text>
       <View style={styles.timingRow}>
@@ -115,7 +131,7 @@ export default function PaymentCreation() { // This component allows users to cr
       />
 
       {errorMsg !== "" && (
-        <Text style={{ color: 'red', textAlign: 'center', marginTop: 10 }}>
+        <Text style={{ color: "red", textAlign: "center", marginTop: 10 }}>
           {errorMsg}
         </Text>
       )}
@@ -145,14 +161,14 @@ const LabelledInput = ({
 const styles = StyleSheet.create({
   container: {
     padding: 20,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     paddingBottom: 40,
   },
   header: {
     fontSize: 24,
-    fontWeight: 'bold',
-    color: '#fff',
-    backgroundColor: '#2D6FA2',
+    fontWeight: "bold",
+    color: "#fff",
+    backgroundColor: "#2D6FA2",
     paddingVertical: 20,
     paddingHorizontal: 15,
     borderRadius: 5,
@@ -161,22 +177,22 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 16,
     marginVertical: 6,
-    color: '#153A7D',
+    color: "#153A7D",
   },
   input: {
-    backgroundColor: '#eee',
+    backgroundColor: "#eee",
     borderRadius: 20,
     padding: 12,
     fontSize: 16,
   },
   timingRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: 10,
   },
   timingBox: {
     flex: 1,
-    backgroundColor: '#eee',
+    backgroundColor: "#eee",
     borderRadius: 20,
     padding: 12,
     fontSize: 16,
@@ -184,18 +200,18 @@ const styles = StyleSheet.create({
   dash: {
     marginHorizontal: 10,
     fontSize: 18,
-    color: '#2D6FA2',
+    color: "#2D6FA2",
   },
   sendButton: {
     marginTop: 65,
-    backgroundColor: '#4DA8FF',
+    backgroundColor: "#4DA8FF",
     paddingVertical: 15,
     borderRadius: 10,
-    alignItems: 'center',
+    alignItems: "center",
   },
   sendButtonText: {
-    fontWeight: 'bold',
+    fontWeight: "bold",
     fontSize: 18,
-    color: '#153A7D',
+    color: "#153A7D",
   },
 });

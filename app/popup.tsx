@@ -36,7 +36,7 @@ export default function PaymentPopup({
 
       <View style={styles.detailRow}>
         <Image
-          source={require("../assets/images/calender.png")}
+          source={require("../assets/images/calendar.png")}
           style={styles.avatar}
         />
         <Text style={styles.detailText}>Tuesday [6pm - 8pm] - MATH</Text>

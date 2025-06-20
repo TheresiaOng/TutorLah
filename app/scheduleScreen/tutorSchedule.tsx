@@ -1,17 +1,13 @@
-import { useAuth } from "@/contexts/authContext";
+import { useAuth } from "@/contexts/AuthProvider";
 import { db } from "@/firebase";
-import {
-    doc,
-    getDoc,
-    onSnapshot
-} from "firebase/firestore";
+import { doc, getDoc, onSnapshot } from "firebase/firestore";
 import React, { useEffect, useState } from "react";
 import {
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 
 type Lesson = {
@@ -23,20 +19,21 @@ type Lesson = {
   endTime: string;
 };
 
-export default function TutorScheduleScreen() { 
+export default function TuteeSchedule() {
   const { userDoc } = useAuth();
   const [lessons, setLessons] = useState<Lesson[]>([]);
 
   useEffect(() => {
     if (!userDoc?.userId) return; // Ensure userDoc is available before proceeding
 
-    const userRef = doc(db, "users", userDoc.userId); 
+    const userRef = doc(db, "users", userDoc.userId);
 
-    const unsubscribe = onSnapshot(userRef, async (snapshot) => { //
-      const userData = snapshot.data(); 
-      const ids = userData?.paymentIds || []; 
+    const unsubscribe = onSnapshot(userRef, async (snapshot) => {
+      //
+      const userData = snapshot.data();
+      const ids = userData?.paymentIds || [];
 
-      interface PaymentData { 
+      interface PaymentData {
         isPaid: boolean;
         paidBy: string;
         subject: string;
@@ -45,13 +42,14 @@ export default function TutorScheduleScreen() {
         endTime: string;
       }
 
-      const paymentPromises = ids.map(async (id: string) => {  
-        const paymentDoc = await getDoc(doc(db, "payments", id)); 
+      const paymentPromises = ids.map(async (id: string) => {
+        const paymentDoc = await getDoc(doc(db, "payments", id));
         if (!paymentDoc.exists()) return null; // If the payment document does not exist, return null
         // Extract payment data and check if it is paid
-        const paymentData = paymentDoc.data() as PaymentData | undefined; 
+        const paymentData = paymentDoc.data() as PaymentData | undefined;
 
-        if (paymentData?.isPaid) { // If the payment is marked as paid, return the lesson details
+        if (paymentData?.isPaid) {
+          // If the payment is marked as paid, return the lesson details
           return {
             id: paymentDoc.id,
             paidBy: paymentData.paidBy,
@@ -74,41 +72,49 @@ export default function TutorScheduleScreen() {
   }, [userDoc]);
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.header}>Schedule</Text>
+    <View className="flex-1 bg-white justify-center items-center">
+      {/* Header */}
+      <View className="border-8 border-primaryBlue bg-primaryBlue w-full h-1/6">
+        <Text className="text-4xl flex-wrap inset-y-14 ml-6 text-white font-asap-bold">
+          Schedule
+        </Text>
+      </View>
+      <ScrollView contentContainerStyle={styles.container}>
+        {lessons.length === 0 ? (
+          <Text style={styles.noLessonsText}>No meetings scheduled.</Text>
+        ) : (
+          lessons.map((lesson) => (
+            <View style={styles.card} key={lesson.id}>
+              <Text style={styles.name}>{lesson.paidBy}</Text>
+              <View style={styles.divider} />
 
-      {lessons.length === 0 ? (
-        <Text style={styles.noLessonsText}>No meetings scheduled.</Text>
-      ) : (
-        lessons.map((lesson) => (
-          <View style={styles.card} key={lesson.id}>
-            <Text style={styles.name}>{lesson.paidBy}</Text>
-            <View style={styles.divider} />
+              <View style={styles.Row}>
+                <Text style={styles.label}>Subjects</Text>
+                <Text style={styles.value}>: {lesson.subject}</Text>
+              </View>
 
-            <View style={styles.Row}>
-              <Text style={styles.label}>Subjects</Text>
-              <Text style={styles.value}>: {lesson.subject}</Text>
+              <View style={styles.Row}>
+                <Text style={styles.label}>Timing</Text>
+                <Text style={styles.value}>
+                  : {lesson.startTime} – {lesson.endTime}
+                </Text>
+              </View>
+
+              <TouchableOpacity style={styles.joinButton}>
+                <Text style={styles.joinText}>Join Class</Text>
+              </TouchableOpacity>
             </View>
-
-            <View style={styles.Row}>
-              <Text style={styles.label}>Timing</Text>
-              <Text style={styles.value}>: {lesson.startTime} – {lesson.endTime}</Text>
-            </View>
-
-            <TouchableOpacity style={styles.joinButton}>
-              <Text style={styles.joinText}>Join Class</Text>
-            </TouchableOpacity>
-          </View>
-        ))
-      )}
-    </ScrollView>
+          ))
+        )}
+      </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     paddingVertical: 20,
-    alignItems: "center", 
+    alignItems: "center",
     backgroundColor: "#fff",
   },
   header: {
@@ -128,7 +134,7 @@ const styles = StyleSheet.create({
     marginTop: 40,
   },
   card: {
-    backgroundColor: "#EAF3FB", 
+    backgroundColor: "#EAF3FB",
     borderRadius: 15,
     padding: 20,
     width: "85%",
@@ -157,11 +163,11 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 16,
     fontWeight: "bold",
-    color: "#153A7D", 
+    color: "#153A7D",
   },
   value: {
     fontSize: 16,
-    color: "#153A7D", 
+    color: "#153A7D",
   },
   joinButton: {
     marginTop: 20,

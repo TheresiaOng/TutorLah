@@ -67,6 +67,22 @@ const Footer = () => {
     }
   };
 
+  const handleCalendar = () => {
+    if (
+      !isOwnProfile ||
+      (pathname !== "/scheduleScreen/tuteeSchedule" &&
+        pathname !== "/scheduleScreen/tutorSchedule")
+    ) {
+      const profilePath =
+        userDoc.role === "tutor"
+          ? "/scheduleScreen/tutorSchedule"
+          : "/scheduleScreen/tuteeSchedule";
+      router.push({
+        pathname: profilePath,
+      });
+    }
+  };
+
   const handleProfile = () => {
     if (
       !isOwnProfile ||
@@ -128,6 +144,18 @@ const Footer = () => {
             source={require("../assets/images/plus.png")}
             className={`h-14 w-14 rounded-full p-3 ${
               pathname === "/createListingScreen/createListing"
+                ? currentDoc?.role === "tutor"
+                  ? "bg-darkPrimaryBlue"
+                  : "bg-darkPrimaryOrange"
+                : ""
+            }`}
+          />
+        </TouchableOpacity>
+        <TouchableOpacity onPress={handleCalendar}>
+          <Image
+            source={require("../assets/images/calendar.png")}
+            className={`h-14 w-14 rounded-full p-3 ${
+              pathname.startsWith("/scheduleScreen")
                 ? currentDoc?.role === "tutor"
                   ? "bg-darkPrimaryBlue"
                   : "bg-darkPrimaryOrange"
