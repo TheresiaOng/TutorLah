@@ -1,8 +1,10 @@
 import { useAuth } from "@/contexts/AuthProvider";
 import { db } from "@/firebase";
+import { router } from "expo-router";
 import { doc, getDoc, onSnapshot } from "firebase/firestore";
 import React, { useEffect, useState } from "react";
 import {
+  Image,
   ScrollView,
   StyleSheet,
   Text,
@@ -74,10 +76,20 @@ export default function TuteeSchedule() {
   return (
     <View className="flex-1 bg-white justify-center items-center">
       {/* Header */}
-      <View className="border-8 border-primaryBlue bg-primaryBlue w-full h-1/6">
-        <Text className="text-4xl flex-wrap inset-y-14 ml-6 text-white font-asap-bold">
-          Schedule
-        </Text>
+      <View className="border-8 w-full justify-center items-center h-1/6 border-primaryBlue bg-primaryBlue">
+        <View className="flex-row w-11/12 items-center inset-y-6">
+          <TouchableOpacity
+            onPress={() => router.back()}
+            className="items-center h-full justify-center mr-2"
+          >
+            <Image
+              className="w-10"
+              resizeMode="contain"
+              source={require("../../assets/images/arrowBack.png")}
+            />
+          </TouchableOpacity>
+          <Text className="font-asap-bold text-3xl text-white">Schedule</Text>
+        </View>
       </View>
       <ScrollView contentContainerStyle={styles.container}>
         {lessons.length === 0 ? (
