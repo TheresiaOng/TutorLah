@@ -182,6 +182,6 @@ const styles = StyleSheet.create({
   joinText: {
     fontWeight: "bold",
     fontSize: 18,
-    color: "#14317A",
+    color: "#14317A", 
   },
 });

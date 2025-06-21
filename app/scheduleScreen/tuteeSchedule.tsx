@@ -171,11 +171,11 @@ const styles = StyleSheet.create({
   value: {
     fontSize: 15,
     fontWeight: "bold",
-    color: "#8B402E",
+    color: "#8B402E", 
   },
   joinButton: {
     marginTop: 20,
-    backgroundColor: "#FFAF2F",
+    backgroundColor: "#FFD256",
     paddingVertical: 10,
     paddingHorizontal: 12,
     borderRadius: 12,
@@ -184,6 +184,6 @@ const styles = StyleSheet.create({
   joinText: {
     fontWeight: "bold",
     fontSize: 18,
-    color: "#8B402E",
+    color: "#8B402E", 
   },
 });
