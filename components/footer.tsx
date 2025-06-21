@@ -73,12 +73,12 @@ const Footer = () => {
       (pathname !== "/scheduleScreen/tuteeSchedule" &&
         pathname !== "/scheduleScreen/tutorSchedule")
     ) {
-      const profilePath =
+      const schedulePath =
         userDoc.role === "tutor"
           ? "/scheduleScreen/tutorSchedule"
           : "/scheduleScreen/tuteeSchedule";
       router.push({
-        pathname: profilePath,
+        pathname: schedulePath,
       });
     }
   };
