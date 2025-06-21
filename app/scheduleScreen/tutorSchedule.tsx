@@ -22,7 +22,7 @@ type Lesson = {
   isPaid?: boolean;
 };
 
-export default function TuteeSchedule() {
+export default function TutorSchedule() {
   const { userDoc } = useAuth();
   const [lessons, setLessons] = useState<Lesson[]>([]); // State to hold the lessons
 
