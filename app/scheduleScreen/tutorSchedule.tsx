@@ -19,39 +19,30 @@ type Lesson = {
   date: string;
   startTime: string;
   endTime: string;
+  isPaid?: boolean;
 };
 
 export default function TuteeSchedule() {
   const { userDoc } = useAuth();
-  const [lessons, setLessons] = useState<Lesson[]>([]);
+  const [lessons, setLessons] = useState<Lesson[]>([]); // State to hold the lessons
 
   useEffect(() => {
-    if (!userDoc?.userId) return; // Ensure userDoc is available before proceeding
+    if (!userDoc?.userId) return; // Ensure userDoc is available
 
-    const userRef = doc(db, "users", userDoc.userId);
+    const userRef = doc(db, "users", userDoc.userId); // Reference to the user document
 
     const unsubscribe = onSnapshot(userRef, async (snapshot) => {
-      //
       const userData = snapshot.data();
       const ids = userData?.paymentIds || [];
 
-      interface PaymentData {
-        isPaid: boolean;
-        paidBy: string;
-        subject: string;
-        date: string;
-        startTime: string;
-        endTime: string;
-      }
-
       const paymentPromises = ids.map(async (id: string) => {
-        const paymentDoc = await getDoc(doc(db, "payments", id));
-        if (!paymentDoc.exists()) return null; // If the payment document does not exist, return null
-        // Extract payment data and check if it is paid
-        const paymentData = paymentDoc.data() as PaymentData | undefined;
+        const paymentDoc = await getDoc(doc(db, "payments", id)); // Reference to the payment document
+        if (!paymentDoc.exists()) return null; // Check if the payment document exists
+
+        const paymentData = paymentDoc.data() as Lesson | undefined;
+        console.log("paymentData", paymentData); // Log the payment data
 
         if (paymentData?.isPaid) {
-          // If the payment is marked as paid, return the lesson details
           return {
             id: paymentDoc.id,
             paidBy: paymentData.paidBy,
@@ -60,13 +51,11 @@ export default function TuteeSchedule() {
             startTime: paymentData.startTime,
             endTime: paymentData.endTime,
           };
-        } else {
-          return null;
         }
+        return null;
       });
 
-      const results = await Promise.all(paymentPromises); // Wait for all payment documents to be fetched and processed
-      // Filter out any null values from the results
+      const results = await Promise.all(paymentPromises); 
       setLessons(results.filter(Boolean) as Lesson[]);
     });
 
@@ -74,7 +63,7 @@ export default function TuteeSchedule() {
   }, [userDoc]);
 
   return (
-    <View className="flex-1 bg-white justify-center items-center">
+    <View className="flex-1 bg-white w-full">
       {/* Header */}
       <View className="border-8 w-full justify-center items-center h-1/6 border-primaryBlue bg-primaryBlue">
         <View className="flex-row w-11/12 items-center inset-y-6">
@@ -88,10 +77,11 @@ export default function TuteeSchedule() {
               source={require("../../assets/images/arrowBack.png")}
             />
           </TouchableOpacity>
-          <Text className="font-asap-bold text-3xl text-white">Schedule</Text>
+          <Text className="font-asap-bold text-3xl text-white">Schedules</Text>
         </View>
       </View>
-      <ScrollView contentContainerStyle={styles.container}>
+
+      <ScrollView contentContainerStyle={styles.container} className="w-full">
         {lessons.length === 0 ? (
           <Text style={styles.noLessonsText}>No meetings scheduled.</Text>
         ) : (
@@ -100,15 +90,20 @@ export default function TuteeSchedule() {
               <Text style={styles.name}>{lesson.paidBy}</Text>
               <View style={styles.divider} />
 
-              <View style={styles.Row}>
-                <Text style={styles.label}>Subjects</Text>
-                <Text style={styles.value}>: {lesson.subject}</Text>
+              <View style={styles.detail}>
+                <Text style={styles.label}>Subject:</Text>
+                <Text style={styles.value}>{lesson.subject}</Text>
               </View>
 
-              <View style={styles.Row}>
-                <Text style={styles.label}>Timing</Text>
+              <View style={styles.detail}>
+                <Text style={styles.label}>Date:</Text>
+                <Text style={styles.value}>{lesson.date}</Text>
+              </View>
+
+              <View style={styles.detail}>
+                <Text style={styles.label}>Timing:</Text>
                 <Text style={styles.value}>
-                  : {lesson.startTime} – {lesson.endTime}
+                  {lesson.startTime} - {lesson.endTime}
                 </Text>
               </View>
 
@@ -129,28 +124,19 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: "#fff",
   },
-  header: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#fff",
-    backgroundColor: "#2D6FA2",
-    paddingVertical: 20,
-    paddingHorizontal: 25,
-    borderRadius: 5,
-    marginBottom: 30,
-  },
   noLessonsText: {
     textAlign: "center",
     fontSize: 18,
-    color: "#999",
+    color: "#999", 
     marginTop: 40,
   },
   card: {
-    backgroundColor: "#EAF3FB",
+    backgroundColor: "#D8ECFF", 
     borderRadius: 15,
     padding: 20,
-    width: "85%",
+    width: "90%",
     marginBottom: 30,
+    alignSelf: "center",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -160,37 +146,42 @@ const styles = StyleSheet.create({
   name: {
     fontSize: 18,
     fontWeight: "bold",
-    color: "#153A7D",
+    color: "#14317A", 
   },
   divider: {
     borderBottomWidth: 2,
-    borderBottomColor: "#153A7D", //
+    borderBottomColor: "#14317A",
     marginVertical: 10,
   },
-  Row: {
+  detail: {
+    marginBottom: 12,
     flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 8,
+    alignItems: "center",
+    width: "100%",
   },
   label: {
     fontSize: 16,
     fontWeight: "bold",
-    color: "#153A7D",
+    color: "#14317A",
+    marginRight: 20,
+    width: 90,
   },
   value: {
-    fontSize: 16,
-    color: "#153A7D",
+    fontSize: 15,
+    fontWeight: "bold",
+    color: "#14317A",
   },
   joinButton: {
     marginTop: 20,
     backgroundColor: "#4DA8FF",
-    paddingVertical: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
     borderRadius: 12,
     alignItems: "center",
   },
   joinText: {
     fontWeight: "bold",
     fontSize: 18,
-    color: "#fff",
+    color: "#14317A",
   },
 });
