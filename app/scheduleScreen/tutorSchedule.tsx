@@ -1,7 +1,7 @@
 import { useAuth } from "@/contexts/AuthProvider";
 import { db } from "@/firebase";
 import { router } from "expo-router";
-import { doc, getDoc, onSnapshot } from "firebase/firestore";
+import { doc, onSnapshot } from "firebase/firestore";
 import React, { useEffect, useState } from "react";
 import {
   Image,
@@ -27,36 +27,51 @@ export default function TutorSchedule() {
   const [lessons, setLessons] = useState<Lesson[]>([]); // State to hold the lessons
 
   useEffect(() => {
-    if (!userDoc?.userId) return; // Ensure userDoc is available
+    if (!userDoc?.userId) return;
 
-    const userRef = doc(db, "users", userDoc.userId); // Reference to the user document
+    const userRef = doc(db, "users", userDoc.userId);
 
-    const unsubscribe = onSnapshot(userRef, async (snapshot) => {
-      const userData = snapshot.data();
+    // Listen to changes in the user's document to get paymentIds
+    const unsubscribe = onSnapshot(userRef, (userSnap) => {
+      const userData = userSnap.data();
       const ids = userData?.paymentIds || [];
+      // Clear old payment listeners
+      const unsubscribers: (() => void)[] = [];
+      // Listen to each payment document
+      ids.forEach((id: string) => {
+        const paymentRef = doc(db, "payments", id); 
 
-      const paymentPromises = ids.map(async (id: string) => {
-        const paymentDoc = await getDoc(doc(db, "payments", id)); // Reference to the payment document
-        if (!paymentDoc.exists()) return null; // Check if the payment document exists
+        const unsubscribePayment = onSnapshot(paymentRef, (paymentSnap) => { // Listen to changes in each payment document
+          if (!paymentSnap.exists()) return; 
 
-        const paymentData = paymentDoc.data() as Lesson | undefined;
-        console.log("paymentData", paymentData); // Log the payment data
+          const data = paymentSnap.data(); // Get the payment data
+          if (!data) return;
 
-        if (paymentData?.isPaid) {
-          return {
-            id: paymentDoc.id,
-            paidBy: paymentData.paidBy,
-            subject: paymentData.subject,
-            date: paymentData.date,
-            startTime: paymentData.startTime,
-            endTime: paymentData.endTime,
-          };
-        }
-        return null;
+          setLessons((prevLessons) => {
+            const filtered = prevLessons.filter((l) => l.id !== id); // Remove old lesson if it exists
+            // Only add if the payment is marked as paid
+            if (data.isPaid) {
+              return [
+                ...filtered, // Add the new lesson
+                {
+                  id,
+                  paidBy: data.paidBy,
+                  subject: data.subject,
+                  date: data.date,
+                  startTime: data.startTime,
+                  endTime: data.endTime,
+                },
+              ];
+            }
+            return filtered; // Remove if not paid
+          });
+        });
+        unsubscribers.push(unsubscribePayment); 
       });
 
-      const results = await Promise.all(paymentPromises);
-      setLessons(results.filter(Boolean) as Lesson[]);
+      return () => {
+        unsubscribers.forEach((unsub) => unsub());
+      };
     });
 
     return () => unsubscribe();
