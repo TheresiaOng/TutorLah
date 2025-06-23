@@ -15,7 +15,7 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  View
+  View,
 } from "react-native";
 
 export default function CreateReview() {
@@ -59,28 +59,42 @@ export default function CreateReview() {
   return (
     <View style={styles.page}>
       {/* Header */}
-      <View style={styles.headerContainer}>
-        <Text style={styles.header}>Create Reviews</Text>
+      <View className="border-8 w-full items-center h-1/6 border-primaryOrange bg-primaryOrange">
         {/* Cancel Button */}
-        <TouchableOpacity
-          style={styles.cancelButton}
-          onPress={() => router.back()}
-          activeOpacity={0.7}
-        >
-          <Image
-            source={require("../assets/images/cancel.png")}
-            style={[styles.cancelIcon, { marginBottom: 10 }]}
-            resizeMode="contain"
-          />
-        </TouchableOpacity>
+
+        <View className="flex-row w-11/12 items-center justify-start inset-y-6">
+          <TouchableOpacity
+            className="items-center h-full justify-center mt-3 mr-2"
+            onPress={() => router.back()}
+            activeOpacity={0.7}
+          >
+            <Image
+              source={require("../assets/images/cancel.png")}
+              className="w-10"
+              resizeMode="contain"
+            />
+          </TouchableOpacity>
+          <Text style={styles.header}>Create Review</Text>
+        </View>
       </View>
 
-      <ScrollView contentContainerStyle={styles.container} style={styles.scrollView}>
+      <ScrollView
+        contentContainerStyle={styles.container}
+        style={styles.scrollView}
+      >
         <Text style={styles.label}>Tutor Name</Text>
-        <TextInput style={styles.input} value={paidTo as string} editable={false} />
+        <TextInput
+          style={styles.input}
+          value={paidTo as string}
+          editable={false}
+        />
 
         <Text style={styles.label}>Your Name</Text>
-        <TextInput style={styles.input} value={paidBy as string} editable={false} />
+        <TextInput
+          style={styles.input}
+          value={paidBy as string}
+          editable={false}
+        />
 
         <Text style={styles.label}>Leave Review</Text>
         <TextInput
@@ -91,13 +105,11 @@ export default function CreateReview() {
           onChangeText={setReviewText}
           placeholder="Type your feedback here..."
         />
-
-        <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
-          <Text style={styles.submitText}>Submit</Text>
-        </TouchableOpacity>
       </ScrollView>
+      <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
+        <Text style={styles.submitText}>Post</Text>
+      </TouchableOpacity>
     </View>
-    
   );
 }
 
@@ -110,39 +122,17 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#fff",
   },
-  headerContainer: {
-    backgroundColor: "#FFAF2F",
-    width: "100%",
-    paddingVertical: 40,
-    paddingHorizontal: 24, 
-    justifyContent: "center",
-    position: "relative",
-  },
   header: {
     fontSize: 28,
     fontWeight: "bold",
     color: "#8B402E",
-    textAlign: "left", 
+    textAlign: "left",
     marginTop: 10,
   },
-  cancelButton: {
-    position: "absolute",
-    right: 24,
-    top: 40,
-    width: 35,      
-    height: 35,
-    zIndex: 1,
-    padding: 5,
-  },
-  cancelIcon: {
-    width: 28,
-    height: 28,
-    right: 24,
-    top: 40,
-  },
   container: {
-    padding: 24,
+    paddingHorizontal: 24,
     backgroundColor: "#fff",
+    marginTop: 12,
   },
   label: {
     fontSize: 16,
@@ -164,8 +154,9 @@ const styles = StyleSheet.create({
   submitButton: {
     backgroundColor: "#FFD256",
     borderRadius: 12,
-    paddingVertical: 12, 
-    marginTop: 200, 
+    paddingVertical: 12,
+    marginVertical: 20,
+    marginHorizontal: 24,
     alignItems: "center",
   },
   submitText: {

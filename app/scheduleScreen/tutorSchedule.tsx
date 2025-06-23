@@ -39,10 +39,11 @@ export default function TutorSchedule() {
       const unsubscribers: (() => void)[] = [];
       // Listen to each payment document
       ids.forEach((id: string) => {
-        const paymentRef = doc(db, "payments", id); 
+        const paymentRef = doc(db, "payments", id);
 
-        const unsubscribePayment = onSnapshot(paymentRef, (paymentSnap) => { // Listen to changes in each payment document
-          if (!paymentSnap.exists()) return; 
+        const unsubscribePayment = onSnapshot(paymentRef, (paymentSnap) => {
+          // Listen to changes in each payment document
+          if (!paymentSnap.exists()) return;
 
           const data = paymentSnap.data(); // Get the payment data
           if (!data) return;
@@ -66,7 +67,7 @@ export default function TutorSchedule() {
             return filtered; // Remove if not paid
           });
         });
-        unsubscribers.push(unsubscribePayment); 
+        unsubscribers.push(unsubscribePayment);
       });
 
       return () => {
@@ -84,7 +85,7 @@ export default function TutorSchedule() {
         <View className="flex-row w-11/12 items-center inset-y-6">
           <TouchableOpacity
             onPress={() => router.back()}
-            className="items-center h-full justify-center mr-2"
+            className="items-center h-full justify-center mt-1 mr-2"
           >
             <Image
               className="w-10"

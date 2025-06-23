@@ -38,10 +38,12 @@ export default function TuteeSchedule() {
       const ids = userData?.paymentIds || [];
 
       const unsubscribers: (() => void)[] = []; // Clear old payment listeners
-      ids.forEach((id: string) => { // Listen to each payment document
-        const paymentRef = doc(db, "payments", id); 
-        const unsubscribePayment = onSnapshot(paymentRef, (paymentSnap) => { // Listen to changes in each payment document
-          if (!paymentSnap.exists()) return; 
+      ids.forEach((id: string) => {
+        // Listen to each payment document
+        const paymentRef = doc(db, "payments", id);
+        const unsubscribePayment = onSnapshot(paymentRef, (paymentSnap) => {
+          // Listen to changes in each payment document
+          if (!paymentSnap.exists()) return;
 
           const data = paymentSnap.data();
           if (!data) return;
@@ -84,7 +86,7 @@ export default function TuteeSchedule() {
           <View className="flex-row items-center">
             <TouchableOpacity
               onPress={() => router.back()}
-              className="items-center h-full justify-center mr-2"
+              className="items-center h-full justify-center mt-1 mr-2"
             >
               <Image
                 className="w-10"
@@ -104,7 +106,9 @@ export default function TuteeSchedule() {
             }
             className="px-3 py-2 rounded bg-secondaryOrange"
           >
-            <Text className="text-darkBrown font-asap-bold text-xl">History</Text>
+            <Text className="text-darkBrown font-asap-bold text-xl">
+              History
+            </Text>
           </TouchableOpacity>
         </View>
       </View>
