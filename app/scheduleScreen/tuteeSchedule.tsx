@@ -89,6 +89,7 @@ export default function TuteeSchedule() {
               <Image
                 className="w-10"
                 resizeMode="contain"
+                style={{ marginTop: 11 }}
                 source={require("../../assets/images/arrowBack.png")}
               />
             </TouchableOpacity>
@@ -103,7 +104,7 @@ export default function TuteeSchedule() {
             }
             className="px-3 py-2 rounded bg-secondaryOrange"
           >
-            <Text className="text-red-600 font-asap-bold text-xl">History</Text>
+            <Text className="text-darkBrown font-asap-bold text-xl">History</Text>
           </TouchableOpacity>
         </View>
       </View>

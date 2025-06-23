@@ -90,10 +90,11 @@ export default function ScheduleHistory() {
               <Image
                 className="w-10"
                 resizeMode="contain"
+                style={{ marginTop: 11 }}
                 source={require("../../assets/images/arrowBack.png")}
               />
             </TouchableOpacity>
-            <Text className="font-asap-bold text-3xl text-white">History</Text>
+            <Text className="font-asap-bold text-3xl text-darkBrown">History</Text>
           </View>
         </View>
       </View>
@@ -101,7 +102,7 @@ export default function ScheduleHistory() {
       {/* Main Scroll Content */}
       <ScrollView contentContainerStyle={styles.container} className="w-full">
         {lessons.length === 0 ? (
-          <Text style={styles.noLessonsText}>No meetings scheduled.</Text>
+          <Text style={styles.noLessonsText}>No meeting history.</Text>
         ) : (
           lessons.map((lesson) => (
             <View style={styles.card} key={lesson.id}>
