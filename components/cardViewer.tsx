@@ -12,6 +12,7 @@ type Listing = {
 type Review = {
   tuteeName: string;
   reviewText: string;
+  ratings: number;
 };
 
 type CardViewerProps =

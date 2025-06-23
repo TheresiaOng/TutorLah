@@ -28,6 +28,7 @@ type Review = {
   id: string;
   tuteeName: string;
   reviewText: string;
+  ratings: number;
 };
 
 const TutorProfile = () => {
@@ -43,6 +44,8 @@ const TutorProfile = () => {
   const { client } = useChat();
 
   const userIdToView = otherUserId ?? userDoc?.userId;
+
+
 
   // Fetching currently viewed user's listings
   useEffect(() => {
@@ -131,6 +134,16 @@ const TutorProfile = () => {
     router.replace("/");
   };
   
+  const renderStars = (rating: number) => {
+  const filledStars = "★".repeat(rating);
+  const emptyStars = "☆".repeat(5 - rating);
+      return (
+        <Text className="color-primaryOrange font-asap-bold text-lg">
+          {filledStars + emptyStars}
+        </Text>
+      );
+    };
+    
   return (
     <View className="flex-1 bg-white justify-center items-center">
       {/* Header */}
@@ -214,6 +227,7 @@ const TutorProfile = () => {
                       <Text className="font-asap-semibold text-darkBlue">
                         {review.tuteeName}
                       </Text>
+                      {renderStars(review.ratings)}
                   <Text className="mt-2 font-asap-regular text-darkBlue">
                         "{review.reviewText}"
                       </Text>
