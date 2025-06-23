@@ -111,6 +111,7 @@ export default function PaymentCreation() {
       const paymentDoc = await addDoc(paymentRef, {
         paidTo: userDoc.name,
         paidBy: otherUserName,
+        tutorId: userDoc.userId,
         subject,
         date,
         startTime,
