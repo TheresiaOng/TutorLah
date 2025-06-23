@@ -20,7 +20,7 @@ const CustomButton = ({ title, onPress, role }: CustomButtonProps) => {
         onPress={onPress}
       >
         <Text
-          className={`font-asap-medium text-lg
+          className={`font-asap-bold text-lg
             ${role === "tutor" ? "text-darkBlue" : "text-darkBrown"}`}
         >
           {title}

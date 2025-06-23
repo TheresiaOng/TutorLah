@@ -144,6 +144,7 @@ const styles = StyleSheet.create({
   noLessonsText: {
     textAlign: "center",
     fontSize: 18,
+    fontFamily: "Asap-Regular",
     color: "#999",
     marginTop: 40,
   },
@@ -162,12 +163,12 @@ const styles = StyleSheet.create({
   },
   name: {
     fontSize: 18,
-    fontWeight: "bold",
+    fontFamily: "Asap-Bold",
     color: "#8B402E",
   },
   divider: {
     borderBottomWidth: 2,
-    borderBottomColor: "#FFAF2F",
+    borderBottomColor: "#FFD256",
     marginVertical: 10,
   },
   detail: {
@@ -178,14 +179,14 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 16,
-    fontWeight: "bold",
+    fontFamily: "Asap-Semibold",
     color: "#8B402E",
     marginRight: 20,
     width: 90,
   },
   value: {
     fontSize: 15,
-    fontWeight: "bold",
+    fontFamily: "Asap-Regular",
     color: "#8B402E",
   },
   joinButton: {
@@ -197,7 +198,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   joinText: {
-    fontWeight: "bold",
+    fontFamily: "Asap-Bold",
     fontSize: 18,
     color: "#8B402E",
   },
