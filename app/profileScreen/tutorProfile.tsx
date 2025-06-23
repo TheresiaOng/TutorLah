@@ -212,13 +212,11 @@ const TutorProfile = () => {
           {/* Reviews Section */}
           <View>
             <View className="flex-col border-primaryBlue border-t-2 pt-2 mx-4 mt-4">
-              <Text className="color-darkBlue text-2xl font-asap-bold">
-                Reviews
-              </Text>
-              <View className="flex-row gap-2">
-                <Text className="font-asap-semibold">{reviewList.length}</Text>
-              </View>
+              <View className="flex-row items-center gap-2">
+              <Text className="color-darkBlue text-2xl font-asap-bold">Reviews</Text>
+              <Text className="color-darkBlue text-2xl font-asap-bold">[{reviewList.length}]</Text>
             </View>
+          </View>
             <View className="items-center w-full px-4">
               {reviewList.length > 0 ? (
               reviewList.map((review) => (
