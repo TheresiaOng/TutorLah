@@ -1,6 +1,6 @@
 import TuteeCard from "@/app/homeScreen/tuteeCard";
 import TutorCard from "@/app/homeScreen/tutorCard";
-import ReviewCard from "@/app/reviewCard";
+import ReviewCard from "@/components/reviewCard";
 import React, { useState } from "react";
 import { Image, TouchableOpacity, View } from "react-native";
 

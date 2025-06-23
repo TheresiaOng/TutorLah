@@ -134,16 +134,6 @@ const TutorProfile = () => {
     router.replace("/");
   };
   
-  const renderStars = (rating: number) => {
-  const filledStars = "★".repeat(rating);
-  const emptyStars = "☆".repeat(5 - rating);
-      return (
-        <Text className="color-primaryOrange font-asap-bold text-lg">
-          {filledStars + emptyStars}
-        </Text>
-      );
-    };
-    
   return (
     <View className="flex-1 bg-white justify-center items-center">
       {/* Header */}
@@ -216,27 +206,15 @@ const TutorProfile = () => {
               <Text className="color-darkBlue text-2xl font-asap-bold">Reviews</Text>
               <Text className="color-darkBlue text-2xl font-asap-bold">[{reviewList.length}]</Text>
             </View>
-          </View>
-            <View className="items-center w-full px-4">
-              {reviewList.length > 0 ? (
-              reviewList.map((review) => (
-                  <BlueCard key={review.id} className="w-full my-2">
-                    <View>
-                      <Text className="font-asap-semibold text-darkBlue">
-                        {review.tuteeName}
-                      </Text>
-                      {renderStars(review.ratings)}
-                  <Text className="mt-2 font-asap-regular text-darkBlue">
-                        "{review.reviewText}"
-                      </Text>
-                </View>
-              </BlueCard>
-              ))
-              ) : (
-                <Text className="p-8 font-asap-regular text-darkGray">
-                  No reviews yet.
-                </Text>
-              )}
+          <View className="items-center w-full px-4 mb-4">
+                {reviewList.length > 0 ? (
+                  <CardViewer reviews={reviewList} />
+                ) : (
+                  <Text className="p-8 font-asap-regular text-darkGray">
+                    No reviews yet.
+                  </Text>
+                )}
+              </View>
             </View>
           </View>
 
