@@ -55,7 +55,7 @@ export default function TutorSchedule() {
         return null;
       });
 
-      const results = await Promise.all(paymentPromises); 
+      const results = await Promise.all(paymentPromises);
       setLessons(results.filter(Boolean) as Lesson[]);
     });
 
@@ -127,11 +127,11 @@ const styles = StyleSheet.create({
   noLessonsText: {
     textAlign: "center",
     fontSize: 18,
-    color: "#999", 
+    color: "#999",
     marginTop: 40,
   },
   card: {
-    backgroundColor: "#D8ECFF", 
+    backgroundColor: "#D8ECFF",
     borderRadius: 15,
     padding: 20,
     width: "90%",
@@ -145,12 +145,12 @@ const styles = StyleSheet.create({
   },
   name: {
     fontSize: 18,
-    fontWeight: "bold",
-    color: "#14317A", 
+    fontFamily: "Asap-Bold",
+    color: "#1A4F82",
   },
   divider: {
     borderBottomWidth: 2,
-    borderBottomColor: "#14317A",
+    borderBottomColor: "#59AEFF",
     marginVertical: 10,
   },
   detail: {
@@ -161,19 +161,19 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 16,
-    fontWeight: "bold",
-    color: "#14317A",
+    fontFamily: "Asap-Semibold",
+    color: "#1A4F82",
     marginRight: 20,
     width: 90,
   },
   value: {
     fontSize: 15,
-    fontWeight: "bold",
-    color: "#14317A",
+    fontFamily: "Asap-Regular",
+    color: "#1A4F82",
   },
   joinButton: {
     marginTop: 20,
-    backgroundColor: "#4DA8FF",
+    backgroundColor: "#59AEFF",
     paddingVertical: 10,
     paddingHorizontal: 12,
     borderRadius: 12,
@@ -182,6 +182,6 @@ const styles = StyleSheet.create({
   joinText: {
     fontWeight: "bold",
     fontSize: 18,
-    color: "#14317A", 
+    color: "#1A4F82",
   },
 });

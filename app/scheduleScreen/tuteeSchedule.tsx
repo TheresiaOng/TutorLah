@@ -57,7 +57,7 @@ export default function TuteeSchedule() {
         return null;
       });
 
-      const results = await Promise.all(paymentPromises); 
+      const results = await Promise.all(paymentPromises);
       setLessons(results.filter(Boolean) as Lesson[]);
     });
 
@@ -129,11 +129,12 @@ const styles = StyleSheet.create({
   noLessonsText: {
     textAlign: "center",
     fontSize: 18,
-    color: "#999", 
+    fontFamily: "Asap-Regular",
+    color: "#999",
     marginTop: 40,
   },
   card: {
-    backgroundColor: "#FFEFC3",  
+    backgroundColor: "#FFEFC3",
     borderRadius: 15,
     padding: 20,
     width: "90%",
@@ -147,12 +148,12 @@ const styles = StyleSheet.create({
   },
   name: {
     fontSize: 18,
-    fontWeight: "bold",
-    color: "#8B402E", 
+    fontFamily: "Asap-Bold",
+    color: "#8B402E",
   },
   divider: {
     borderBottomWidth: 2,
-    borderBottomColor: "#FFAF2F", 
+    borderBottomColor: "#FFD256",
     marginVertical: 10,
   },
   detail: {
@@ -163,15 +164,15 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 16,
-    fontWeight: "bold",
+    fontFamily: "Asap-Semibold",
     color: "#8B402E",
     marginRight: 20,
     width: 90,
   },
   value: {
     fontSize: 15,
-    fontWeight: "bold",
-    color: "#8B402E", 
+    fontFamily: "Asap-Regular",
+    color: "#8B402E",
   },
   joinButton: {
     marginTop: 20,
@@ -182,8 +183,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   joinText: {
-    fontWeight: "bold",
+    fontFamily: "Asap-Bold",
     fontSize: 18,
-    color: "#8B402E", 
+    color: "#8B402E",
   },
 });
