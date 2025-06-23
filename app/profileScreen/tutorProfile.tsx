@@ -24,15 +24,22 @@ type Listing = {
   role: "tutor" | "tutee";
 };
 
+type Review = {
+  id: string;
+  tuteeName: string;
+  reviewText: string;
+};
+
 const TutorProfile = () => {
   const [currentListings, setCurrentListings] = useState<Listing[]>([]);
   const [currentDoc, setCurrentDoc] = useState<DocumentData | null>(null);
+  const [reviewList, setReviewList] = useState<Review[]>([]);
   const { userDoc } = useAuth();
   const { id: viewingUserId } = useGlobalSearchParams();
   const otherUserId = Array.isArray(viewingUserId)
     ? viewingUserId[0]
     : viewingUserId;
-
+  
   const { client } = useChat();
 
   const userIdToView = otherUserId ?? userDoc?.userId;
@@ -83,6 +90,38 @@ const TutorProfile = () => {
     fetchProfileDoc();
   }, [viewingUserId, userDoc, userIdToView]);
 
+  useEffect(() => {
+    const fetchReviews = async () => {
+      if (!currentDoc?.reviewIds || currentDoc.reviewIds.length === 0) {
+        setReviewList([]);
+        return;
+      }
+
+      try {
+        const reviewPromises = currentDoc.reviewIds.map(
+          async (reviewId: string) => {
+            const reviewDoc = await getDoc(doc(db, "reviews", reviewId));
+            if (reviewDoc.exists()) {
+              return {
+                id: reviewDoc.id,
+                ...(reviewDoc.data() as Omit<Review, "id">),
+              };
+            }
+            return null;
+          }
+        );
+
+        const reviews = (await Promise.all(reviewPromises)).filter(
+          Boolean
+        ) as Review[];
+        setReviewList(reviews);
+      } catch (error) {
+        console.error("Error fetching reviews:", error);
+      }
+    };
+    fetchReviews();
+  }, [currentDoc]);
+
   const isOwnProfile = !viewingUserId || viewingUserId === userDoc?.userId;
 
   // if the user is not logged in, redirect to login page
@@ -91,7 +130,7 @@ const TutorProfile = () => {
     await client.disconnectUser();
     router.replace("/");
   };
-
+  
   return (
     <View className="flex-1 bg-white justify-center items-center">
       {/* Header */}
@@ -164,24 +203,28 @@ const TutorProfile = () => {
                 Reviews
               </Text>
               <View className="flex-row gap-2">
-                <Text className="font-asap-semibold">5</Text>
-                <Text className="text-xl -inset-y-1 color-primaryOrange">
-                  ★ ★ ★ ★ ★
-                </Text>
+                <Text className="font-asap-semibold">{reviewList.length}</Text>
               </View>
             </View>
-            <View className="items-center">
-              <BlueCard className="w-11/12">
-                <View>
-                  <Text className="font-asap-semibold text-darkBlue">
-                    Harry Potter
-                  </Text>
-                  <Text className="color-primaryOrange">★ ★ ★ ★ ★</Text>
+            <View className="items-center w-full px-4">
+              {reviewList.length > 0 ? (
+              reviewList.map((review) => (
+                  <BlueCard key={review.id} className="w-full my-2">
+                    <View>
+                      <Text className="font-asap-semibold text-darkBlue">
+                        {review.tuteeName}
+                      </Text>
                   <Text className="mt-2 font-asap-regular text-darkBlue">
-                    "Amazing teacher 😊🪄"
-                  </Text>
+                        "{review.reviewText}"
+                      </Text>
                 </View>
               </BlueCard>
+              ))
+              ) : (
+                <Text className="p-8 font-asap-regular text-darkGray">
+                  No reviews yet.
+                </Text>
+              )}
             </View>
           </View>
 
