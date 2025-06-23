@@ -9,12 +9,13 @@ import {
 } from "firebase/firestore";
 import React, { useState } from "react";
 import {
+  Image,
   ScrollView,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
-  View,
+  View
 } from "react-native";
 
 export default function CreateReview() {
@@ -59,6 +60,18 @@ export default function CreateReview() {
       {/* Header */}
       <View style={styles.headerContainer}>
         <Text style={styles.header}>Create Reviews</Text>
+        {/* Cancel Button */}
+        <TouchableOpacity
+          style={styles.cancelButton}
+          onPress={() => router.back()}
+          activeOpacity={0.7}
+        >
+          <Image
+            source={require("../assets/images/cancel.png")}
+            style={[styles.cancelIcon, { marginBottom: 10 }]}
+            resizeMode="contain"
+          />
+        </TouchableOpacity>
       </View>
 
       <ScrollView contentContainerStyle={styles.container} style={styles.scrollView}>
@@ -78,11 +91,12 @@ export default function CreateReview() {
           placeholder="Type your feedback here..."
         />
 
-        <TouchableOpacity style={styles.sendButton} onPress={handleSubmit}>
-          <Text style={styles.sendText}>Send</Text>
+        <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
+          <Text style={styles.submitText}>Submit</Text>
         </TouchableOpacity>
       </ScrollView>
     </View>
+    
   );
 }
 
@@ -101,6 +115,7 @@ const styles = StyleSheet.create({
     paddingVertical: 40,
     paddingHorizontal: 24, 
     justifyContent: "center",
+    position: "relative",
   },
   header: {
     fontSize: 28,
@@ -108,6 +123,21 @@ const styles = StyleSheet.create({
     color: "#8B402E",
     textAlign: "left", 
     marginTop: 10,
+  },
+  cancelButton: {
+    position: "absolute",
+    right: 24,
+    top: 40,
+    width: 35,      
+    height: 35,
+    zIndex: 1,
+    padding: 5,
+  },
+  cancelIcon: {
+    width: 28,
+    height: 28,
+    right: 24,
+    top: 40,
   },
   container: {
     padding: 24,
@@ -130,14 +160,14 @@ const styles = StyleSheet.create({
     height: 150,
     textAlignVertical: "top",
   },
-  sendButton: {
+  submitButton: {
     backgroundColor: "#FFD256",
     borderRadius: 12,
     paddingVertical: 12, 
     marginTop: 200, 
     alignItems: "center",
   },
-  sendText: {
+  submitText: {
     color: "#8B402E",
     fontSize: 18,
     fontWeight: "bold",
