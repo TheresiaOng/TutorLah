@@ -68,21 +68,33 @@ export default function TuteeSchedule() {
     <View className="flex-1 bg-white w-full">
       {/* Header */}
       <View className="border-8 w-full justify-center items-center h-1/6 border-primaryOrange bg-primaryOrange">
-        <View className="flex-row w-11/12 items-center inset-y-6">
+        <View className="flex-row w-11/12 items-center justify-between inset-y-6">
+          {/* Back Button + Title */}
+          <View className="flex-row items-center">
+            <TouchableOpacity
+              onPress={() => router.back()}
+              className="items-center h-full justify-center mr-2"
+            >
+              <Image
+                className="w-10"
+                resizeMode="contain"
+                source={require("../../assets/images/arrowBack.png")}
+              />
+            </TouchableOpacity>
+            <Text className="font-asap-bold text-3xl text-white">Schedules</Text>
+          </View>
+
+          {/* History Button */}
           <TouchableOpacity
-            onPress={() => router.back()}
-            className="items-center h-full justify-center mr-2"
+            onPress={() => router.push({ pathname: "/scheduleScreen/scheduleHistory" })} // Navigate to history screen 
+            className="px-3 py-2 rounded bg-secondaryOrange"
           >
-            <Image
-              className="w-10"
-              resizeMode="contain"
-              source={require("../../assets/images/arrowBack.png")}
-            />
+            <Text className="text-red-600 font-asap-bold text-base">History</Text>
           </TouchableOpacity>
-          <Text className="font-asap-bold text-3xl text-white">Schedules</Text>
         </View>
       </View>
 
+      {/* Main Scroll Content */}
       <ScrollView contentContainerStyle={styles.container} className="w-full">
         {lessons.length === 0 ? (
           <Text style={styles.noLessonsText}>No meetings scheduled.</Text>
