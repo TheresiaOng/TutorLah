@@ -31,6 +31,7 @@ export default function CreateReview() {
     try {
       const reviewDoc = await addDoc(collection(db, "reviews"), {
         reviewText: reviewText.trim(),
+        tuteeName: paidBy,
       });
 
       const userDocRef = doc(
