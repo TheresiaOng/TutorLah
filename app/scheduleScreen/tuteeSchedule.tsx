@@ -21,7 +21,7 @@ type Lesson = {
   startTime: string;
   endTime: string;
   isPaid?: boolean;
-  tutorID: string;
+  tutorId: string;
 };
 
 export default function TuteeSchedule() {
@@ -53,7 +53,7 @@ export default function TuteeSchedule() {
             date: paymentData.date,
             startTime: paymentData.startTime,
             endTime: paymentData.endTime,
-            tutorID: paymentData.tutorID,
+            tutorId: paymentData.tutorId,
           };
         }
         return null;
@@ -83,7 +83,7 @@ export default function TuteeSchedule() {
                 source={require("../../assets/images/arrowBack.png")}
               />
             </TouchableOpacity>
-            <Text className="font-asap-bold text-3xl text-white">Schedules</Text>
+            <Text className="font-asap-bold text-3xl text-darkBrown">Schedules</Text>
           </View>
 
           <TouchableOpacity

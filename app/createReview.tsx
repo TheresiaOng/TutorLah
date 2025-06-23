@@ -1,24 +1,24 @@
 import { db } from "@/firebase";
 import { router, useLocalSearchParams } from "expo-router";
 import {
-    addDoc,
-    arrayUnion,
-    collection,
-    doc,
-    updateDoc,
+  addDoc,
+  arrayUnion,
+  collection,
+  doc,
+  updateDoc,
 } from "firebase/firestore";
 import React, { useState } from "react";
 import {
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 
 export default function CreateReview() {
-  const { paidTo, paidBy, tutorID } = useLocalSearchParams();
+  const { paidTo, paidBy, tutorId } = useLocalSearchParams();
   const [reviewText, setReviewText] = useState("");
 
   const handleSubmit = async () => {
@@ -35,10 +35,10 @@ export default function CreateReview() {
       const userDocRef = doc(
         db,
         "users",
-        typeof tutorID === "string"
-          ? tutorID
-          : Array.isArray(tutorID)
-          ? tutorID[0]
+        typeof tutorId === "string"
+          ? tutorId
+          : Array.isArray(tutorId)
+          ? tutorId[0]
           : ""
       );
 

@@ -4,12 +4,12 @@ import { router } from "expo-router";
 import { doc, getDoc, onSnapshot } from "firebase/firestore";
 import React, { useEffect, useState } from "react";
 import {
-    Image,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  Image,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 
 type Lesson = {
@@ -21,10 +21,10 @@ type Lesson = {
   startTime: string;
   endTime: string;
   isPaid?: boolean;
-  tutorID: string; // Added tutorID to track the tutor
+  tutorId: string; // Added tutorID to track the tutor
 };
 
-export default function TuteeSchedule() {
+export default function ScheduleHistory() {
   const { userDoc } = useAuth();
   const [lessons, setLessons] = useState<Lesson[]>([]); // State to hold the lessons
 
@@ -53,7 +53,7 @@ export default function TuteeSchedule() {
             date: paymentData.date,
             startTime: paymentData.startTime,
             endTime: paymentData.endTime,
-            tutorID: paymentData.tutorID, 
+            tutorId: paymentData.tutorId, 
           };
         }
         return null;
@@ -123,7 +123,7 @@ export default function TuteeSchedule() {
            params: {
         paidTo: lesson.paidTo,
         paidBy: lesson.paidBy,
-        tutorID: lesson.tutorID,
+        tutorId: lesson.tutorId,
       },
     })
   }
