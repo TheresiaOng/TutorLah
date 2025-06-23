@@ -120,8 +120,8 @@ const HomeScreen = () => {
                 </View>
               );
             }}
-            className="mt-16"
-            ItemSeparatorComponent={() => <View className="h-6" />} // Adds vertical spacing
+            className="mt-16 mb-16"
+            ItemSeparatorComponent={() => <View className="h-4" />} // Adds vertical spacing
           />
         )}
       </View>
