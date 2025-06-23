@@ -1,7 +1,7 @@
 import { useAuth } from "@/contexts/AuthProvider";
 import { db } from "@/firebase";
 import { router } from "expo-router";
-import { doc, getDoc, onSnapshot } from "firebase/firestore";
+import { doc, onSnapshot } from "firebase/firestore";
 import React, { useEffect, useState } from "react";
 import {
   Image,
@@ -29,43 +29,53 @@ export default function ScheduleHistory() {
   const [lessons, setLessons] = useState<Lesson[]>([]); // State to hold the lessons
 
   useEffect(() => {
-    if (!userDoc?.userId) return; // Ensure userDoc is available
-
-    const userRef = doc(db, "users", userDoc.userId); // Reference to the user document
-
-    const unsubscribe = onSnapshot(userRef, async (snapshot) => {
-      const userData = snapshot.data();
-      const ids = userData?.paymentIds || [];
-
-      const paymentPromises = ids.map(async (id: string) => {
-        const paymentDoc = await getDoc(doc(db, "payments", id)); // Reference to the payment document
-        if (!paymentDoc.exists()) return null; // Check if the payment document exists
-
-        const paymentData = paymentDoc.data() as Lesson | undefined;
-        console.log("paymentData", paymentData); // Log the payment data
-
-        if (paymentData?.isPaid) {
-          return {
-            id: paymentDoc.id,
-            paidBy: paymentData.paidBy,
-            paidTo: paymentData.paidTo,
-            subject: paymentData.subject,
-            date: paymentData.date,
-            startTime: paymentData.startTime,
-            endTime: paymentData.endTime,
-            tutorId: paymentData.tutorId, 
-          };
-        }
-        return null;
+      if (!userDoc?.userId) return;
+  
+      const userRef = doc(db, "users", userDoc.userId);
+  
+      const unsubscribe = onSnapshot(userRef, (snapshot) => {
+        const userData = snapshot.data();
+        const ids = userData?.paymentIds || [];
+  
+        const unsubscribers: (() => void)[] = []; // Clear old payment listeners
+        ids.forEach((id: string) => { // Listen to each payment document
+          const paymentRef = doc(db, "payments", id); 
+          const unsubscribePayment = onSnapshot(paymentRef, (paymentSnap) => { // Listen to changes in each payment document
+            if (!paymentSnap.exists()) return; 
+  
+            const data = paymentSnap.data();
+            if (!data) return;
+            setLessons((prevLessons) => {
+              const filtered = prevLessons.filter((l) => l.id !== id); // Remove old lesson if it exists
+              // Only add if the payment is marked as paid
+  
+              if (data.isPaid) {
+                return [
+                  ...filtered, // Add the new lesson
+                  {
+                    id,
+                    paidBy: data.paidBy,
+                    paidTo: data.paidTo,
+                    subject: data.subject,
+                    date: data.date,
+                    startTime: data.startTime,
+                    endTime: data.endTime,
+                    tutorId: data.tutorId,
+                  },
+                ];
+              }
+              return filtered; // Remove if unpaid
+            });
+          });
+          unsubscribers.push(unsubscribePayment);
+        });
+        return () => {
+          unsubscribers.forEach((unsub) => unsub());
+        };
       });
-
-      const results = await Promise.all(paymentPromises); 
-      setLessons(results.filter(Boolean) as Lesson[]);
-    });
-
-    return () => unsubscribe();
-  }, [userDoc]);
-
+      return () => unsubscribe();
+    }, [userDoc]);
+  
   return (
     <View className="flex-1 bg-white w-full">
       {/* Header */}

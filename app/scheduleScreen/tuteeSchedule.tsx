@@ -1,7 +1,7 @@
 import { useAuth } from "@/contexts/AuthProvider";
 import { db } from "@/firebase";
 import { router } from "expo-router";
-import { doc, getDoc, onSnapshot } from "firebase/firestore";
+import { doc, onSnapshot } from "firebase/firestore";
 import React, { useEffect, useState } from "react";
 import {
   Image,
@@ -33,36 +33,46 @@ export default function TuteeSchedule() {
 
     const userRef = doc(db, "users", userDoc.userId);
 
-    const unsubscribe = onSnapshot(userRef, async (snapshot) => {
+    const unsubscribe = onSnapshot(userRef, (snapshot) => {
       const userData = snapshot.data();
       const ids = userData?.paymentIds || [];
 
-      const paymentPromises = ids.map(async (id: string) => {
-        const paymentDoc = await getDoc(doc(db, "payments", id));
-        if (!paymentDoc.exists()) return null;
+      const unsubscribers: (() => void)[] = []; // Clear old payment listeners
+      ids.forEach((id: string) => { // Listen to each payment document
+        const paymentRef = doc(db, "payments", id); 
+        const unsubscribePayment = onSnapshot(paymentRef, (paymentSnap) => { // Listen to changes in each payment document
+          if (!paymentSnap.exists()) return; 
 
-        const paymentData = paymentDoc.data() as Lesson | undefined;
-        console.log("paymentData", paymentData); // Log the payment data
+          const data = paymentSnap.data();
+          if (!data) return;
+          setLessons((prevLessons) => {
+            const filtered = prevLessons.filter((l) => l.id !== id); // Remove old lesson if it exists
+            // Only add if the payment is marked as paid
 
-        if (paymentData?.isPaid) {
-          return {
-            id: paymentDoc.id,
-            paidBy: paymentData.paidBy,
-            paidTo: paymentData.paidTo,
-            subject: paymentData.subject,
-            date: paymentData.date,
-            startTime: paymentData.startTime,
-            endTime: paymentData.endTime,
-            tutorId: paymentData.tutorId,
-          };
-        }
-        return null;
+            if (data.isPaid) {
+              return [
+                ...filtered, // Add the new lesson
+                {
+                  id,
+                  paidBy: data.paidBy,
+                  paidTo: data.paidTo,
+                  subject: data.subject,
+                  date: data.date,
+                  startTime: data.startTime,
+                  endTime: data.endTime,
+                  tutorId: data.tutorId,
+                },
+              ];
+            }
+            return filtered; // Remove if unpaid
+          });
+        });
+        unsubscribers.push(unsubscribePayment);
       });
-
-      const results = await Promise.all(paymentPromises);
-      setLessons(results.filter(Boolean) as Lesson[]);
+      return () => {
+        unsubscribers.forEach((unsub) => unsub());
+      };
     });
-
     return () => unsubscribe();
   }, [userDoc]);
 
@@ -71,7 +81,6 @@ export default function TuteeSchedule() {
       {/* Header */}
       <View className="border-8 w-full justify-center items-center h-1/6 border-primaryOrange bg-primaryOrange">
         <View className="flex-row w-11/12 items-center justify-between inset-y-6">
-          {/* Back Button + Title */}
           <View className="flex-row items-center">
             <TouchableOpacity
               onPress={() => router.back()}
@@ -83,7 +92,9 @@ export default function TuteeSchedule() {
                 source={require("../../assets/images/arrowBack.png")}
               />
             </TouchableOpacity>
-            <Text className="font-asap-bold text-3xl text-darkBrown">Schedules</Text>
+            <Text className="font-asap-bold text-3xl text-darkBrown">
+              Schedules
+            </Text>
           </View>
 
           <TouchableOpacity
@@ -97,7 +108,7 @@ export default function TuteeSchedule() {
         </View>
       </View>
 
-      {/* Main Scroll Content */}
+      {/* Main Content */}
       <ScrollView contentContainerStyle={styles.container} className="w-full">
         {lessons.length === 0 ? (
           <Text style={styles.noLessonsText}>No meetings scheduled.</Text>
