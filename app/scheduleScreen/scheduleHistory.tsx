@@ -4,12 +4,12 @@ import { router } from "expo-router";
 import { doc, getDoc, onSnapshot } from "firebase/firestore";
 import React, { useEffect, useState } from "react";
 import {
-  Image,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
+    Image,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from "react-native";
 
 type Lesson = {
@@ -21,25 +21,25 @@ type Lesson = {
   startTime: string;
   endTime: string;
   isPaid?: boolean;
-  tutorID: string;
+  tutorID: string; // Added tutorID to track the tutor
 };
 
 export default function TuteeSchedule() {
   const { userDoc } = useAuth();
-  const [lessons, setLessons] = useState<Lesson[]>([]);
+  const [lessons, setLessons] = useState<Lesson[]>([]); // State to hold the lessons
 
   useEffect(() => {
-    if (!userDoc?.userId) return;
+    if (!userDoc?.userId) return; // Ensure userDoc is available
 
-    const userRef = doc(db, "users", userDoc.userId);
+    const userRef = doc(db, "users", userDoc.userId); // Reference to the user document
 
     const unsubscribe = onSnapshot(userRef, async (snapshot) => {
       const userData = snapshot.data();
       const ids = userData?.paymentIds || [];
 
       const paymentPromises = ids.map(async (id: string) => {
-        const paymentDoc = await getDoc(doc(db, "payments", id));
-        if (!paymentDoc.exists()) return null;
+        const paymentDoc = await getDoc(doc(db, "payments", id)); // Reference to the payment document
+        if (!paymentDoc.exists()) return null; // Check if the payment document exists
 
         const paymentData = paymentDoc.data() as Lesson | undefined;
         console.log("paymentData", paymentData); // Log the payment data
@@ -53,13 +53,13 @@ export default function TuteeSchedule() {
             date: paymentData.date,
             startTime: paymentData.startTime,
             endTime: paymentData.endTime,
-            tutorID: paymentData.tutorID,
+            tutorID: paymentData.tutorID, 
           };
         }
         return null;
       });
 
-      const results = await Promise.all(paymentPromises);
+      const results = await Promise.all(paymentPromises); 
       setLessons(results.filter(Boolean) as Lesson[]);
     });
 
@@ -83,17 +83,8 @@ export default function TuteeSchedule() {
                 source={require("../../assets/images/arrowBack.png")}
               />
             </TouchableOpacity>
-            <Text className="font-asap-bold text-3xl text-white">Schedules</Text>
+            <Text className="font-asap-bold text-3xl text-white">History</Text>
           </View>
-
-          <TouchableOpacity
-            onPress={() =>
-              router.push({ pathname: "/scheduleScreen/scheduleHistory" })
-            }
-            className="px-3 py-2 rounded bg-secondaryOrange"
-          >
-            <Text className="text-red-600 font-asap-bold text-xl">History</Text>
-          </TouchableOpacity>
         </View>
       </View>
 
@@ -124,9 +115,21 @@ export default function TuteeSchedule() {
                 </Text>
               </View>
 
-              <TouchableOpacity style={styles.joinButton}>
-                <Text style={styles.joinText}>Join Class</Text>
-              </TouchableOpacity>
+            <TouchableOpacity
+         style={styles.leaveReviewButton}
+             onPress={() =>
+            router.push({
+              pathname: "/createReview", // Navigate to create review screen
+           params: {
+        paidTo: lesson.paidTo,
+        paidBy: lesson.paidBy,
+        tutorID: lesson.tutorID,
+      },
+    })
+  }
+>
+  <Text style={styles.leaveReviewText}>Leave Review</Text>
+</TouchableOpacity>
             </View>
           ))
         )}
@@ -144,12 +147,11 @@ const styles = StyleSheet.create({
   noLessonsText: {
     textAlign: "center",
     fontSize: 18,
-    fontFamily: "Asap-Regular",
-    color: "#999",
+    color: "#999", 
     marginTop: 40,
   },
   card: {
-    backgroundColor: "#FFEFC3",
+    backgroundColor: "#FFEFC3",  
     borderRadius: 15,
     padding: 20,
     width: "90%",
@@ -163,12 +165,12 @@ const styles = StyleSheet.create({
   },
   name: {
     fontSize: 18,
-    fontFamily: "Asap-Bold",
-    color: "#8B402E",
+    fontWeight: "bold",
+    color: "#8B402E", 
   },
   divider: {
     borderBottomWidth: 2,
-    borderBottomColor: "#FFD256",
+    borderBottomColor: "#FFAF2F", 
     marginVertical: 10,
   },
   detail: {
@@ -179,17 +181,17 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 16,
-    fontFamily: "Asap-Semibold",
+    fontWeight: "bold",
     color: "#8B402E",
     marginRight: 20,
     width: 90,
   },
   value: {
     fontSize: 15,
-    fontFamily: "Asap-Regular",
-    color: "#8B402E",
+    fontWeight: "bold",
+    color: "#8B402E", 
   },
-  joinButton: {
+  leaveReviewButton: {
     marginTop: 20,
     backgroundColor: "#FFD256",
     paddingVertical: 10,
@@ -197,9 +199,9 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     alignItems: "center",
   },
-  joinText: {
-    fontFamily: "Asap-Bold",
+  leaveReviewText: {
+    fontWeight: "bold",
     fontSize: 18,
-    color: "#8B402E",
+    color: "#8B402E", 
   },
 });
