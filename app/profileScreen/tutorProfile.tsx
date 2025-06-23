@@ -59,7 +59,7 @@ const TutorProfile = () => {
       {/* Header */}
       <View className="border-8 border-primaryBlue bg-primaryBlue w-full justify-center items-center h-1/4">
         {/* Profile pic and Name */}
-        <View className="flex-row w-11/12 items-center inset-y-9">
+        <View className="flex-row w-11/12 items-center inset-y-8">
           <TouchableOpacity
             onPress={() => router.back()}
             className="items-center justify-center mr-2"
@@ -77,16 +77,20 @@ const TutorProfile = () => {
               className="h-20 w-20 rounded-full mt-1 p-2"
             />
           </View>
-          <Text className="text-4xl w-3/5 pl-4 flex-wrap text-white font-asap-bold">
-            {currentDoc ? currentDoc.name : "User"}
+          <Text
+            numberOfLines={1}
+            ellipsizeMode="tail"
+            className="text-4xl w-3/5 pl-4 flex-wrap text-white font-asap-bold"
+          >
+            {currentDoc?.name || "User"}
           </Text>
         </View>
       </View>
 
       {/* Personal Info Card */}
       <View className="h-5/6 w-full items-center">
-        <ScrollView className="w-full px-4">
-          <View className="items-center">
+        <ScrollView className="w-full">
+          <View className="items-center w-full">
             <BlueCard className="mt-4">
               <View className="flex-row items-start">
                 <Text className="font-asap-semibold my-4 w-40 text-darkBlue">
@@ -116,15 +120,17 @@ const TutorProfile = () => {
           </View>
 
           {/* Reviews Section */}
-          <View className="flex-col border-primaryBlue border-t-2 pt-2 mx-2 mt-4">
-            <Text className="color-darkBlue text-2xl font-asap-bold">
-              Reviews
-            </Text>
-            <View className="flex-row gap-2">
-              <Text className="font-asap-semibold">5</Text>
-              <Text className="text-xl -inset-y-1 color-primaryOrange">
-                ★ ★ ★ ★ ★
+          <View>
+            <View className="flex-col border-primaryBlue border-t-2 pt-2 mx-4 mt-4">
+              <Text className="color-darkBlue text-2xl font-asap-bold">
+                Reviews
               </Text>
+              <View className="flex-row gap-2">
+                <Text className="font-asap-semibold">5</Text>
+                <Text className="text-xl -inset-y-1 color-primaryOrange">
+                  ★ ★ ★ ★ ★
+                </Text>
+              </View>
             </View>
             <View className="items-center">
               <BlueCard className="w-11/12">
@@ -142,7 +148,7 @@ const TutorProfile = () => {
           </View>
 
           {/* Listing Section */}
-          <View className="flex-col border-primaryBlue border-t-2 pt-2 mx-2 mt-4">
+          <View className="flex-col border-primaryBlue border-t-2 pt-2 mx-4 mt-4">
             <Text className="color-darkBlue text-2xl font-asap-bold">
               {isOwnProfile ? "Your Listing" : "Listing"}
             </Text>

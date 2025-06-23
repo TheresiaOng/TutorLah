@@ -153,7 +153,7 @@ const CreateListing = () => {
               <Image
                 className="w-10"
                 resizeMode="contain"
-                source={require("../../assets/images/arrowBack.png")}
+                source={require("../../assets/images/cancel.png")}
               />
             </TouchableOpacity>
             <Text

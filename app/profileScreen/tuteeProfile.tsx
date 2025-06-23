@@ -86,16 +86,20 @@ const TuteeProfile = () => {
               className="h-20 w-20 rounded-full mt-1 p-2"
             />
           </View>
-          <Text className="text-4xl w-3/5 pl-4 flex-wrap text-darkBrown font-asap-bold">
-            {currentDoc ? currentDoc.name : "User"}
+          <Text
+            numberOfLines={1}
+            ellipsizeMode="tail"
+            className="text-4xl w-3/5 pl-4 flex-wrap text-darkBrown font-asap-bold"
+          >
+            {currentDoc?.name || "User"}
           </Text>
         </View>
       </View>
 
       {/* Personal Info Card */}
       <View className="h-5/6 w-full items-center">
-        <ScrollView className="w-full px-4">
-          <View className="items-center">
+        <ScrollView className="w-full">
+          <View className="items-center w-full">
             <OrangeCard className="mt-4">
               <View className="flex-row items-start">
                 <Text className="font-asap-semibold my-4 w-40 text-darkBrown">
@@ -118,7 +122,7 @@ const TuteeProfile = () => {
 
           {/* Following Section */}
           {isOwnProfile && (
-            <View className="flex-col border-primaryOrange border-t-2 pt-2 mx-2 mt-4">
+            <View className="flex-col border-primaryOrange border-t-2 pt-2 mx-4 mt-4">
               <Text className="color-darkBrown text-2xl font-asap-bold">
                 Following
               </Text>
@@ -131,7 +135,7 @@ const TuteeProfile = () => {
           )}
 
           {/* Listing Section */}
-          <View className="flex-col border-primaryOrange border-t-2 pt-2 mx-2 mt-4">
+          <View className="flex-col border-primaryOrange border-t-2 pt-2 mx-4 mt-4">
             <Text className="color-darkBrown text-2xl font-asap-bold">
               {isOwnProfile ? "Your Listing" : "Listing"}
             </Text>
