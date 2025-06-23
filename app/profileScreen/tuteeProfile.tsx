@@ -1,3 +1,4 @@
+import CardViewer from "@/components/cardViewer";
 import CustomButton from "@/components/customButton";
 import OrangeCard from "@/components/orangeCard";
 import { useAuth } from "@/contexts/AuthProvider";
@@ -6,12 +7,25 @@ import Constants from "expo-constants";
 import { router } from "expo-router";
 import { useGlobalSearchParams } from "expo-router/build/hooks";
 import { signOut } from "firebase/auth";
-import { doc, getDoc } from "firebase/firestore";
+import {
+  collection,
+  doc,
+  getDoc,
+  onSnapshot,
+  query,
+  where,
+} from "firebase/firestore";
 import React, { useEffect, useState } from "react";
 import { Image, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { StreamChat } from "stream-chat";
 
+type Listing = {
+  listId: string;
+  role: "tutor" | "tutee";
+};
+
 const TuteeProfile = () => {
+  const [currentListings, setCurrentListings] = useState<Listing[]>([]);
   const [currentDoc, setCurrentDoc] = useState<any>(null);
   const { userDoc } = useAuth();
   const { id: viewingUserId } = useGlobalSearchParams();
@@ -29,9 +43,30 @@ const TuteeProfile = () => {
 
   const client = StreamChat.getInstance(getStreamApiKey());
 
+  const userIdToView = otherUserId ?? userDoc?.userId;
+
+  // Fetching currently viewed user's listings
+  useEffect(() => {
+    let listingsQuery = query(
+      collection(db, "listings"),
+      where("userId", "==", userIdToView) // Filter listings by the userId to view
+      // This will fetch listings only for the user whose profile is being viewed
+    );
+
+    const unsubscribe = onSnapshot(listingsQuery, (snapshot) => {
+      // each specific document in the collection
+      const fetchedListings: Listing[] = snapshot.docs.map((doc) => ({
+        listId: doc.id,
+        ...(doc.data() as Omit<Listing, "listId">),
+      }));
+      setCurrentListings(fetchedListings);
+    });
+
+    return () => unsubscribe(); // Cleanup listener on unmount
+  }, [viewingUserId, userDoc, userIdToView]);
+
   useEffect(() => {
     const fetchProfileDoc = async () => {
-      const userIdToView = otherUserId ?? userDoc?.userId;
       if (!userIdToView) return;
       if (userIdToView === userDoc?.userId) {
         setCurrentDoc(userDoc);
@@ -52,7 +87,7 @@ const TuteeProfile = () => {
     };
 
     fetchProfileDoc();
-  }, [viewingUserId, userDoc]);
+  }, [viewingUserId, userDoc, userIdToView]);
 
   const isOwnProfile = !viewingUserId || viewingUserId === userDoc?.userId;
 
@@ -98,7 +133,7 @@ const TuteeProfile = () => {
 
       {/* Personal Info Card */}
       <View className="h-5/6 w-full items-center">
-        <ScrollView className="w-full">
+        <ScrollView className="w-full mb-12">
           <View className="items-center w-full">
             <OrangeCard className="mt-4">
               <View className="flex-row items-start">
@@ -137,14 +172,18 @@ const TuteeProfile = () => {
           {/* Listing Section */}
           <View className="flex-col border-primaryOrange border-t-2 pt-2 mx-4 mt-4">
             <Text className="color-darkBrown text-2xl font-asap-bold">
-              {isOwnProfile ? "Your Listing" : "Listing"}
+              {isOwnProfile ? "Your Listings" : "Listings"}
             </Text>
-            <View className="items-center">
-              <Text className="p-8 font-asap-regular text-darkGray">
-                {isOwnProfile
-                  ? "You have no listing right now"
-                  : "No listing at the moment"}
-              </Text>
+            <View className="items-center mb-4">
+              {currentListings.length > 0 ? (
+                <CardViewer listings={currentListings} />
+              ) : (
+                <Text className="p-8 font-asap-regular text-darkGray">
+                  {isOwnProfile
+                    ? "You have no listing right now"
+                    : "No listing at the moment"}
+                </Text>
+              )}
             </View>
 
             {/* Logout Button */}
