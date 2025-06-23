@@ -27,33 +27,32 @@ type Lesson = {
 export default function ScheduleHistory() {
   const { userDoc } = useAuth();
   const [lessons, setLessons] = useState<Lesson[]>([]); // State to hold the lessons
+  const [reviewedIds, setReviewedIds] = useState<string[]>([]); // State to hold reviewed payment IDs
 
   useEffect(() => {
     if (!userDoc?.userId) return;
 
     const userRef = doc(db, "users", userDoc.userId);
 
-    const unsubscribe = onSnapshot(userRef, (snapshot) => {
+    const unsubReviewed = onSnapshot(userRef, (snapshot) => {
+      const data = snapshot.data();
+      setReviewedIds(data?.reviewedPaymentIds || []);
+    });
+
+    // Get lesson/payment data
+    const unsubUser = onSnapshot(userRef, (snapshot) => {
       const userData = snapshot.data();
       const ids = userData?.paymentIds || [];
-
-      const unsubscribers: (() => void)[] = []; // Clear old payment listeners
-      ids.forEach((id: string) => {
-        // Listen to each payment document
-        const paymentRef = doc(db, "payments", id);
-        const unsubscribePayment = onSnapshot(paymentRef, (paymentSnap) => {
-          // Listen to changes in each payment document
-          if (!paymentSnap.exists()) return;
-
-          const data = paymentSnap.data();
-          if (!data) return;
-          setLessons((prevLessons) => {
-            const filtered = prevLessons.filter((l) => l.id !== id); // Remove old lesson if it exists
-            // Only add if the payment is marked as paid
-
-            if (data.isPaid) {
+      const unsubscribers: (() => void)[] = [];
+      ids.forEach((id: string) => { // Listen to each payment document
+        const paymentRef = doc(db, "payments", id); 
+        const unsub = onSnapshot(paymentRef, (snap) => {
+          const data = snap.data();
+          if (snap.exists() && data?.isPaid) { // Only add if the payment is marked as paid
+            setLessons((prev) => {
+              const filtered = prev.filter((l) => l.id !== id); // Remove old lesson if it exists
               return [
-                ...filtered, // Add the new lesson
+                ...filtered, 
                 {
                   id,
                   paidBy: data.paidBy,
@@ -62,22 +61,21 @@ export default function ScheduleHistory() {
                   date: data.date,
                   startTime: data.startTime,
                   endTime: data.endTime,
-                  tutorId: data.tutorId,
+                  tutorId: data.tutorId, 
                 },
               ];
-            }
-            return filtered; // Remove if unpaid
-          });
+            });
+          }
         });
-        unsubscribers.push(unsubscribePayment);
+        unsubscribers.push(unsub); 
       });
-      return () => {
-        unsubscribers.forEach((unsub) => unsub());
-      };
+      return () => unsubscribers.forEach((u) => u()); 
     });
-    return () => unsubscribe();
+    return () => {
+      unsubReviewed();
+      unsubUser();
+    };
   }, [userDoc]);
-
   return (
     <View className="flex-1 bg-white w-full">
       {/* Header */}
@@ -123,13 +121,19 @@ export default function ScheduleHistory() {
                 <Text style={styles.value}>{lesson.date}</Text>
               </View>
 
-              <View style={styles.detail}>
+            <View style={styles.detail}>
                 <Text style={styles.label}>Timing:</Text>
                 <Text style={styles.value}>
                   {lesson.startTime} - {lesson.endTime}
                 </Text>
               </View>
-
+               {reviewedIds.includes(lesson.id) ? ( // Check if the lesson has been reviewed and if then button changes
+            <View style={[styles.leaveReviewButton, { backgroundColor: "#ccc" }]}> 
+         <Text style={[styles.leaveReviewText, { color: "#888" }]}> 
+               Review Submitted
+                </Text>
+           </View>
+              ) : (
               <TouchableOpacity
                 style={styles.leaveReviewButton}
                 onPress={() =>
@@ -139,12 +143,14 @@ export default function ScheduleHistory() {
                       paidTo: lesson.paidTo,
                       paidBy: lesson.paidBy,
                       tutorId: lesson.tutorId,
+                      paymentId: lesson.id, 
                     },
                   })
                 }
               >
                 <Text style={styles.leaveReviewText}>Leave Review</Text>
               </TouchableOpacity>
+            )}
             </View>
           ))
         )}

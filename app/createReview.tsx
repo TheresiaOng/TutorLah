@@ -1,3 +1,4 @@
+import { useAuth } from "@/contexts/AuthProvider";
 import { db } from "@/firebase";
 import { router, useLocalSearchParams } from "expo-router";
 import {
@@ -19,8 +20,9 @@ import {
 } from "react-native";
 
 export default function CreateReview() {
-  const { paidTo, paidBy, tutorId } = useLocalSearchParams();
+  const { paidTo, paidBy, tutorId, paymentId } = useLocalSearchParams();
   const [reviewText, setReviewText] = useState("");
+  const { userDoc } = useAuth();
 
   const handleSubmit = async () => {
     if (!reviewText.trim()) {
@@ -32,6 +34,7 @@ export default function CreateReview() {
       const reviewDoc = await addDoc(collection(db, "reviews"), {
         reviewText: reviewText.trim(),
         tuteeName: paidBy,
+        paymentId,
       });
 
       const userDocRef = doc(
@@ -45,7 +48,11 @@ export default function CreateReview() {
       );
 
       await updateDoc(userDocRef, {
-        reviewIds: arrayUnion(reviewDoc.id),
+        reviewIds: arrayUnion(reviewDoc.id), 
+      });
+
+      await updateDoc(doc(db, "users", userDoc.userId), {
+        reviewedPaymentIds: arrayUnion(paymentId), 
       });
 
       alert("Review submitted successfully!");
