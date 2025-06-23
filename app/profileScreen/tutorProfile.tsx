@@ -39,6 +39,8 @@ const TutorProfile = () => {
 
   // Fetching currently viewed user's listings
   useEffect(() => {
+    if (!userIdToView) return;
+
     let listingsQuery = query(
       collection(db, "listings"),
       where("userId", "==", userIdToView) // Filter listings by the userId to view
@@ -189,7 +191,7 @@ const TutorProfile = () => {
               {isOwnProfile ? "Your Listings" : "Listings"}
             </Text>
             <View className="items-center mb-4">
-              {currentListings.length > 0 ? (
+              {currentListings?.length > 0 ? (
                 <CardViewer listings={currentListings} />
               ) : (
                 <Text className="p-8 font-asap-regular text-darkGray">
