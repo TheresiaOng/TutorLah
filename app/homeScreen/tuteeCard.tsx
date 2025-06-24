@@ -52,7 +52,7 @@ const TuteeCard = ({ item }: cardProps) => {
       </TouchableOpacity>
       <View className="border-b border-secondaryOrange border-2 mt-2" />
       <View className="flex-row items-start">
-        <Text className="font-asap-regular my-4 w-40 text-darkBrown">
+        <Text className="font-asap-semibold my-4 w-40 text-darkBrown">
           Education Level
         </Text>
         <Text className="font-asap-regular my-4 flex-shrink text-darkBrown">
@@ -60,7 +60,7 @@ const TuteeCard = ({ item }: cardProps) => {
         </Text>
       </View>
       <View className="flex-row items-start">
-        <Text className="font-asap-regular my-4 w-40 text-darkBrown">
+        <Text className="font-asap-semibold my-4 w-40 text-darkBrown">
           Subjects Wanted
         </Text>
         <Text className="font-asap-regular flex-shrink my-4 text-darkBrown">
@@ -68,7 +68,7 @@ const TuteeCard = ({ item }: cardProps) => {
         </Text>
       </View>
       <View className="flex-row items-start">
-        <Text className="font-asap-regular my-4 w-40 text-darkBrown">
+        <Text className="font-asap-semibold my-4 w-40 text-darkBrown">
           Price Range
         </Text>
         <Text className="font-asap-regular my-4 flex-shrink text-darkBrown">

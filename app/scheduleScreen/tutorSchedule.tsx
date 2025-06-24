@@ -145,6 +145,7 @@ const styles = StyleSheet.create({
   },
   noLessonsText: {
     textAlign: "center",
+    fontFamily: "Asap-Regular",
     fontSize: 18,
     color: "#999",
     marginTop: 40,

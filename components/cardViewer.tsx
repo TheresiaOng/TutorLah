@@ -58,12 +58,12 @@ const CardViewer = ({ listings, reviews, following }: CardViewerProps) => {
             (listings[0].role === "tutor" ? (
               <TutorCard
                 item={listings[index]}
-                listId={listings[index].listId}
+                listId={listings[index]?.listId}
               />
             ) : (
               <TuteeCard
                 item={listings[index]}
-                listId={listings[index].listId}
+                listId={listings[index]?.listId}
               />
             ))}
           {reviews && <ReviewCard item={reviews?.[index]} />}

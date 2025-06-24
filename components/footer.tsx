@@ -127,11 +127,11 @@ const Footer = () => {
             }`}
           />
         </TouchableOpacity>
-        <TouchableOpacity onPress={handleChat}>
+        <TouchableOpacity onPress={handleCalendar}>
           <Image
-            source={require("../assets/images/chatBubble.png")}
+            source={require("../assets/images/calendar.png")}
             className={`h-14 w-14 rounded-full p-3 ${
-              pathname.startsWith("/chatScreen")
+              pathname.startsWith("/scheduleScreen")
                 ? currentDoc?.role === "tutor"
                   ? "bg-darkPrimaryBlue"
                   : "bg-darkPrimaryOrange"
@@ -151,11 +151,11 @@ const Footer = () => {
             }`}
           />
         </TouchableOpacity>
-        <TouchableOpacity onPress={handleCalendar}>
+        <TouchableOpacity onPress={handleChat}>
           <Image
-            source={require("../assets/images/calendar.png")}
+            source={require("../assets/images/chatBubble.png")}
             className={`h-14 w-14 rounded-full p-3 ${
-              pathname.startsWith("/scheduleScreen")
+              pathname.startsWith("/chatScreen")
                 ? currentDoc?.role === "tutor"
                   ? "bg-darkPrimaryBlue"
                   : "bg-darkPrimaryOrange"

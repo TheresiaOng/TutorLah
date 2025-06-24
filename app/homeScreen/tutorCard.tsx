@@ -52,7 +52,7 @@ const TutorCard = ({ item }: cardProps) => {
       </TouchableOpacity>
       <View className="border-b border-secondaryBlue border-2 mt-2" />
       <View className="flex-row items-start">
-        <Text className="font-asap-regular my-4 w-40 text-darkBlue">
+        <Text className="font-asap-semibold my-4 w-40 text-darkBlue">
           Education Level
         </Text>
         <Text className="font-asap-regular flex-shrink my-4 text-darkBlue">
@@ -60,7 +60,7 @@ const TutorCard = ({ item }: cardProps) => {
         </Text>
       </View>
       <View className="flex-row items-start">
-        <Text className="font-asap-regular my-4 w-40 text-darkBlue">
+        <Text className="font-asap-semibold my-4 w-40 text-darkBlue">
           Teaching Subjects
         </Text>
         <Text className="font-asap-regular flex-shrink my-4 text-darkBlue">
@@ -68,7 +68,9 @@ const TutorCard = ({ item }: cardProps) => {
         </Text>
       </View>
       <View className="flex-row items-start">
-        <Text className="font-asap-regular my-4 w-40 text-darkBlue">Price</Text>
+        <Text className="font-asap-semibold my-4 w-40 text-darkBlue">
+          Price
+        </Text>
         <Text className="font-asap-regular my-4 flex-shrink text-darkBlue">
           : S${item.price} /hr {item.negotiable == "yes" && "[Negotiable]"}
         </Text>
