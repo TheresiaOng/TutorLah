@@ -123,7 +123,10 @@ export default function TutorSchedule() {
                 </Text>
               </View>
 
-              <TouchableOpacity style={styles.joinButton}>
+              <TouchableOpacity
+                onPress={() => router.push("/comingSoon")}
+                style={styles.joinButton}
+              >
                 <Text style={styles.joinText}>Join Class</Text>
               </TouchableOpacity>
             </View>

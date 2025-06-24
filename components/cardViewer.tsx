@@ -1,8 +1,9 @@
 import TuteeCard from "@/app/homeScreen/tuteeCard";
 import TutorCard from "@/app/homeScreen/tutorCard";
 import ReviewCard from "@/components/reviewCard";
+import { router } from "expo-router";
 import React, { useState } from "react";
-import { Image, TouchableOpacity, View } from "react-native";
+import { Image, Text, TouchableOpacity, View } from "react-native";
 
 type Listing = {
   listId: string;
@@ -15,13 +16,20 @@ type Review = {
   ratings: number;
 };
 
-type CardViewerProps =
-  | { listings: Listing[]; reviews?: never }
-  | { reviews: Review[]; listings?: never };
+type Following = {
+  userId: string;
+  name: string;
+  role: "tutor" | "tutee";
+};
 
-const CardViewer = ({ listings, reviews }: CardViewerProps) => {
+type CardViewerProps =
+  | { listings: Listing[]; reviews?: never; following?: never }
+  | { reviews: Review[]; listings?: never; following?: never }
+  | { following: Following[]; listings?: never; reviews?: never };
+
+const CardViewer = ({ listings, reviews, following }: CardViewerProps) => {
   const [index, setIndex] = useState(0);
-  const data = listings ?? reviews ?? [];
+  const data = listings ?? reviews ?? following ?? [];
   const handleNext = () => {
     if (index < data.length - 1) setIndex(index + 1);
   };
@@ -31,7 +39,7 @@ const CardViewer = ({ listings, reviews }: CardViewerProps) => {
   };
 
   return (
-    <View className="flex-1 justify-center items-center px-4">
+    <View className="justify-center items-center px-4">
       <View className="flex-row mt-4 justify-between w-full">
         <TouchableOpacity
           className="justify-center items-center"
@@ -46,14 +54,37 @@ const CardViewer = ({ listings, reviews }: CardViewerProps) => {
         </TouchableOpacity>
 
         <View className="-mx-2 justify-center items-center">
-          {listings ? (
-            listings[0].role === "tutor" ? (
-              <TutorCard item={listings[index]} listId={listings[index].listId} />
+          {listings &&
+            (listings[0].role === "tutor" ? (
+              <TutorCard
+                item={listings[index]}
+                listId={listings[index].listId}
+              />
             ) : (
-              <TuteeCard item={listings[index]} listId={listings[index].listId} />
-            )
-          ) : (
-            <ReviewCard item={reviews![index]} />
+              <TuteeCard
+                item={listings[index]}
+                listId={listings[index].listId}
+              />
+            ))}
+          {reviews && <ReviewCard item={reviews?.[index]} />}
+          {following && following.length > 0 && following[index] && (
+            <View className="items-center">
+              <TouchableOpacity
+                onPress={() =>
+                  router.push({
+                    pathname:
+                      following[index].role === "tutor"
+                        ? "/profileScreen/tutorProfile"
+                        : "/profileScreen/tuteeProfile",
+                    params: { id: following[index].userId },
+                  })
+                }
+              >
+                <Text className="text-lg font-asap-bold text-darkBrown">
+                  {following[index].name}
+                </Text>
+              </TouchableOpacity>
+            </View>
           )}
         </View>
 

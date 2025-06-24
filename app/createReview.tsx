@@ -22,12 +22,12 @@ import {
 export default function CreateReview() {
   const { paidTo, paidBy, tutorId, paymentId } = useLocalSearchParams();
   const [reviewText, setReviewText] = useState("");
-  const [ratings, setRatings] = useState(""); 
+  const [ratings, setRatings] = useState("");
   const { userDoc } = useAuth();
 
   const handleSubmit = async () => {
-    if (!reviewText.trim()) {
-      alert("Please write a review before submitting.");
+    if (!reviewText.trim() || !ratings) {
+      alert("Please write a review and give a rating before submitting.");
       return;
     }
 
@@ -50,11 +50,11 @@ export default function CreateReview() {
       );
 
       await updateDoc(userDocRef, {
-        reviewIds: arrayUnion(reviewDoc.id), 
+        reviewIds: arrayUnion(reviewDoc.id),
       });
 
       await updateDoc(doc(db, "users", userDoc.userId), {
-        reviewedPaymentIds: arrayUnion(paymentId), 
+        reviewedPaymentIds: arrayUnion(paymentId),
       });
 
       alert("Review submitted successfully!");
@@ -111,6 +111,7 @@ export default function CreateReview() {
           value={ratings}
           onChangeText={setRatings}
           placeholder="Enter ratings out of 5"
+          placeholderTextColor="#5d5d5d"
           keyboardType="numeric"
           maxLength={1}
         />
@@ -123,6 +124,7 @@ export default function CreateReview() {
           value={reviewText}
           onChangeText={setReviewText}
           placeholder="Type your feedback here..."
+          placeholderTextColor="#5d5d5d"
         />
       </ScrollView>
       <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
@@ -143,7 +145,7 @@ const styles = StyleSheet.create({
   },
   header: {
     fontSize: 28,
-    fontWeight: "bold",
+    fontFamily: "Asap-Bold",
     color: "#8B402E",
     textAlign: "left",
     marginTop: 10,
@@ -155,7 +157,8 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 16,
-    color: "#F79824",
+    fontFamily: "Asap-Regular",
+    color: "#E9901B",
     marginBottom: 6,
     marginTop: 10,
   },
@@ -164,6 +167,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     padding: 12,
     fontSize: 16,
+    fontFamily: "Asap-Regular",
     color: "#000",
   },
   textArea: {
@@ -181,6 +185,6 @@ const styles = StyleSheet.create({
   submitText: {
     color: "#8B402E",
     fontSize: 18,
-    fontWeight: "bold",
+    fontFamily: "Asap-Bold",
   },
 });

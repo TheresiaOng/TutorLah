@@ -20,7 +20,8 @@ function LayoutWithFooter() {
     pathname.startsWith("/createListingScreen") ||
     (pathname.startsWith("/chatScreen/") &&
       pathname !== "/chatScreen/channelListScreen") ||
-    pathname == "/paymentCreation";
+    pathname == "/paymentCreation" ||
+    pathname == "/comingSoon";
 
   return (
     <View className="flex-1">
