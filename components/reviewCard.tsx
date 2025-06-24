@@ -9,21 +9,32 @@ type Review = {
 };
 
 const renderStars = (rating: number) => {
-  const filledStars = "★".repeat(rating);
-  const emptyStars = "☆".repeat(5 - rating);
-      return (
-        <Text className="color-primaryOrange font-asap-bold text-lg">
-          {filledStars + emptyStars}
-        </Text>
-      );
-    };
+  if (rating > 5) {
+    return (
+      <Text className="color-primaryOrange font-asap-bold text-lg">
+        {"★".repeat(5)}
+      </Text>
+    );
+  } else {
+    const filledStars = "★".repeat(rating);
+    const emptyStars = "☆".repeat(5 - rating);
+
+    return (
+      <Text className="color-primaryOrange font-asap-bold text-lg">
+        {filledStars + emptyStars}
+      </Text>
+    );
+  }
+};
 
 const ReviewCard = ({ item }: { item: Review }) => (
   <BlueCard className="w-11/12">
     <View>
       <Text className="font-asap-semibold text-darkBlue">{item.tuteeName}</Text>
       {renderStars(item.ratings)}
-      <Text className="mt-2 font-asap-regular text-darkBlue">"{item.reviewText}"</Text>
+      <Text className="mt-2 font-asap-regular text-darkBlue">
+        "{item.reviewText}"
+      </Text>
     </View>
   </BlueCard>
 );

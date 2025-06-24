@@ -9,11 +9,13 @@ import { useGlobalSearchParams } from "expo-router/build/hooks";
 import { signOut } from "firebase/auth";
 import {
   collection,
+  deleteDoc,
   doc,
   DocumentData,
   getDoc,
   onSnapshot,
   query,
+  setDoc,
   where,
 } from "firebase/firestore";
 import React, { useEffect, useState } from "react";
@@ -35,17 +37,16 @@ const TutorProfile = () => {
   const [currentListings, setCurrentListings] = useState<Listing[]>([]);
   const [currentDoc, setCurrentDoc] = useState<DocumentData | null>(null);
   const [reviewList, setReviewList] = useState<Review[]>([]);
+  const [follow, setFollow] = useState<boolean>(false);
   const { userDoc } = useAuth();
   const { id: viewingUserId } = useGlobalSearchParams();
   const otherUserId = Array.isArray(viewingUserId)
     ? viewingUserId[0]
     : viewingUserId;
-  
+
   const { client } = useChat();
 
   const userIdToView = otherUserId ?? userDoc?.userId;
-
-
 
   // Fetching currently viewed user's listings
   useEffect(() => {
@@ -133,7 +134,53 @@ const TutorProfile = () => {
     await client.disconnectUser();
     router.replace("/");
   };
-  
+
+  useEffect(() => {
+    const checkFollowStatus = async () => {
+      if (!userIdToView || !userDoc?.userId) return;
+
+      const followersDocRef = doc(
+        db,
+        "users",
+        userIdToView,
+        "followers",
+        userDoc.userId
+      );
+
+      try {
+        const docSnap = await getDoc(followersDocRef);
+        setFollow(docSnap.exists());
+      } catch (error) {
+        console.error("Error checking follow status:", error);
+      }
+    };
+
+    checkFollowStatus();
+  }, []);
+
+  const handleFollow = async () => {
+    const userId = currentDoc?.userId;
+    const userRef = doc(db, "users", userId);
+    const followerId = userDoc?.userId;
+
+    const followersDocRef = doc(db, "users", userId, "followers", followerId);
+    const followingDocRef = doc(db, "users", followerId, "following", userId);
+
+    if (!follow) {
+      await setDoc(followersDocRef, {
+        followedAt: new Date(),
+      });
+      await setDoc(followingDocRef, {
+        followedAt: new Date(),
+      });
+      setFollow(true);
+    } else {
+      await deleteDoc(followersDocRef);
+      await deleteDoc(followingDocRef);
+      setFollow(false);
+    }
+  };
+
   return (
     <View className="flex-1 bg-white justify-center items-center">
       {/* Header */}
@@ -151,19 +198,37 @@ const TutorProfile = () => {
             />
           </TouchableOpacity>
 
-          <View className="w-20 h-20 bg-white items-center rounded-full">
+          <View className="w-20 h-20 mr-4 bg-white items-center rounded-full">
             <Image
               source={require("../../assets/images/hatLogo.png")}
               className="h-20 w-20 rounded-full mt-1 p-2"
             />
           </View>
-          <Text
-            numberOfLines={1}
-            ellipsizeMode="tail"
-            className="text-4xl w-3/5 pl-4 flex-wrap text-white font-asap-bold"
-          >
-            {currentDoc?.name || "User"}
-          </Text>
+          <View className="flex-1 flex-col items-start">
+            <Text
+              numberOfLines={1}
+              ellipsizeMode="tail"
+              className="text-4xl flex-wrap text-white font-asap-bold"
+            >
+              {currentDoc?.name || "User"}
+            </Text>
+            {isOwnProfile && (
+              <CustomButton
+                title="Edit Profile"
+                onPress={() => router.push("/comingSoon")}
+                role="tutor"
+                extraClassName="h-11 inset-y-4"
+              />
+            )}
+            {!isOwnProfile && userDoc?.role === "tutee" && (
+              <CustomButton
+                title={follow ? "Unfollow" : "Follow"}
+                onPress={handleFollow}
+                role="tutor"
+                extraClassName="h-11 inset-y-4"
+              />
+            )}
+          </View>
         </View>
       </View>
 
@@ -203,10 +268,14 @@ const TutorProfile = () => {
           <View>
             <View className="flex-col border-primaryBlue border-t-2 pt-2 mx-4 mt-4">
               <View className="flex-row items-center gap-2">
-              <Text className="color-darkBlue text-2xl font-asap-bold">Reviews</Text>
-              <Text className="color-darkBlue text-2xl font-asap-bold">[{reviewList.length}]</Text>
-            </View>
-          <View className="items-center w-full px-4 mb-4">
+                <Text className="color-darkBlue text-2xl font-asap-bold">
+                  Reviews
+                </Text>
+                <Text className="color-darkBlue text-2xl font-asap-bold">
+                  [{reviewList.length}]
+                </Text>
+              </View>
+              <View className="items-center w-full px-4 mb-4">
                 {reviewList.length > 0 ? (
                   <CardViewer reviews={reviewList} />
                 ) : (
@@ -221,7 +290,9 @@ const TutorProfile = () => {
           {/* Listing Section */}
           <View className="flex-col border-primaryBlue border-t-2 pt-2 mx-4 mt-4">
             <Text className="color-darkBlue text-2xl font-asap-bold">
-              {isOwnProfile ? "Your Listings" : "Listings"}
+              {isOwnProfile
+                ? `Your Listings [${currentListings.length}]`
+                : `Listings [${currentListings.length}]`}
             </Text>
             <View className="items-center mb-4">
               {currentListings?.length > 0 ? (

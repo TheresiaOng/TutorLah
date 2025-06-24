@@ -44,15 +44,17 @@ export default function ScheduleHistory() {
       const userData = snapshot.data();
       const ids = userData?.paymentIds || [];
       const unsubscribers: (() => void)[] = [];
-      ids.forEach((id: string) => { // Listen to each payment document
-        const paymentRef = doc(db, "payments", id); 
+      ids.forEach((id: string) => {
+        // Listen to each payment document
+        const paymentRef = doc(db, "payments", id);
         const unsub = onSnapshot(paymentRef, (snap) => {
           const data = snap.data();
-          if (snap.exists() && data?.isPaid) { // Only add if the payment is marked as paid
+          if (snap.exists() && data?.isPaid) {
+            // Only add if the payment is marked as paid
             setLessons((prev) => {
               const filtered = prev.filter((l) => l.id !== id); // Remove old lesson if it exists
               return [
-                ...filtered, 
+                ...filtered,
                 {
                   id,
                   paidBy: data.paidBy,
@@ -61,15 +63,15 @@ export default function ScheduleHistory() {
                   date: data.date,
                   startTime: data.startTime,
                   endTime: data.endTime,
-                  tutorId: data.tutorId, 
+                  tutorId: data.tutorId,
                 },
               ];
             });
           }
         });
-        unsubscribers.push(unsub); 
+        unsubscribers.push(unsub);
       });
-      return () => unsubscribers.forEach((u) => u()); 
+      return () => unsubscribers.forEach((u) => u());
     });
     return () => {
       unsubReviewed();
@@ -121,36 +123,41 @@ export default function ScheduleHistory() {
                 <Text style={styles.value}>{lesson.date}</Text>
               </View>
 
-            <View style={styles.detail}>
+              <View style={styles.detail}>
                 <Text style={styles.label}>Timing:</Text>
                 <Text style={styles.value}>
                   {lesson.startTime} - {lesson.endTime}
                 </Text>
               </View>
-               {reviewedIds.includes(lesson.id) ? ( // Check if the lesson has been reviewed and if then button changes
-            <View style={[styles.leaveReviewButton, { backgroundColor: "#ccc" }]}> 
-         <Text style={[styles.leaveReviewText, { color: "#888" }]}> 
-               Review Submitted
-                </Text>
-           </View>
+              {reviewedIds.includes(lesson.id) ? ( // Check if the lesson has been reviewed and if then button changes
+                <View
+                  style={[
+                    styles.leaveReviewButton,
+                    { backgroundColor: "#ccc" },
+                  ]}
+                >
+                  <Text style={[styles.leaveReviewText, { color: "#888" }]}>
+                    Review Submitted
+                  </Text>
+                </View>
               ) : (
-              <TouchableOpacity
-                style={styles.leaveReviewButton}
-                onPress={() =>
-                  router.push({
-                    pathname: "/createReview", // Navigate to create review screen
-                    params: {
-                      paidTo: lesson.paidTo,
-                      paidBy: lesson.paidBy,
-                      tutorId: lesson.tutorId,
-                      paymentId: lesson.id, 
-                    },
-                  })
-                }
-              >
-                <Text style={styles.leaveReviewText}>Leave Review</Text>
-              </TouchableOpacity>
-            )}
+                <TouchableOpacity
+                  style={styles.leaveReviewButton}
+                  onPress={() =>
+                    router.push({
+                      pathname: "/createReview", // Navigate to create review screen
+                      params: {
+                        paidTo: lesson.paidTo,
+                        paidBy: lesson.paidBy,
+                        tutorId: lesson.tutorId,
+                        paymentId: lesson.id,
+                      },
+                    })
+                  }
+                >
+                  <Text style={styles.leaveReviewText}>Leave Review</Text>
+                </TouchableOpacity>
+              )}
             </View>
           ))
         )}

@@ -1,5 +1,6 @@
 import CardViewer from "@/components/cardViewer";
 import CustomButton from "@/components/customButton";
+import MiniProfile from "@/components/miniProfile";
 import OrangeCard from "@/components/orangeCard";
 import { useAuth } from "@/contexts/AuthProvider";
 import { auth, db } from "@/firebase";
@@ -16,8 +17,21 @@ import {
   where,
 } from "firebase/firestore";
 import React, { useEffect, useState } from "react";
-import { Image, ScrollView, Text, TouchableOpacity, View } from "react-native";
+import {
+  FlatList,
+  Image,
+  ScrollView,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { StreamChat } from "stream-chat";
+
+type following = {
+  userId: string;
+  name: string;
+  role: "tutor" | "tutee";
+};
 
 type Listing = {
   listId: string;
@@ -25,6 +39,7 @@ type Listing = {
 };
 
 const TuteeProfile = () => {
+  const [following, setFollowing] = useState<following[]>([]);
   const [currentListings, setCurrentListings] = useState<Listing[]>([]);
   const [currentDoc, setCurrentDoc] = useState<any>(null);
   const { userDoc } = useAuth();
@@ -44,28 +59,6 @@ const TuteeProfile = () => {
   const client = StreamChat.getInstance(getStreamApiKey());
 
   const userIdToView = otherUserId ?? userDoc?.userId;
-
-  // Fetching currently viewed user's listings
-  useEffect(() => {
-    if (!userIdToView) return;
-
-    let listingsQuery = query(
-      collection(db, "listings"),
-      where("userId", "==", userIdToView) // Filter listings by the userId to view
-      // This will fetch listings only for the user whose profile is being viewed
-    );
-
-    const unsubscribe = onSnapshot(listingsQuery, (snapshot) => {
-      // each specific document in the collection
-      const fetchedListings: Listing[] = snapshot.docs.map((doc) => ({
-        listId: doc.id,
-        ...(doc.data() as Omit<Listing, "listId">),
-      }));
-      setCurrentListings(fetchedListings);
-    });
-
-    return () => unsubscribe(); // Cleanup listener on unmount
-  }, [viewingUserId, userDoc, userIdToView]);
 
   useEffect(() => {
     const fetchProfileDoc = async () => {
@@ -91,6 +84,54 @@ const TuteeProfile = () => {
     fetchProfileDoc();
   }, [viewingUserId, userDoc, userIdToView]);
 
+  // Fetching currently viewed user's following list
+  useEffect(() => {
+    if (!userIdToView) return;
+
+    const followingRef = collection(db, "users", userIdToView, "following");
+
+    const unsubscribe = onSnapshot(followingRef, async (snapshot) => {
+      const userIds = snapshot.docs.map((doc) => doc.id);
+
+      const userDocPromises = userIds.map((id) => getDoc(doc(db, "users", id)));
+
+      const userDocs = await Promise.all(userDocPromises);
+
+      const fetchedFollowing = userDocs
+        .filter((docSnap) => docSnap.exists())
+        .map((docSnap) => ({
+          userId: docSnap.id,
+          ...(docSnap.data() as { name: string; role: "tutor" | "tutee" }),
+        }));
+
+      setFollowing(fetchedFollowing);
+    });
+
+    return () => unsubscribe();
+  }, [userIdToView]);
+
+  // Fetching currently viewed user's listings
+  useEffect(() => {
+    if (!userIdToView) return;
+
+    let listingsQuery = query(
+      collection(db, "listings"),
+      where("userId", "==", userIdToView) // Filter listings by the userId to view
+      // This will fetch listings only for the user whose profile is being viewed
+    );
+
+    const unsubscribe = onSnapshot(listingsQuery, (snapshot) => {
+      // each specific document in the collection
+      const fetchedListings: Listing[] = snapshot.docs.map((doc) => ({
+        listId: doc.id,
+        ...(doc.data() as Omit<Listing, "listId">),
+      }));
+      setCurrentListings(fetchedListings);
+    });
+
+    return () => unsubscribe(); // Cleanup listener on unmount
+  }, [viewingUserId, userDoc, userIdToView]);
+
   const isOwnProfile = !viewingUserId || viewingUserId === userDoc?.userId;
 
   // if the user is not logged in, redirect to login page
@@ -105,7 +146,7 @@ const TuteeProfile = () => {
       {/* Header */}
       <View className="border-8 border-primaryOrange bg-primaryOrange w-full justify-center items-center h-1/4">
         {/* Profile pic and Name */}
-        <View className="flex-row w-11/12 items-center inset-y-9">
+        <View className="flex-row w-11/12 items-center inset-y-8">
           <TouchableOpacity
             onPress={() => router.back()}
             className="items-center justify-center mr-2"
@@ -117,19 +158,29 @@ const TuteeProfile = () => {
             />
           </TouchableOpacity>
 
-          <View className="w-20 h-20 bg-white items-center rounded-full">
+          <View className="w-20 h-20 mr-4 bg-white items-center rounded-full">
             <Image
               source={require("../../assets/images/hatLogo.png")}
               className="h-20 w-20 rounded-full mt-1 p-2"
             />
           </View>
-          <Text
-            numberOfLines={1}
-            ellipsizeMode="tail"
-            className="text-4xl w-3/5 pl-4 flex-wrap text-darkBrown font-asap-bold"
-          >
-            {currentDoc?.name || "User"}
-          </Text>
+          <View className="flex-1 flex-col items-start">
+            <Text
+              numberOfLines={1}
+              ellipsizeMode="tail"
+              className="text-4xl flex-wrap text-darkBrown font-asap-bold"
+            >
+              {currentDoc?.name || "User"}
+            </Text>
+            {isOwnProfile && (
+              <CustomButton
+                title="Edit Profile"
+                onPress={() => router.push("/comingSoon")}
+                role="tutee"
+                extraClassName="h-11 inset-y-4"
+              />
+            )}
+          </View>
         </View>
       </View>
 
@@ -161,12 +212,29 @@ const TuteeProfile = () => {
           {isOwnProfile && (
             <View className="flex-col border-primaryOrange border-t-2 pt-2 mx-4 mt-4">
               <Text className="color-darkBrown text-2xl font-asap-bold">
-                Following
+                Following [{following.length}]
               </Text>
-              <View className="items-center">
-                <Text className="p-8 font-asap-regular text-darkGray">
-                  You have no following right now
-                </Text>
+              <View className="items-center mb-4">
+                {following.length > 0 ? (
+                  <FlatList
+                    data={following}
+                    keyExtractor={(item) => item.userId}
+                    renderItem={({ item }) => {
+                      return (
+                        <View className="items-center justify-center">
+                          <MiniProfile item={item} />
+                        </View>
+                      );
+                    }}
+                    horizontal={true}
+                    className="w-full mt-6"
+                    ItemSeparatorComponent={() => <View className="w-4" />}
+                  />
+                ) : (
+                  <Text className="mt-4 font-asap-regular text-darkGray">
+                    No following at the moment
+                  </Text>
+                )}
               </View>
             </View>
           )}
@@ -174,7 +242,9 @@ const TuteeProfile = () => {
           {/* Listing Section */}
           <View className="flex-col border-primaryOrange border-t-2 pt-2 mx-4 mt-4">
             <Text className="color-darkBrown text-2xl font-asap-bold">
-              {isOwnProfile ? "Your Listings" : "Listings"}
+              {isOwnProfile
+                ? `Your Listings [${currentListings.length}]`
+                : `Listings [${currentListings.length}]`}
             </Text>
             <View className="items-center mb-4">
               {currentListings?.length > 0 ? (
