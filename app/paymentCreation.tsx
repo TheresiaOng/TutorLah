@@ -180,26 +180,26 @@ export default function PaymentCreation() {
       >
         <ScrollView className="h-5/6 w-full my-4 mt-6 px-6">
           <LabelledInput
-            label="Paid To:"
+            label="Paid To"
             value={paidTo}
             onChangeText={setPaidTo}
             editable={false} // Make this field non-editable
             // since it should be filled automatically
           />
           <LabelledInput
-            label="Paid By:"
+            label="Paid By"
             value={paidBy}
             onChangeText={setPaidBy}
             editable={false} // Make this field non-editable
             // since it should be filled automatically
           />
           <LabelledInput
-            label="Subject:"
+            label="Subject"
             value={subject}
             onChangeText={setSubject}
           />
           <LabelledInput
-            label="Date of Lesson:"
+            label="Date of Lesson"
             value={date}
             onChangeText={setDate}
           />
@@ -223,7 +223,7 @@ export default function PaymentCreation() {
             />
           </View>
 
-          <Text style={styles.label}>Cost/hr:</Text>
+          <Text style={styles.label}>Cost/hr</Text>
           <View className="flex-row items-center h-12 bg-lightGray rounded-full mb-4 p-2 w-full">
             <Text className="text-lg font-asap-regular ml-1 mr-1">S$</Text>
             <TextInput
@@ -234,7 +234,7 @@ export default function PaymentCreation() {
             />
           </View>
 
-          <Text style={styles.label}>Total cost:</Text>
+          <Text style={styles.label}>Total cost</Text>
           <View className="flex-row items-center h-12 bg-lightGray rounded-full mb-12 p-2 w-full">
             <Text className="text-lg font-asap-regular ml-1 mr-1">S$</Text>
             <TextInput
