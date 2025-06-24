@@ -31,6 +31,11 @@ export default function CreateReview() {
       return;
     }
 
+    if (!ratings || isNaN(Number(ratings)) || Number(ratings) < 1 || Number(ratings) > 5) {
+      alert("Please enter a valid rating between 1 and 5.");
+      return;
+    }
+
     try {
       const reviewDoc = await addDoc(collection(db, "reviews"), {
         reviewText: reviewText.trim(),
