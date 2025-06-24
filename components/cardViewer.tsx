@@ -1,5 +1,6 @@
 import TuteeCard from "@/app/homeScreen/tuteeCard";
 import TutorCard from "@/app/homeScreen/tutorCard";
+import ReviewCard from "@/components/reviewCard";
 import React, { useState } from "react";
 import { Image, TouchableOpacity, View } from "react-native";
 
@@ -8,15 +9,21 @@ type Listing = {
   role: "tutor" | "tutee";
 };
 
-type CardViewerProps = {
-  listings: Listing[];
+type Review = {
+  tuteeName: string;
+  reviewText: string;
+  ratings: number;
 };
 
-const CardViewer = ({ listings }: CardViewerProps) => {
-  const [index, setIndex] = useState(0);
+type CardViewerProps =
+  | { listings: Listing[]; reviews?: never }
+  | { reviews: Review[]; listings?: never };
 
+const CardViewer = ({ listings, reviews }: CardViewerProps) => {
+  const [index, setIndex] = useState(0);
+  const data = listings ?? reviews ?? [];
   const handleNext = () => {
-    if (index < listings.length - 1) setIndex(index + 1);
+    if (index < data.length - 1) setIndex(index + 1);
   };
 
   const handlePrev = () => {
@@ -39,22 +46,26 @@ const CardViewer = ({ listings }: CardViewerProps) => {
         </TouchableOpacity>
 
         <View className="-mx-2 justify-center items-center">
-          {listings[0].role === "tutor" ? (
-            <TutorCard item={listings[index]} listId={listings[index].listId} />
+          {listings ? (
+            listings[0].role === "tutor" ? (
+              <TutorCard item={listings[index]} listId={listings[index].listId} />
+            ) : (
+              <TuteeCard item={listings[index]} listId={listings[index].listId} />
+            )
           ) : (
-            <TuteeCard item={listings[index]} listId={listings[index].listId} />
+            <ReviewCard item={reviews![index]} />
           )}
         </View>
 
         <TouchableOpacity
           className="justify-center items-center"
           onPress={handleNext}
-          disabled={index === listings.length - 1}
+          disabled={index === data.length - 1}
         >
           <Image
             source={require("../assets/images/arrowRight.png")}
             className={`w-8 h-8 ${
-              index === listings.length - 1 ? "opacity-0" : "opacity-100"
+              index === data.length - 1 ? "opacity-0" : "opacity-100"
             }`}
             resizeMode="contain"
           />

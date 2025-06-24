@@ -22,6 +22,7 @@ import {
 export default function CreateReview() {
   const { paidTo, paidBy, tutorId, paymentId } = useLocalSearchParams();
   const [reviewText, setReviewText] = useState("");
+  const [ratings, setRatings] = useState(""); 
   const { userDoc } = useAuth();
 
   const handleSubmit = async () => {
@@ -34,6 +35,7 @@ export default function CreateReview() {
       const reviewDoc = await addDoc(collection(db, "reviews"), {
         reviewText: reviewText.trim(),
         tuteeName: paidBy,
+        ratings: ratings.trim(),
         paymentId,
       });
 
@@ -101,6 +103,16 @@ export default function CreateReview() {
           style={styles.input}
           value={paidBy as string}
           editable={false}
+        />
+
+        <Text style={styles.label}>Ratings</Text>
+        <TextInput
+          style={styles.input}
+          value={ratings}
+          onChangeText={setRatings}
+          placeholder="Enter ratings out of 5"
+          keyboardType="numeric"
+          maxLength={1}
         />
 
         <Text style={styles.label}>Leave Review</Text>
