@@ -118,7 +118,7 @@ export default function PaymentCreation() {
         endTime,
         costPerHour,
         totalCost,
-        isPaid: false,
+        isPaid: true,
       });
 
       const userDocRef = doc(db, "users", userDoc.userId); // Reference to the user's document
