@@ -1,7 +1,17 @@
 import { router } from "expo-router";
-import { signInWithEmailAndPassword } from "firebase/auth";
+import {
+  sendEmailVerification,
+  signInWithEmailAndPassword,
+} from "firebase/auth";
 import React, { useState } from "react";
-import { Image, Text, TextInput, TouchableOpacity, View } from "react-native";
+import {
+  Alert,
+  Image,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { auth } from "../../firebase";
 import errorhandling from "./errorhandling";
 
@@ -20,8 +30,18 @@ const Login = () => {
           email,
           password
         );
-        console.log(userCredential.user);
-        router.push("/homeScreen/home");
+
+        if (auth.currentUser && !auth.currentUser.emailVerified) {
+          sendEmailVerification(userCredential.user);
+          Alert.alert(
+            "Verify Email",
+            "Please verify your email first before logging in"
+          );
+          router.push("./verifyEmail");
+        } else {
+          console.log(userCredential.user);
+          router.push("/homeScreen/home");
+        }
       } catch (error: any) {
         console.log(error);
         const errorMessage = errorhandling(error);

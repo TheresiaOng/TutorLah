@@ -1,6 +1,10 @@
 import { auth, db } from "@/firebase";
+import Constants from "expo-constants";
 import { router } from "expo-router";
-import { createUserWithEmailAndPassword } from "firebase/auth";
+import {
+  createUserWithEmailAndPassword,
+  sendEmailVerification,
+} from "firebase/auth";
 import { collection, doc, setDoc } from "firebase/firestore";
 import React, {
   forwardRef,
@@ -8,8 +12,10 @@ import React, {
   useImperativeHandle,
   useState,
 } from "react";
-import { Text, TextInput, View } from "react-native";
+import { Alert, Text, TextInput, View } from "react-native";
 import errorhandling from "./errorhandling";
+
+const STREAM_SECRET_KEY = Constants.expoConfig?.extra?.STREAM_SECRET_KEY;
 
 type QuestionDetailsProps = {
   role: "tutor" | "tutee";
@@ -51,39 +57,31 @@ const QuestionDetails = forwardRef<QuestionDetailsRef, QuestionDetailsProps>(
               password
             );
 
-            // Storing user data in firestore
-            const docRef = doc(usersRef, userCredential.user.uid);
-            await setDoc(docRef, {
-              userId: userCredential.user.uid,
-              role,
-              email,
-              name,
-              educationLevel,
-              educationInstitute,
-              achievements,
-            });
+            if (auth.currentUser && !auth.currentUser.emailVerified) {
+              await sendEmailVerification(auth.currentUser);
 
-            // Creating user for Stream
-            const streamUser = await fetch(
-              "https://ynikykgyystdyitckguc.supabase.co/functions/v1/create-stream-user",
-              {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                  Authorization: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InluaWt5a2d5eXN0ZHlpdGNrZ3VjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAwMDY2MjQsImV4cCI6MjA2NTU4MjYyNH0._fFlVovJ6dO7XdPXG9BwAgCyONTJEJakRnWefN51L7c`,
-                },
-                body: JSON.stringify({
-                  id: userCredential.user.uid,
-                  name,
-                  role,
-                }),
-              }
-            );
+              Alert.alert(
+                "Verify Email",
+                "A verification link has been sent to your email. Please verify to continue."
+              );
 
-            const result = await streamUser.json();
-            console.log("Stream user created:", result);
+              // Storing user data in firestore
+              const docRef = doc(usersRef, userCredential.user.uid);
+              await setDoc(docRef, {
+                userId: userCredential.user.uid,
+                role,
+                email,
+                name,
+                educationLevel,
+                educationInstitute,
+                achievements,
+                verified: false,
+              });
 
-            router.push("/homeScreen/home");
+              router.push("./verifyEmail");
+            } else {
+              router.push("/homeScreen/home");
+            }
           } catch (error: any) {
             const errorMessage = errorhandling(error);
             onError?.(errorMessage ?? "");
@@ -103,38 +101,30 @@ const QuestionDetails = forwardRef<QuestionDetailsRef, QuestionDetailsProps>(
               password
             );
 
-            // Storing user data in firestore
-            const docRef = doc(usersRef, userCredential.user.uid);
-            await setDoc(docRef, {
-              userId: userCredential.user.uid,
-              role,
-              email,
-              name,
-              educationLevel,
-              educationInstitute,
-            });
+            if (auth.currentUser && !auth.currentUser.emailVerified) {
+              await sendEmailVerification(auth.currentUser);
 
-            // Creating user for Stream
-            const streamUser = await fetch(
-              "https://ynikykgyystdyitckguc.supabase.co/functions/v1/create-stream-user",
-              {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                  Authorization: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InluaWt5a2d5eXN0ZHlpdGNrZ3VjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAwMDY2MjQsImV4cCI6MjA2NTU4MjYyNH0._fFlVovJ6dO7XdPXG9BwAgCyONTJEJakRnWefN51L7c`,
-                },
-                body: JSON.stringify({
-                  id: userCredential.user.uid,
-                  name,
-                  role,
-                }),
-              }
-            );
+              Alert.alert(
+                "Verify Email",
+                "A verification link has been sent to your email. Please verify to continue."
+              );
 
-            const result = await streamUser.json();
-            console.log("Stream user created:", result);
+              // Storing user data in firestore
+              const docRef = doc(usersRef, userCredential.user.uid);
+              await setDoc(docRef, {
+                userId: userCredential.user.uid,
+                role,
+                email,
+                name,
+                educationLevel,
+                educationInstitute,
+                verified: false,
+              });
 
-            router.push("/homeScreen/home");
+              router.push("./verifyEmail");
+            } else {
+              router.push("/homeScreen/home");
+            }
           } catch (error: any) {
             const errorMessage = errorhandling(error);
             onError?.(errorMessage ?? "");

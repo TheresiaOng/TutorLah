@@ -17,13 +17,13 @@ const TuteeCard = ({ item }: cardProps) => {
   const { client, setChannel } = useChat();
 
   const handleChatPress = async () => {
-    if (userDoc?.userId === item.userId) return;
+    if (userDoc?.userId === item?.userId) return;
 
     try {
       const channel = await GetOrCreateChannel({
         client,
         currentUserId: userDoc.userId,
-        otherUserId: item.userId,
+        otherUserId: item?.userId,
       });
 
       setChannel(channel);
@@ -39,15 +39,15 @@ const TuteeCard = ({ item }: cardProps) => {
         onPress={() =>
           router.push({
             pathname:
-              item.userRole === "tutor"
+              item?.userRole === "tutor"
                 ? "/profileScreen/tutorProfile"
                 : "/profileScreen/tuteeProfile",
-            params: { id: item.userId },
+            params: { id: item?.userId },
           })
         }
       >
         <Text className="font-asap-bold text-xl text-darkBrown">
-          {item.name}
+          {item?.name}
         </Text>
       </TouchableOpacity>
       <View className="border-b border-secondaryOrange border-2 mt-2" />
@@ -56,7 +56,7 @@ const TuteeCard = ({ item }: cardProps) => {
           Education Level
         </Text>
         <Text className="font-asap-regular my-4 flex-shrink text-darkBrown">
-          : {item.education}
+          : {item?.education}
         </Text>
       </View>
       <View className="flex-row items-start">
@@ -64,7 +64,7 @@ const TuteeCard = ({ item }: cardProps) => {
           Subjects Wanted
         </Text>
         <Text className="font-asap-regular flex-shrink my-4 text-darkBrown">
-          : {item.subjects}
+          : {item?.subjects}
         </Text>
       </View>
       <View className="flex-row items-start">
@@ -72,10 +72,10 @@ const TuteeCard = ({ item }: cardProps) => {
           Price Range
         </Text>
         <Text className="font-asap-regular my-4 flex-shrink text-darkBrown">
-          : S${item.startPrice} - S${item.endPrice} /hr
+          : S${item?.startPrice} - S${item?.endPrice} /hr
         </Text>
       </View>
-      {item.userId !== userDoc?.userId && (
+      {item?.userId !== userDoc?.userId && (
         <CustomButton title="Chat" onPress={handleChatPress} role="tutee" />
       )}
     </OrangeCard>
