@@ -23,7 +23,7 @@ const TutorCard = ({ item }: cardProps) => {
       const channel = await GetOrCreateChannel({
         client,
         currentUserId: userDoc.userId,
-        otherUserId: item.userId,
+        otherUserId: item?.userId,
       });
 
       setChannel(channel);
@@ -42,12 +42,12 @@ const TutorCard = ({ item }: cardProps) => {
               item.role === "tutor"
                 ? "/profileScreen/tutorProfile"
                 : "/profileScreen/tuteeProfile",
-            params: { id: item.userId },
+            params: { id: item?.userId },
           })
         }
       >
         <Text className="font-asap-bold text-xl text-darkBlue">
-          {item.name}
+          {item?.name}
         </Text>
       </TouchableOpacity>
       <View className="border-b border-secondaryBlue border-2 mt-2" />
@@ -56,7 +56,7 @@ const TutorCard = ({ item }: cardProps) => {
           Education Level
         </Text>
         <Text className="font-asap-regular flex-shrink my-4 text-darkBlue">
-          : {item.education}
+          : {item?.education}
         </Text>
       </View>
       <View className="flex-row items-start">
@@ -64,7 +64,7 @@ const TutorCard = ({ item }: cardProps) => {
           Teaching Subjects
         </Text>
         <Text className="font-asap-regular flex-shrink my-4 text-darkBlue">
-          : {item.subjects}
+          : {item?.subjects}
         </Text>
       </View>
       <View className="flex-row items-start">
@@ -72,10 +72,10 @@ const TutorCard = ({ item }: cardProps) => {
           Price
         </Text>
         <Text className="font-asap-regular my-4 flex-shrink text-darkBlue">
-          : S${item.price} /hr {item.negotiable == "yes" && "[Negotiable]"}
+          : S${item?.price} /hr {item?.negotiable == "yes" && "[Negotiable]"}
         </Text>
       </View>
-      {item.userId !== userDoc?.userId && (
+      {item?.userId !== userDoc?.userId && (
         <CustomButton title="Chat" onPress={handleChatPress} role="tutor" />
       )}
     </BlueCard>

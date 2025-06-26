@@ -15,6 +15,7 @@ function getStreamApiKey(): string {
 }
 
 const client = StreamChat.getInstance(getStreamApiKey());
+const secret = Constants.expoConfig?.extra?.streamSecretKey;
 
 export const ChatWrapper = ({ children }: { children: ReactNode }) => {
   const [isChatReady, setIsChatReady] = useState(false);
@@ -40,7 +41,7 @@ export const ChatWrapper = ({ children }: { children: ReactNode }) => {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InluaWt5a2d5eXN0ZHlpdGNrZ3VjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAwMDY2MjQsImV4cCI6MjA2NTU4MjYyNH0._fFlVovJ6dO7XdPXG9BwAgCyONTJEJakRnWefN51L7c`,
+            Authorization: `Bearer ${secret}`,
           },
           body: JSON.stringify({
             id: userDoc.userId,

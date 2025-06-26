@@ -52,7 +52,8 @@ export default {
       "eas": {
         "projectId": "0f928a3d-92ed-4ca5-aef1-c6bf5bcb769f"
       },
-      streamApiKey: process.env.STREAM_API_KEY
+      streamApiKey: process.env.STREAM_API_KEY,
+      streamSecretKey: process.env.STREAM_SECRET_KEY
     },
     "updates": {
       "url": "https://u.expo.dev/0f928a3d-92ed-4ca5-aef1-c6bf5bcb769f"
