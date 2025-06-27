@@ -2,8 +2,8 @@ import 'dotenv/config';
 
 export default {
   expo: {
-    name: "TutorLah",
-    slug: "TutorLah",
+    name: "TutorLah!",
+    slug: "TutorLah!",
     version: "1.0.0",
     orientation: "portrait",
     icon: "./assets/images/TutorLahLogo.png",
