@@ -170,7 +170,7 @@ export default function PaymentCreation() {
               userDoc?.role === "tutor" ? "text-white" : "text-darkBrown"
             } font-asap-bold text-3xl`}
           >
-            Create Payment Details
+            Create Lesson
           </Text>
         </View>
       </View>
