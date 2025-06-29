@@ -3,8 +3,11 @@ import 'dotenv/config';
 export default {
   expo: {
     name: "TutorLah!",
-    slug: "TutorLah!",
-    version: "1.0.0",
+    slug: "TutorLah",
+    version: "2.0.0",
+    runtimeVersion: {
+      policy: "appVersion"
+    },
     orientation: "portrait",
     icon: "./assets/images/TutorLahLogo.png",
     scheme: "tutorlah",
