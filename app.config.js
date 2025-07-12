@@ -67,6 +67,10 @@ export default {
       firebaseMessagingSenderId: process.env.FIREBASE_MESSAGING_SENDER_ID,
       firebaseAppId: process.env.FIREBASE_APP_ID,
       firebaseMeasurementId: process.env.FIREBASE_MEASUREMENT_ID,
+      supabaseUrl: process.env.SUPABASE_URL,
+      supabaseServiceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY,
+      supabaseAnonKey: process.env.SUPABASE_ANON_KEY,
+      stripeSecretKey: process.env.STRIPE_SECRET_KEY,
       "eas": {
         "projectId": "0f928a3d-92ed-4ca5-aef1-c6bf5bcb769f"
       },
