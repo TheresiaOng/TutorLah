@@ -1,3 +1,4 @@
+import CustomButton from "@/components/customButton";
 import { useAuth } from "@/contexts/AuthProvider";
 import { db } from "@/firebase";
 import { router } from "expo-router";
@@ -29,19 +30,27 @@ const CreateListing = () => {
     { label: "Yes", value: "yes" },
     { label: "No", value: "no" },
   ]);
-  const [errorMsg, setErrorMsg] = useState("");
+  const [posting, setPosting] = useState(false);
+
   const { userDoc } = useAuth(); //current user's doc info
 
-  const MAX_WORDS = 10;
+  const MAX_SUBJECTS = 10;
 
   const handleSubject = (text: string) => {
     setLength(text.length);
-    const words = text.split(",").map((word) => word.trim());
+    const words = text.split(",").map((word) => word.trim()); // Counting number of words
 
-    const nonEmptyWords = words.filter((word) => word !== "");
+    const nonEmptyWords = words.filter((word) => word !== ""); // Counting non-empty words
 
-    if (nonEmptyWords.length > MAX_WORDS) {
+    // Max subject count check
+    if (nonEmptyWords.length > MAX_SUBJECTS) {
       return;
+    }
+
+    // Disallow subjects that start with non-alphanumeric characters
+    const isValid = nonEmptyWords.every((word) => /^[a-zA-Z0-9]/.test(word));
+    if (!isValid) {
+      return; // Invalid subject name, do not update
     }
 
     setSubjects(text);
@@ -50,25 +59,58 @@ const CreateListing = () => {
 
   const listingRef = collection(db, "listings"); // name of the collection in Firestore
 
+  const checkIfAllFieldsFilled = () => {
+    if (userDoc?.role === "tutor") {
+      return (
+        subjects.trim() !== "" && price.trim() !== "" && negotiable !== null
+      );
+    } else {
+      return (
+        subjects.trim() !== "" &&
+        startPrice.trim() !== "" &&
+        endPrice.trim() !== ""
+      );
+    }
+  };
+
   const post = async () => {
     if (userDoc?.role === "tutor") {
-      if (!subjects || !price || !negotiable) {
-        setErrorMsg("Please fill all fields before posting");
+      // Ensuring price is > S$3
+      if (parseFloat(price) < 3) {
+        Alert.alert(
+          "Minimum Pricing/hr is S$3",
+          "Stripe will impose a S$2.70 tax, please raise your class cost accordingly."
+        );
         return;
       }
 
-      setErrorMsg("");
-      const formattedSubjects = subjects
+      const rawSubjects = subjects.trim();
+
+      // Check if there are any actual words (not just punctuation or whitespace)
+      const subjectWords = rawSubjects
         .split(",")
-        .map((word) => {
-          const trimmed = word.trim();
-          return (
-            trimmed.charAt(0).toUpperCase() + trimmed.slice(1).toLowerCase()
-          );
-        })
-        .join(", "); //check for error
+        .map((word) => word.trim())
+        .filter((word) => word.length > 0 && /[a-zA-Z]/.test(word));
+
+      if (subjectWords.length === 0) {
+        Alert.alert(
+          "Invalid Subject",
+          "Please enter at least one valid subject."
+        );
+        return;
+      }
+
+      setPosting(true);
+
+      // Format the subjects to all start with upper case letter
+      const formattedSubjects = subjectWords
+        .map(
+          (word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+        )
+        .join(", ");
 
       try {
+        // Creating a new document with all the information
         const newListing = await addDoc(listingRef, {
           name: userDoc.name,
           userId: userDoc.userId,
@@ -76,7 +118,7 @@ const CreateListing = () => {
           subjects: formattedSubjects,
           price,
           negotiable,
-          education: `${userDoc.educationInstitute} ${userDoc.educationLevel}`, //creation of doc
+          education: `${userDoc.educationInstitute} ${userDoc.educationLevel}`,
         });
         Alert.alert("Success", "Your listing has been created successfully!");
       } catch (error) {
@@ -86,31 +128,55 @@ const CreateListing = () => {
         );
         console.error("Error creating listing:", error);
       } finally {
-        router.push("/homeScreen/home"); //where it should go
+        // Both success and fail attempt will be routed back to home screen
+        setPosting(false);
+        router.push("/homeScreen/home");
       }
     } else {
-      if (!subjects || !startPrice || !endPrice) {
-        setErrorMsg("Please fill all fields before posting");
+      // Ensuring starting price is <= ending price
+      if (parseFloat(endPrice) < parseFloat(startPrice)) {
+        Alert.alert(
+          "Price Error",
+          "Starting price must be less than or equal to ending price"
+        );
         return;
       }
 
-      if (endPrice < startPrice) {
-        setErrorMsg("Starting price must be smaller than ending price");
+      // Ensuring starting price is > S$3
+      if (parseFloat(startPrice) < 3) {
+        Alert.alert(
+          "Minimum Pricing/hr is S$3",
+          "Stripe will impose a S$2.70 tax, please raise your starting price accordingly."
+        );
         return;
       }
 
-      setErrorMsg("");
-      const formattedSubjects = subjects
+      const rawSubjects = subjects.trim();
+
+      // Check if there are any actual words (not just punctuation or whitespace)
+      const subjectWords = rawSubjects
         .split(",")
-        .map((word) => {
-          const trimmed = word.trim();
-          return (
-            trimmed.charAt(0).toUpperCase() + trimmed.slice(1).toLowerCase()
-          );
-        })
+        .map((word) => word.trim())
+        .filter((word) => word.length > 0 && /[a-zA-Z]/.test(word));
+
+      if (subjectWords.length === 0) {
+        Alert.alert(
+          "Invalid Subject",
+          "Please enter at least one valid subject."
+        );
+        return;
+      }
+
+      setPosting(true);
+      // Format the subjects to all start with upper case letter
+      const formattedSubjects = subjectWords
+        .map(
+          (word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+        )
         .join(", ");
 
       try {
+        // Creating a new document with all the information
         const newListing = await addDoc(listingRef, {
           name: userDoc?.name,
           userId: userDoc?.userId,
@@ -128,6 +194,8 @@ const CreateListing = () => {
         );
         console.error("Error creating listing:", error);
       } finally {
+        // Both success and fail attempt will be routed back to home screen
+        setPosting(false);
         router.push("/homeScreen/home");
       }
     }
@@ -167,13 +235,6 @@ const CreateListing = () => {
         </View>
 
         <View className="h-4/6 w-full items-center">
-          {errorMsg !== "" && (
-            <View className="items-center justify-center w-full">
-              <Text className="text-sm font-asap-regular mt-4 text-red-500">
-                {errorMsg}
-              </Text>
-            </View>
-          )}
           <View className="justify-center w-full px-6 mt-6 items-start">
             {/* Input fields for listing */}
             <View className="w-full h-full items-center">
@@ -188,7 +249,7 @@ const CreateListing = () => {
                   Educational Level
                 </Text>
                 <View
-                  className={`border-2 justify-center border-gray flex-wrap font-asap-regular h-14 bg-lightGray rounded-2xl p-2 mb-8 w-full`}
+                  className={`border-2 justify-center border-gray flex-wrap font-asap-regular h-14 bg-lightGray rounded-3xl p-2 mb-8 w-full`}
                 >
                   <Text className="font-asap-regular">
                     {userDoc?.educationInstitute} {userDoc?.educationLevel}
@@ -216,7 +277,7 @@ const CreateListing = () => {
                 </Text>
 
                 <TextInput
-                  className={`border-2 border-gray flex-wrap font-asap-regular min-h-14 max-h-32 rounded-2xl p-2 w-full`}
+                  className={`border-2 border-gray flex-wrap font-asap-regular min-h-14 max-h-32 rounded-3xl p-2 w-full`}
                   placeholderTextColor={"#000"}
                   value={subjects}
                   onChangeText={(text) => handleSubject(text)}
@@ -254,13 +315,25 @@ const CreateListing = () => {
                   <Text className="text-sm pl-4 font-asap-medium text-darkPrimaryBlue">
                     Pricing per Hour
                   </Text>
-                  <View className="flex-row items-center border-2 h-14 border-gray mb-8 rounded-2xl p-2 w-full">
+                  <View className="flex-row items-center border-2 h-14 border-gray mb-8 rounded-3xl p-2 w-full">
                     <Text className="text-lg font-asap-regular mr-1">S$</Text>
                     <TextInput
                       className={`font-asap-regular flex-1`}
                       placeholderTextColor={"#000"}
                       value={price.toString()}
-                      onChangeText={setPrice}
+                      onChangeText={(text) => {
+                        // Allow only digits and one comma
+                        let cleaned = text.replace(/[^0-9,]/g, "");
+
+                        // Prevent multiple commas
+                        const parts = cleaned.split(",");
+                        if (parts.length > 2) return;
+
+                        // Limit to 2 digits after comma
+                        if (parts[1]?.length > 2) return;
+
+                        setPrice(cleaned);
+                      }}
                       autoCapitalize="none"
                       keyboardType="numeric"
                       maxLength={19}
@@ -287,7 +360,7 @@ const CreateListing = () => {
                       style={{
                         borderColor: "#8e8e93",
                         borderWidth: 2,
-                        borderRadius: 16,
+                        borderRadius: 20,
                       }}
                       dropDownContainerStyle={{
                         borderColor: "#8e8e93",
@@ -306,14 +379,26 @@ const CreateListing = () => {
                     Price Range per Hour
                   </Text>
                   <View className="flex-row items-center justify-center w-full">
-                    <View className="flex-row items-center border-2 h-14 border-gray mb-8 rounded-2xl p-2 w-2/5">
+                    <View className="flex-row items-center border-2 h-14 border-gray mb-8 rounded-3xl p-2 w-2/5">
                       <Text className="text-lg font-asap-regular mr-1">S$</Text>
                       <TextInput
                         className={`font-asap-regular flex-1`}
                         placeholderTextColor={"#8e8e93"}
                         placeholder="From"
                         value={startPrice.toString()}
-                        onChangeText={setStartPrice}
+                        onChangeText={(text) => {
+                          // Allow only digits and one comma
+                          let cleaned = text.replace(/[^0-9,]/g, "");
+
+                          // Prevent multiple commas
+                          const parts = cleaned.split(",");
+                          if (parts.length > 2) return;
+
+                          // Limit to 2 digits after comma
+                          if (parts[1]?.length > 2) return;
+
+                          setStartPrice(cleaned);
+                        }}
                         autoCapitalize="none"
                         keyboardType="numeric"
                         maxLength={19}
@@ -324,14 +409,26 @@ const CreateListing = () => {
                         -
                       </Text>
                     </View>
-                    <View className="flex-row items-center border-2 h-14 border-gray mb-8 rounded-2xl p-2 w-2/5">
+                    <View className="flex-row items-center border-2 h-14 border-gray mb-8 rounded-3xl p-2 w-2/5">
                       <Text className="text-lg font-asap-regular mr-1">S$</Text>
                       <TextInput
                         className={`font-asap-regular flex-1`}
                         placeholderTextColor={"#8e8e93"}
-                        placeholder="To"
+                        placeholder="From"
                         value={endPrice.toString()}
-                        onChangeText={setEndPrice}
+                        onChangeText={(text) => {
+                          // Allow only digits and one comma
+                          let cleaned = text.replace(/[^0-9,]/g, "");
+
+                          // Prevent multiple commas
+                          const parts = cleaned.split(",");
+                          if (parts.length > 2) return;
+
+                          // Limit to 2 digits after comma
+                          if (parts[1]?.length > 2) return;
+
+                          setEndPrice(cleaned);
+                        }}
                         autoCapitalize="none"
                         keyboardType="numeric"
                         maxLength={19}
@@ -345,22 +442,13 @@ const CreateListing = () => {
         </View>
         <View className="h-1/5 w-full justify-center">
           <View className="px-6 w-full">
-            <TouchableOpacity
-              className={`${
-                userDoc?.role === "tutor"
-                  ? "bg-secondaryBlue"
-                  : "bg-secondaryOrange"
-              } w-full items-center py-3 rounded-xl`}
+            <CustomButton
+              title="Post"
+              role={userDoc?.role}
               onPress={post}
-            >
-              <Text
-                className={`${
-                  userDoc?.role === "tutor" ? "text-darkBlue" : "text-darkBrown"
-                } font-asap-bold`}
-              >
-                Post
-              </Text>
-            </TouchableOpacity>
+              active={checkIfAllFieldsFilled()}
+              loading={posting}
+            />
           </View>
         </View>
       </View>

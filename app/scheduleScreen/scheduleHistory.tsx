@@ -49,23 +49,33 @@ export default function ScheduleHistory() {
         const paymentRef = doc(db, "payments", id);
         const unsub = onSnapshot(paymentRef, (snap) => {
           const data = snap.data();
+
           if (snap.exists() && data?.isPaid) {
             // Only add if the payment is marked as paid
             setLessons((prev) => {
               const filtered = prev.filter((l) => l.id !== id); // Remove old lesson if it exists
-              return [
-                ...filtered,
-                {
-                  id,
-                  paidBy: data.paidBy,
-                  paidTo: data.paidTo,
-                  subject: data.subject,
-                  date: data.date,
-                  startTime: data.startTime,
-                  endTime: data.endTime,
-                  tutorId: data.tutorId,
-                },
-              ];
+
+              const now = new Date();
+              const end = new Date(data.endTime);
+
+              const hasEnded = end < now;
+
+              if (hasEnded) {
+                return [
+                  ...filtered,
+                  {
+                    id,
+                    paidBy: data.paidBy,
+                    paidTo: data.paidTo,
+                    subject: data.subject,
+                    date: data.date,
+                    startTime: data.startTime,
+                    endTime: data.endTime,
+                    tutorId: data.tutorId,
+                  },
+                ];
+              }
+              return filtered; // remove if not ended yet
             });
           }
         });
@@ -106,11 +116,11 @@ export default function ScheduleHistory() {
       {/* Main Scroll Content */}
       <ScrollView contentContainerStyle={styles.container} className="w-full">
         {lessons.length === 0 ? (
-          <Text style={styles.noLessonsText}>No meeting history.</Text>
+          <Text style={styles.noLessonsText}>No lesson history</Text>
         ) : (
           lessons.map((lesson) => (
             <View style={styles.card} key={lesson.id}>
-              <Text style={styles.name}>{lesson.paidTo}</Text>
+              <Text style={styles.name}>{lesson.paidBy}</Text>
               <View style={styles.divider} />
 
               <View style={styles.detail}>
@@ -120,13 +130,23 @@ export default function ScheduleHistory() {
 
               <View style={styles.detail}>
                 <Text style={styles.label}>Date:</Text>
-                <Text style={styles.value}>{lesson.date}</Text>
+                <Text style={styles.value}>
+                  {new Date(lesson.date).toDateString()}
+                </Text>
               </View>
 
               <View style={styles.detail}>
                 <Text style={styles.label}>Timing:</Text>
                 <Text style={styles.value}>
-                  {lesson.startTime} - {lesson.endTime}
+                  {new Date(lesson.startTime).toLocaleTimeString("en-GB", {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}{" "}
+                  -{" "}
+                  {new Date(lesson.endTime).toLocaleTimeString("en-GB", {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
                 </Text>
               </View>
               {reviewedIds.includes(lesson.id) ? ( // Check if the lesson has been reviewed and if then button changes

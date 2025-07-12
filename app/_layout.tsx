@@ -1,5 +1,5 @@
-import { ChatWrapper } from "@/components/chatWrapper";
 import Footer from "@/components/footer";
+import { ChatWrapper } from "@/components/streamWrapper";
 import { AuthProvider, useAuth } from "@/contexts/AuthProvider";
 import { useFonts } from "expo-font";
 import { Stack, usePathname } from "expo-router";
@@ -14,20 +14,38 @@ function LayoutWithFooter() {
   const pathname = usePathname();
   const { userDoc } = useAuth();
 
+  // Hide footer from all of these screens
   const hideFooter =
     pathname === "/" ||
     pathname.startsWith("/loginScreen") ||
     pathname.startsWith("/createListingScreen") ||
     (pathname.startsWith("/chatScreen/") &&
-      pathname !== "/chatScreen/channelListScreen") ||
-    pathname == "/paymentCreation" ||
-    pathname == "/comingSoon";
+      pathname !== "/chatScreen/chatListScreen") ||
+    pathname == "/lessonCreation" ||
+    pathname == "/createReview" ||
+    pathname == "/comingSoon" ||
+    pathname.startsWith("/videoScreen");
 
   return (
     <View className="flex-1">
       <Stack screenOptions={{ headerShown: false, gestureEnabled: false }} />
       {!hideFooter && userDoc && <Footer />}
     </View>
+  );
+}
+
+function ConditionalWrapper() {
+  const { userDoc } = useAuth();
+
+  if (!userDoc) {
+    return <LayoutWithFooter />;
+  }
+
+  // Only wraps the chatWrapper if userDoc exists (user logged in)
+  return (
+    <ChatWrapper>
+      <LayoutWithFooter />
+    </ChatWrapper>
   );
 }
 
@@ -48,9 +66,7 @@ export default function RootLayout() {
     <SafeAreaProvider>
       <GestureHandlerRootView className="flex-1">
         <AuthProvider>
-          <ChatWrapper>
-            <LayoutWithFooter />
-          </ChatWrapper>
+          <ConditionalWrapper />
         </AuthProvider>
       </GestureHandlerRootView>
     </SafeAreaProvider>

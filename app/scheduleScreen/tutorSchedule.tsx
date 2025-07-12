@@ -23,6 +23,8 @@ type Lesson = {
   startTime: string;
   endTime: string;
   isPaid?: boolean;
+  tutorId: string;
+  tuteeId: string;
 };
 
 export default function TutorSchedule() {
@@ -31,6 +33,17 @@ export default function TutorSchedule() {
   const [onboardingUrl, setOnboardingUrl] = useState<string | null>(null);
   const [showWebView, setShowWebView] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  const handleJoinCall = (
+    lessonId: string,
+    tutorId: string,
+    tuteeId: string
+  ) => {
+    router.push({
+      pathname: "/videoScreen/[callId]",
+      params: { callId: lessonId, tutorId: tutorId, tuteeId: tuteeId },
+    });
+  };
 
   // Firestore: Fetch lessons
   useEffect(() => {
@@ -51,8 +64,15 @@ export default function TutorSchedule() {
           if (!data) return;
 
           setLessons((prevLessons) => {
-            const filtered = prevLessons.filter((l) => l.id !== id);
-            if (data.isPaid) {
+            const filtered = prevLessons.filter((l) => l.id !== id); // Remove old lesson if it exists
+            // Only add if the payment is marked as paid and not ended yet
+
+            const now = new Date();
+            const end = new Date(data.endTime);
+
+            const hasEnded = end < now;
+
+            if (data.isPaid && !hasEnded) {
               return [
                 ...filtered,
                 {
@@ -62,6 +82,8 @@ export default function TutorSchedule() {
                   date: data.date,
                   startTime: data.startTime,
                   endTime: data.endTime,
+                  tutorId: data.tutorId,
+                  tuteeId: data.tuteeId,
                 },
               ];
             }
@@ -151,7 +173,7 @@ export default function TutorSchedule() {
             source={require("../../assets/images/arrowBack.png")}
           />
         </TouchableOpacity>
-        <Text style={styles.headerText}>Schedules</Text>
+        <Text style={styles.headerText}>Your Schedules</Text>
         <TouchableOpacity
           onPress={startOnboarding}
           style={[
@@ -172,34 +194,64 @@ export default function TutorSchedule() {
 
       <ScrollView contentContainerStyle={styles.lessonsContainer}>
         {lessons.length === 0 ? (
-          <Text style={styles.noLessonsText}>No meetings scheduled.</Text>
+          <Text style={styles.noLessonsText}>No lessons scheduled</Text>
         ) : (
-          lessons.map((lesson) => (
-            <View style={styles.card} key={lesson.id}>
-              <Text style={styles.name}>{lesson.paidBy}</Text>
-              <View style={styles.divider} />
-              <View style={styles.detail}>
-                <Text style={styles.label}>Subject:</Text>
-                <Text style={styles.value}>{lesson.subject}</Text>
+          lessons.map((lesson) => {
+            const now = new Date();
+
+            const lessonDate = new Date(lesson.date);
+            const start = new Date(lesson.startTime);
+            const end = new Date(lesson.endTime);
+
+            const onGoing =
+              now >= start &&
+              now <= end &&
+              lessonDate.toDateString() === now.toDateString();
+
+            return (
+              <View style={styles.card} key={lesson.id}>
+                <Text style={styles.name}>{lesson.paidBy}</Text>
+                <View style={styles.divider} />
+
+                <View style={styles.detail}>
+                  <Text style={styles.label}>Subject:</Text>
+                  <Text style={styles.value}>{lesson.subject}</Text>
+                </View>
+
+                <View style={styles.detail}>
+                  <Text style={styles.label}>Date:</Text>
+                  <Text style={styles.value}>{lessonDate.toDateString()}</Text>
+                </View>
+
+                <View style={styles.detail}>
+                  <Text style={styles.label}>Timing:</Text>
+                  <Text style={styles.value}>
+                    {new Date(lesson.startTime).toLocaleTimeString("en-GB", {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}{" "}
+                    -{" "}
+                    {new Date(lesson.endTime).toLocaleTimeString("en-GB", {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </Text>
+                </View>
+
+                {/* Only show join button if the class is ongoing */}
+                {onGoing && (
+                  <TouchableOpacity
+                    onPress={() =>
+                      handleJoinCall(lesson.id, lesson.tutorId, lesson.tuteeId)
+                    }
+                    style={styles.joinButton}
+                  >
+                    <Text style={styles.joinText}>Join Class</Text>
+                  </TouchableOpacity>
+                )}
               </View>
-              <View style={styles.detail}>
-                <Text style={styles.label}>Date:</Text>
-                <Text style={styles.value}>{lesson.date}</Text>
-              </View>
-              <View style={styles.detail}>
-                <Text style={styles.label}>Timing:</Text>
-                <Text style={styles.value}>
-                  {lesson.startTime} - {lesson.endTime}
-                </Text>
-              </View>
-              <TouchableOpacity
-                onPress={() => router.push("/comingSoon")}
-                style={styles.joinButton}
-              >
-                <Text style={styles.joinText}>Join Class</Text>
-              </TouchableOpacity>
-            </View>
-          ))
+            );
+          })
         )}
       </ScrollView>
     </View>

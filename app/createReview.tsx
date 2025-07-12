@@ -10,6 +10,7 @@ import {
 } from "firebase/firestore";
 import React, { useState } from "react";
 import {
+  Alert,
   Image,
   ScrollView,
   StyleSheet,
@@ -23,51 +24,79 @@ export default function CreateReview() {
   const { paidTo, paidBy, tutorId, paymentId } = useLocalSearchParams();
   const [reviewText, setReviewText] = useState("");
   const [ratings, setRatings] = useState("");
+  const [errorMsg, setErrorMsg] = useState("");
   const { userDoc } = useAuth();
 
   const handleSubmit = async () => {
     if (!reviewText.trim() || !ratings) {
-      alert("Please write a review and give a rating before submitting.");
+      setErrorMsg("Please write a review and give a rating before submitting");
       return;
     }
 
-    if (!ratings || isNaN(Number(ratings)) || Number(ratings) < 1 || Number(ratings) > 5) {
-      alert("Please enter a valid rating between 1 and 5.");
+    if (
+      !ratings ||
+      isNaN(Number(ratings)) ||
+      Number(ratings) < 1 ||
+      Number(ratings) > 5
+    ) {
+      setErrorMsg("Please enter a valid rating between 1 and 5");
       return;
     }
 
-    try {
-      const reviewDoc = await addDoc(collection(db, "reviews"), {
-        reviewText: reviewText.trim(),
-        tuteeName: paidBy,
-        ratings: ratings.trim(),
-        paymentId,
-      });
+    setErrorMsg("");
+    // Show confirmation alert
+    Alert.alert(
+      "Confirm Review Submission",
+      "Your name will be public and your review must not contain any offensive language.\n\nAre you sure you want to post this review?",
+      [
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
+        {
+          text: "Submit",
+          style: "default",
+          onPress: async () => {
+            try {
+              const reviewDoc = await addDoc(collection(db, "reviews"), {
+                reviewText: reviewText.trim(),
+                tuteeName: paidBy,
+                ratings: ratings.trim(),
+                paymentId,
+              });
 
-      const userDocRef = doc(
-        db,
-        "users",
-        typeof tutorId === "string"
-          ? tutorId
-          : Array.isArray(tutorId)
-          ? tutorId[0]
-          : ""
-      );
+              const userDocRef = doc(
+                db,
+                "users",
+                typeof tutorId === "string"
+                  ? tutorId
+                  : Array.isArray(tutorId)
+                  ? tutorId[0]
+                  : ""
+              );
 
-      await updateDoc(userDocRef, {
-        reviewIds: arrayUnion(reviewDoc.id),
-      });
+              await updateDoc(userDocRef, {
+                reviewIds: arrayUnion(reviewDoc.id),
+              });
 
-      await updateDoc(doc(db, "users", userDoc.userId), {
-        reviewedPaymentIds: arrayUnion(paymentId),
-      });
+              await updateDoc(doc(db, "users", userDoc.userId), {
+                reviewedPaymentIds: arrayUnion(paymentId),
+              });
 
-      alert("Review submitted successfully!");
-      router.back();
-    } catch (error) {
-      console.error("Error submitting review: ", error);
-      alert("Failed to submit review. Please try again.");
-    }
+              Alert.alert("Success", "Review submitted successfully!");
+              router.back();
+            } catch (error) {
+              console.error("Error submitting review: ", error);
+              Alert.alert(
+                "Error",
+                "Failed to submit review. Please try again."
+              );
+            }
+          },
+        },
+      ],
+      { cancelable: true }
+    );
   };
 
   return (
@@ -98,14 +127,14 @@ export default function CreateReview() {
       >
         <Text style={styles.label}>Tutor Name</Text>
         <TextInput
-          style={styles.input}
+          style={styles.disabledInput}
           value={paidTo as string}
           editable={false}
         />
 
         <Text style={styles.label}>Your Name</Text>
         <TextInput
-          style={styles.input}
+          style={styles.disabledInput}
           value={paidBy as string}
           editable={false}
         />
@@ -132,6 +161,19 @@ export default function CreateReview() {
           placeholderTextColor="#5d5d5d"
         />
       </ScrollView>
+      {errorMsg !== "" && (
+        <Text
+          style={{
+            color: "red",
+            textAlign: "center",
+            marginTop: 20,
+            fontFamily: "Asap",
+            fontSize: 12,
+          }}
+        >
+          {errorMsg}
+        </Text>
+      )}
       <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
         <Text style={styles.submitText}>Post</Text>
       </TouchableOpacity>
@@ -168,12 +210,25 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   input: {
-    backgroundColor: "#eee",
+    borderColor: "#8e8e93",
+    borderWidth: 2,
     borderRadius: 20,
     padding: 12,
     fontSize: 16,
-    fontFamily: "Asap-Regular",
     color: "#000",
+    fontFamily: "Asap-Regular",
+    marginBottom: 12,
+  },
+  disabledInput: {
+    backgroundColor: "#ebebeb",
+    borderColor: "#8e8e93",
+    borderWidth: 2,
+    borderRadius: 20,
+    padding: 12,
+    fontSize: 16,
+    color: "#000",
+    fontFamily: "Asap-Regular",
+    marginBottom: 12,
   },
   textArea: {
     height: 150,
@@ -183,6 +238,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFD256",
     borderRadius: 12,
     paddingVertical: 12,
+    marginBottom: 35,
     marginVertical: 20,
     marginHorizontal: 24,
     alignItems: "center",

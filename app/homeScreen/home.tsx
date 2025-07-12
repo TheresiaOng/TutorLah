@@ -1,10 +1,11 @@
 import { useAuth } from "@/contexts/AuthProvider";
 import { collection, onSnapshot, query, where } from "firebase/firestore";
 import React, { useEffect, useState } from "react";
-import { FlatList, Image, Text, View } from "react-native";
+import { ActivityIndicator, FlatList, Image, Text, View } from "react-native";
 import { db } from "../../firebase";
 
 import CustomSearchBar from "@/components/customSearchBar";
+import NullScreen from "../nullScreen";
 import TuteeCard from "./tuteeCard";
 import TutorCard from "./tutorCard";
 
@@ -19,6 +20,7 @@ const HomeScreen = () => {
   const [searchResults, setSearchResults] = useState<Listing[]>([]);
   const [searchFields, setSearchFields] = useState<string[]>([]);
   const { userDoc } = useAuth();
+  if (!userDoc) return <NullScreen />;
 
   useEffect(() => {
     let listingsQuery = query(collection(db, "listings")); // Query to fetch all listings
@@ -68,8 +70,8 @@ const HomeScreen = () => {
               />
             </View>
             <Text
-              numberOfLines={1}
-              ellipsizeMode="tail"
+              numberOfLines={1} // Ensuring only one-line name display
+              ellipsizeMode="tail" // Adding "..." at the end for the remainder of letters
               className="text-4xl w-4/5 pl-4 font-asap-bold color-white"
             >
               {userDoc?.name || "User"}
@@ -101,8 +103,17 @@ const HomeScreen = () => {
       />
 
       <View className="h-5/6 w-full justify-center items-center">
+        {/* Loading indicator */}
+        {listings.length == 0 && (
+          <View className="items-center flex-col justify-center w-full h-full">
+            <ActivityIndicator size="large" />
+            <Text className="font-asap-medium mt-4">Loading listings...</Text>
+          </View>
+        )}
+
+        {/* No search found text */}
         {searchQuery.trim() !== "" && searchResults.length === 0 ? (
-          <Text className="text-center mt-16 text-gray text-lg font-asap-regular">
+          <Text className="text-center mb-12 text-gray text-lg font-asap-regular">
             No results found
           </Text>
         ) : (

@@ -1,8 +1,37 @@
+import { useAuth } from "@/contexts/AuthProvider";
+import { useChat } from "@/contexts/ChatProvider";
 import { useRouter } from "expo-router";
-import { Image, Text, TouchableOpacity, View } from "react-native";
+import { useEffect, useState } from "react";
+import {
+  ActivityIndicator,
+  Image,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 
 export default function Index() {
+  const { userDoc } = useAuth();
   const router = useRouter();
+  const [showOverlay, setShowOverlay] = useState(false);
+
+  let isChatReady = false;
+
+  try {
+    const { isChatReady: ready } = useChat();
+    isChatReady = ready;
+  } catch (e) {
+    // not in ChatProvider yet — ignore
+    isChatReady = false;
+  }
+
+  useEffect(() => {
+    if (userDoc && isChatReady) {
+      setShowOverlay(true);
+      router.replace("/homeScreen/home");
+    }
+  }, [userDoc, isChatReady]);
 
   return (
     <View className="flex-1 h-fullitems-center">
@@ -54,6 +83,28 @@ export default function Index() {
           </TouchableOpacity>
         </View>
       </View>
+      {showOverlay && (
+        <View style={styles.overlay}>
+          <ActivityIndicator size="large" color="#fff" />
+          <Text className="text-white mt-4 font-asap-medium">
+            Redirecting...
+          </Text>
+        </View>
+      )}
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  overlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "rgba(0,0,0,0.5)", // dark transparent
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 999,
+  },
+});

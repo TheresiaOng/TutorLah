@@ -1,16 +1,16 @@
 import { StreamChat } from "stream-chat";
 
-type GetOrCreateChannelProps = {
+type GetOrCreateChatProps = {
   client: StreamChat;
   currentUserId: string;
   otherUserId: string;
 };
 
-const GetOrCreateChannel = async ({
+const GetOrCreateChat = async ({
   client,
   currentUserId,
   otherUserId,
-}: GetOrCreateChannelProps) => {
+}: GetOrCreateChatProps) => {
   const members = [currentUserId, otherUserId].sort();
   const channel = client.channel("messaging", {
     members,
@@ -20,4 +20,4 @@ const GetOrCreateChannel = async ({
   return channel;
 };
 
-export default GetOrCreateChannel;
+export default GetOrCreateChat;
