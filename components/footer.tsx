@@ -1,3 +1,4 @@
+import NullScreen from "@/app/nullScreen";
 import { useAuth } from "@/contexts/AuthProvider";
 import { db } from "@/firebase";
 import { router, useGlobalSearchParams, usePathname } from "expo-router";
@@ -42,25 +43,26 @@ const Footer = () => {
   }, [viewingUserId, userDoc]);
 
   if (!currentDoc) {
-    return null;
+    return <NullScreen />;
   }
 
   const isOwnProfile = !currentDoc || currentDoc?.userId === userDoc?.userId;
 
   const handleHome = () => {
     if (pathname !== "/homeScreen/home") {
-      router.push("/homeScreen/home");
+      router.replace("/homeScreen/home");
     }
   };
 
   const handleChat = () => {
-    if (pathname !== "/chatScreen/channelListScreen") {
-      router.push("/chatScreen/channelListScreen");
+    if (pathname !== "/chatScreen/chatListScreen") {
+      router.replace("/chatScreen/chatListScreen");
     }
   };
 
   const handleCreate = () => {
     if (pathname !== "/createListingScreen/createListing") {
+      // Used push because user might navigate back
       router.push({
         pathname: "/createListingScreen/createListing",
       });
@@ -77,7 +79,7 @@ const Footer = () => {
         userDoc.role === "tutor"
           ? "/scheduleScreen/tutorSchedule"
           : "/scheduleScreen/tuteeSchedule";
-      router.push({
+      router.replace({
         pathname: schedulePath,
       });
     }
@@ -93,7 +95,7 @@ const Footer = () => {
         userDoc.role === "tutor"
           ? "/profileScreen/tutorProfile"
           : "/profileScreen/tuteeProfile";
-      router.push({
+      router.replace({
         pathname: profilePath,
       });
     }

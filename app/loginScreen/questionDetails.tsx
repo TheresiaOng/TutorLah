@@ -23,6 +23,8 @@ type QuestionDetailsProps = {
   password: string;
   onError?: (error: string) => void;
   next: () => void;
+  onChangeComplete: (complete: boolean) => void;
+  setLoading: (loading: boolean) => void;
 };
 
 export type QuestionDetailsRef = {
@@ -30,13 +32,28 @@ export type QuestionDetailsRef = {
 };
 
 const QuestionDetails = forwardRef<QuestionDetailsRef, QuestionDetailsProps>(
-  ({ role, email, password, onError, next }, ref) => {
+  (
+    { role, email, password, onChangeComplete, setLoading, onError, next },
+    ref
+  ) => {
     const [name, setName] = useState("");
     const [educationLevel, setEducationLevel] = useState("");
     const [educationInstitute, setEducationInstitute] = useState("");
     const [achievements, setAchievements] = useState("");
 
     const usersRef = collection(db, "users");
+
+    // Change button visibility based on fields filled or not
+    useEffect(() => {
+      const isComplete =
+        name.trim() !== "" &&
+        educationLevel.trim() !== "" &&
+        educationInstitute.trim() !== "" &&
+        email.trim() !== "" &&
+        password.trim() !== "";
+
+      onChangeComplete(isComplete);
+    }, [name, educationLevel, educationInstitute, email, password]);
 
     // Reset fields when the role changes
     // This effect runs when the component mounts and whenever the role changes
@@ -46,91 +63,94 @@ const QuestionDetails = forwardRef<QuestionDetailsRef, QuestionDetailsProps>(
 
     const handleNext = async () => {
       if (role === "tutor") {
-        if (!educationLevel || !educationInstitute || !name) {
-          onError?.("Please fill all fields for tutor.");
-        } else if (email && password) {
-          try {
-            // Creating user for firebase auth
-            const userCredential = await createUserWithEmailAndPassword(
-              auth,
-              email,
-              password
+        try {
+          setLoading(true);
+          await auth.signOut();
+
+          // Creating user for firebase auth
+          const userCredential = await createUserWithEmailAndPassword(
+            auth,
+            email,
+            password
+          );
+
+          if (auth.currentUser && !auth.currentUser.emailVerified) {
+            await sendEmailVerification(auth.currentUser);
+
+            Alert.alert(
+              "Verify Email",
+              "A verification link has been sent to your email. Please verify to continue."
             );
 
-            if (auth.currentUser && !auth.currentUser.emailVerified) {
-              await sendEmailVerification(auth.currentUser);
+            // Storing user data in firestore
+            const docRef = doc(usersRef, userCredential.user.uid);
+            await setDoc(docRef, {
+              userId: userCredential.user.uid,
+              role,
+              email,
+              name,
+              educationLevel,
+              educationInstitute,
+              achievements,
+              verified: false,
+            });
 
-              Alert.alert(
-                "Verify Email",
-                "A verification link has been sent to your email. Please verify to continue."
-              );
-
-              // Storing user data in firestore
-              const docRef = doc(usersRef, userCredential.user.uid);
-              await setDoc(docRef, {
-                userId: userCredential.user.uid,
-                role,
-                email,
-                name,
-                educationLevel,
-                educationInstitute,
-                achievements,
-                verified: false,
-              });
-
-              router.push("./verifyEmail");
-            } else {
-              router.push("/homeScreen/home");
-            }
-          } catch (error: any) {
-            const errorMessage = errorhandling(error);
-            onError?.(errorMessage ?? "");
+            router.push({
+              pathname: "./verifyEmail",
+              params: { email, password },
+            });
+            setLoading(false);
+          } else {
+            router.push("/homeScreen/home");
+            setLoading(false);
           }
-        } else {
-          onError?.("Please enter email and password.");
+        } catch (error: any) {
+          const errorMessage = errorhandling(error);
+          Alert.alert("Error", errorMessage);
+          setLoading(false);
         }
       } else {
-        if (!educationLevel || !educationInstitute || !name) {
-          onError?.("Please fill all fields for tutee.");
-        } else if (email && password) {
-          try {
-            // Creating user for firebase auth
-            const userCredential = await createUserWithEmailAndPassword(
-              auth,
-              email,
-              password
+        try {
+          setLoading(true);
+          await auth.signOut();
+
+          // Creating user for firebase auth
+          const userCredential = await createUserWithEmailAndPassword(
+            auth,
+            email,
+            password
+          );
+
+          if (auth.currentUser && !auth.currentUser.emailVerified) {
+            await sendEmailVerification(auth.currentUser);
+
+            Alert.alert(
+              "Verify Email",
+              "A verification link has been sent to your email. Please verify to continue."
             );
 
-            if (auth.currentUser && !auth.currentUser.emailVerified) {
-              await sendEmailVerification(auth.currentUser);
+            // Storing user data in firestore
+            const docRef = doc(usersRef, userCredential.user.uid);
+            await setDoc(docRef, {
+              userId: userCredential.user.uid,
+              role,
+              email,
+              name,
+              educationLevel,
+              educationInstitute,
+              verified: false,
+            });
 
-              Alert.alert(
-                "Verify Email",
-                "A verification link has been sent to your email. Please verify to continue."
-              );
-
-              // Storing user data in firestore
-              const docRef = doc(usersRef, userCredential.user.uid);
-              await setDoc(docRef, {
-                userId: userCredential.user.uid,
-                role,
-                email,
-                name,
-                educationLevel,
-                educationInstitute,
-                verified: false,
-              });
-
-              router.push("./verifyEmail");
-            } else {
-              router.push("/homeScreen/home");
-            }
-          } catch (error: any) {
-            const errorMessage = errorhandling(error);
-            onError?.(errorMessage ?? "");
+            router.push("./verifyEmail");
+            setLoading(false);
+          } else {
+            router.push("/homeScreen/home");
+            setLoading(false);
           }
-        } else {
-          onError?.("Please enter email and password.");
+        } catch (error: any) {
+          const errorMessage = errorhandling(error);
+          Alert.alert("Error", errorMessage);
+          setLoading(false);
         }
       }
     };

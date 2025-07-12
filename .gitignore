@@ -42,3 +42,6 @@ yarn-error.*
 # DEPLOYMENT BUILD
 /ios
 /android
+# Deployment Build
+ios/
+android/

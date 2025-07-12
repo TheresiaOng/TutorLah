@@ -20,6 +20,7 @@ import {
 } from "firebase/firestore";
 import React, { useEffect, useState } from "react";
 import { Image, ScrollView, Text, TouchableOpacity, View } from "react-native";
+import NullScreen from "../nullScreen";
 
 type Listing = {
   listId: string;
@@ -38,11 +39,12 @@ const TutorProfile = () => {
   const [currentDoc, setCurrentDoc] = useState<DocumentData | null>(null);
   const [reviewList, setReviewList] = useState<Review[]>([]);
   const [follow, setFollow] = useState<boolean>(false);
-  const { userDoc } = useAuth();
   const { id: viewingUserId } = useGlobalSearchParams();
   const otherUserId = Array.isArray(viewingUserId)
     ? viewingUserId[0]
     : viewingUserId;
+  const { userDoc } = useAuth();
+  if (!userDoc) return <NullScreen />;
 
   const { client } = useChat();
 
@@ -187,16 +189,18 @@ const TutorProfile = () => {
       <View className="border-8 border-primaryBlue bg-primaryBlue w-full justify-center items-center h-1/4">
         {/* Profile pic and Name */}
         <View className="flex-row w-11/12 items-center inset-y-8">
-          <TouchableOpacity
-            onPress={() => router.back()}
-            className="items-center justify-center mr-2"
-          >
-            <Image
-              className="w-10"
-              resizeMode="contain"
-              source={require("../../assets/images/arrowBack.png")}
-            />
-          </TouchableOpacity>
+          {!isOwnProfile && (
+            <TouchableOpacity
+              onPress={() => router.back()}
+              className="items-center justify-center mr-2"
+            >
+              <Image
+                className="w-10"
+                resizeMode="contain"
+                source={require("../../assets/images/arrowBack.png")}
+              />
+            </TouchableOpacity>
+          )}
 
           <View className="w-20 h-20 mr-4 bg-white items-center rounded-full">
             <Image

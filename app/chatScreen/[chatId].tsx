@@ -4,6 +4,7 @@ import { useHeaderHeight } from "@react-navigation/elements";
 import { router, Stack } from "expo-router";
 import React, { useEffect } from "react";
 import {
+  ActivityIndicator,
   Image,
   SafeAreaView,
   Text,
@@ -24,22 +25,27 @@ export default function ChannelScreen() {
   const headerHeight = useHeaderHeight();
 
   const handleCreatePayment = () => {
-    router.push("/paymentCreation");
+    router.push("/lessonCreation");
   };
 
   useEffect(() => {
     setTopInset(headerHeight);
   }, [headerHeight, setTopInset]);
 
+  // If no channel yet, show a loading screen
   if (!channel) {
     console.log(channel);
     return (
       <SafeAreaView>
-        <Text>Loading chat ...</Text>
+        <View className="items-center flex-col justify-center w-full h-full">
+          <ActivityIndicator size="large" />
+          <Text className="font-asap-medium mt-4">Loading chat...</Text>
+        </View>
       </SafeAreaView>
     );
   }
 
+  // Retrieve other member's stream information
   const otherMember = Object.values(channel.state.members).find(
     (m) => m.user?.id !== userDoc?.userId
   );
@@ -56,6 +62,8 @@ export default function ChannelScreen() {
       }`}
     >
       <Stack.Screen options={{ title: "Channel Screen" }} />
+
+      {/* Display channel if it exist, else display null */}
       {channel ? (
         <Channel
           channel={channel}
@@ -93,6 +101,7 @@ export default function ChannelScreen() {
             )}
           </View>
 
+          {/* Main chat screen */}
           <MessageList />
           <MessageInput />
         </Channel>

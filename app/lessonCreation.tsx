@@ -1,6 +1,8 @@
+import CustomButton from "@/components/customButton";
 import { useAuth } from "@/contexts/AuthProvider";
 import { useChat } from "@/contexts/ChatProvider";
 import { db } from "@/firebase";
+import DateTimePicker from "@react-native-community/datetimepicker";
 import { createClient } from "@supabase/supabase-js";
 import Constants from "expo-constants";
 import { router } from "expo-router";
@@ -25,18 +27,24 @@ import {
   View,
 } from "react-native";
 
-export default function PaymentCreation() {
+export default function LessonCreation() {
   // State variables to hold payment details
   const [paidTo, setPaidTo] = useState("");
   const [paidBy, setPaidBy] = useState("");
   const [subject, setSubject] = useState("");
-  const [date, setDate] = useState("");
-  const [startTime, setStartTime] = useState("");
-  const [endTime, setEndTime] = useState("");
   const [costPerHour, setCostPerHour] = useState("");
   const [totalCost, setTotalCost] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [totalAfterTax, setTotalAfterTax] = useState("");
+
+  const [date, setDate] = useState(new Date());
+  const [showDate, setShowDate] = useState(false);
+  const [startTime, setStartTime] = useState(new Date());
+  const [showStartTime, setShowStartTime] = useState(false);
+  const [endTime, setEndTime] = useState(new Date());
+  const [showEndTime, setShowEndTime] = useState(false);
+
   // Supabase client
   const supabaseUrl = Constants.expoConfig?.extra?.supabaseUrl;
   const supabaseAnonKey = Constants.expoConfig?.extra?.supabaseAnonKey;
@@ -58,20 +66,44 @@ export default function PaymentCreation() {
   }, [userDoc, channel]);
 
   useEffect(() => {
+    setErrorMsg("");
     if (costPerHour && startTime && endTime) {
-      const start = parseFloat(startTime);
-      const end = parseFloat(endTime);
-      const cost = parseFloat(costPerHour);
+      const startMillis = startTime.getTime();
+      const endMillis = endTime.getTime();
 
-      if (!isNaN(start) && !isNaN(end) && !isNaN(cost)) {
-        const hours = end - start;
-        const total = (hours * cost).toFixed(2);
-        setTotalCost(total);
+      // Convert comma to dot for decimal parsing
+      const cost = parseFloat(costPerHour.replace(",", "."));
+
+      if (!isNaN(cost)) {
+        const durationInHours = (endMillis - startMillis) / (1000 * 60 * 60);
+
+        if (durationInHours >= 0.99) {
+          setErrorMsg("");
+
+          const total = (durationInHours * cost).toFixed(2).replace(".", ",");
+          setTotalCost(total);
+
+          const afterTax = (parseFloat(total.replace(",", ".")) - 2.7)
+            .toFixed(2)
+            .replace(".", ",");
+          setTotalAfterTax(afterTax);
+        } else if (durationInHours < 1 && durationInHours > 0) {
+          setErrorMsg("Minimum class time must be 1 hour");
+        } else {
+          setTotalCost("");
+          setTotalAfterTax("");
+          setErrorMsg("End time must be later than start time");
+          return;
+        }
       } else {
         setTotalCost("");
+        setTotalAfterTax("");
+        setErrorMsg("");
       }
     } else {
       setTotalCost("");
+      setTotalAfterTax("");
+      setErrorMsg("");
     }
   }, [costPerHour, startTime, endTime]);
 
@@ -80,9 +112,9 @@ export default function PaymentCreation() {
       paidTo.trim() &&
       paidBy.trim() &&
       subject.trim() &&
-      date.trim() &&
-      startTime.trim() &&
-      endTime.trim() &&
+      date instanceof Date &&
+      startTime instanceof Date &&
+      endTime instanceof Date &&
       costPerHour.trim() &&
       totalCost.trim()
     );
@@ -93,6 +125,15 @@ export default function PaymentCreation() {
       setErrorMsg("Please fill in all fields.");
       return;
     }
+
+    if (parseFloat(costPerHour) < 3) {
+      Alert.alert(
+        "Minimum Cost/hr is S$3",
+        "Stripe will impose a S$2.70 tax, please raise your class cost accordingly."
+      );
+      return;
+    }
+
     setErrorMsg("");
     setSubmitting(true);
 
@@ -118,10 +159,11 @@ export default function PaymentCreation() {
         paidTo: userDoc.name,
         paidBy: otherUserName,
         tutorId: userDoc.userId,
+        tuteeId: otherUserId,
         subject,
-        date,
-        startTime,
-        endTime,
+        date: date.toISOString(),
+        startTime: startTime.toISOString(),
+        endTime: endTime.toISOString(),
         costPerHour,
         totalCost,
         isPaid: true,
@@ -175,21 +217,31 @@ export default function PaymentCreation() {
     const paynowUrl = checkoutData.url; // Extract the PayNow URL from the response
 
     // Send message to the channel with payment details
-      await channel?.sendMessage({ 
-        text: `New class created by **${userDoc.name}** for **${otherUserName}**:
+      await channel?.sendMessage({
+        text: `New class created by **${
+          userDoc.name
+        }** for **${otherUserName}**:
           \nSubject: ${subject}
-          \nDate: ${date}
-          \nTime: ${startTime} - ${endTime}
+          \nDate: ${date.toDateString()}
+          \nTime: ${startTime.toLocaleTimeString("en-GB", {
+            hour: "2-digit",
+            minute: "2-digit",
+            hour12: false,
+          })} - ${endTime.toLocaleTimeString("en-GB", {
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: false,
+        })}
           \nCost/hr: S$${costPerHour}
           \nTotal cost: S$${totalCost}
           \n\n 👉 [Click here to pay via PayNow](${paynowUrl})`, 
         user_id: userDoc.userId,
       });
 
-      Alert.alert("Success", "Lesson booked.");
+      Alert.alert("Success", "Lesson created.");
       router.back();
     } catch (error) {
-      Alert.alert("Error", "Failed to book lesson.");
+      Alert.alert("Error", "Failed to create lesson.");
       console.error("Error adding document: ", error);
     } finally {
       setSubmitting(false);
@@ -243,44 +295,151 @@ export default function PaymentCreation() {
             value={subject}
             onChangeText={setSubject}
           />
-          <LabelledInput
-            label="Date of Lesson"
-            value={date}
-            onChangeText={setDate}
-          />
 
-          <Text style={styles.label}>Timing:</Text>
-          <View style={styles.timingRow}>
-            <TextInput
-              style={styles.timingBox}
-              placeholder="Start"
-              value={startTime}
-              onChangeText={setStartTime}
-              keyboardType="numbers-and-punctuation"
-            />
-            <Text style={styles.dash}>-</Text>
-            <TextInput
-              style={styles.timingBox}
-              placeholder="End"
-              value={endTime}
-              onChangeText={setEndTime}
-              keyboardType="numbers-and-punctuation"
-            />
+          <Text style={styles.label}>Date</Text>
+
+          {!showDate ? (
+            <TouchableOpacity
+              onPress={() => {
+                setShowDate(true);
+                setShowStartTime(false);
+                setShowEndTime(false);
+              }}
+            >
+              <Text style={styles.input}>
+                {date ? date.toLocaleDateString() : "Select Date"}
+              </Text>
+            </TouchableOpacity>
+          ) : (
+            <View className="flex-col">
+              <DateTimePicker
+                value={date}
+                mode="date"
+                display="spinner"
+                onChange={(event, selectedDate) => {
+                  const currentDate = selectedDate || date;
+                  setDate(currentDate);
+                }}
+                textColor="black"
+                minimumDate={new Date()}
+              />
+              <CustomButton
+                title="Confirm Date"
+                role="tutor"
+                onPress={() => setShowDate(false)}
+              />
+            </View>
+          )}
+
+          <View className="flex-col space-y-4">
+            <Text style={styles.label}>Start Time</Text>
+            {/* START TIME */}
+
+            {!showStartTime ? (
+              <TouchableOpacity
+                onPress={() => {
+                  setShowDate(false);
+                  setShowStartTime(true);
+                  setShowEndTime(false);
+                }}
+              >
+                <Text style={styles.input}>
+                  {startTime
+                    ? startTime.toLocaleTimeString("en-GB", {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                        hour12: false,
+                      })
+                    : "Select Start Time"}
+                </Text>
+              </TouchableOpacity>
+            ) : (
+              <View className="flex-1">
+                <DateTimePicker
+                  value={startTime}
+                  mode="time"
+                  display="spinner"
+                  onChange={(event, selectedTime) => {
+                    const currentTime = selectedTime || startTime;
+                    setStartTime(currentTime);
+                  }}
+                  textColor="black"
+                />
+                <CustomButton
+                  title="Confirm Start Time"
+                  role="tutor"
+                  onPress={() => setShowStartTime(false)}
+                />
+              </View>
+            )}
           </View>
 
+          <Text style={styles.label}>End Time</Text>
+          {/* END TIME */}
+
+          {!showEndTime ? (
+            <TouchableOpacity
+              onPress={() => {
+                setShowDate(false);
+                setShowStartTime(false);
+                setShowEndTime(true);
+              }}
+            >
+              <Text style={styles.input}>
+                {endTime
+                  ? endTime.toLocaleTimeString("en-GB", {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                      hour12: false,
+                    })
+                  : "Select End Time"}
+              </Text>
+            </TouchableOpacity>
+          ) : (
+            <View className="flex-1">
+              <DateTimePicker
+                value={endTime}
+                mode="time"
+                display="spinner"
+                onChange={(event, selectedTime) => {
+                  const currentTime = selectedTime || endTime;
+                  setEndTime(currentTime);
+                }}
+                textColor="black"
+              />
+              <CustomButton
+                title="Confirm End Time"
+                role="tutor"
+                onPress={() => setShowEndTime(false)}
+              />
+            </View>
+          )}
+
           <Text style={styles.label}>Cost/hr</Text>
-          <View className="flex-row items-center h-12 bg-lightGray rounded-full mb-4 p-2 w-full">
+          <View className="flex-row items-center h-14 border-gray border-2 rounded-3xl mb-4 p-2 w-full">
             <Text className="text-lg font-asap-regular ml-1 mr-1">S$</Text>
             <TextInput
               className={`font-asap-regular flex-1`}
               keyboardType="numeric"
               value={costPerHour}
-              onChangeText={setCostPerHour}
+              onChangeText={(text) => {
+                // Allow only digits and one comma
+                let cleaned = text.replace(/[^0-9,]/g, "");
+
+                // Prevent multiple commas
+                const parts = cleaned.split(",");
+                if (parts.length > 2) return;
+
+                // Limit to 2 digits after comma
+                if (parts[1]?.length > 2) return;
+
+                setCostPerHour(cleaned);
+              }}
             />
           </View>
 
           <Text style={styles.label}>Total cost</Text>
-          <View className="flex-row items-center h-12 bg-lightGray rounded-full mb-12 p-2 w-full">
+          <View className="flex-row items-center h-14 bg-lightGray rounded-3xl border-gray border-2 mb-2 p-2 w-full">
             <Text className="text-lg font-asap-regular ml-1 mr-1">S$</Text>
             <TextInput
               className={`font-asap-regular flex-1`}
@@ -291,33 +450,35 @@ export default function PaymentCreation() {
               // since it should be calculated automatically
             />
           </View>
+          {totalAfterTax && (
+            <Text className="text-sm font-asap-regular ml-1 mb-12 mr-1">
+              ❗️After Stripe tax (S$2.70) you will receive: S${totalAfterTax}
+            </Text>
+          )}
 
           {errorMsg !== "" && (
-            <Text style={{ color: "red", textAlign: "center", marginTop: 10 }}>
+            <Text
+              style={{
+                color: "red",
+                textAlign: "center",
+                marginTop: 20,
+                fontFamily: "Asap",
+              }}
+            >
               {errorMsg}
             </Text>
           )}
         </ScrollView>
       </KeyboardAvoidingView>
-      <TouchableOpacity
-        style={[
-          styles.sendButton,
-          (submitting || !checkIfAllFieldsFilled()) &&
-            styles.disabledSendButton, // Disable button if submitting is false or fields are not filled
-        ]}
-        onPress={handleSend}
-        disabled={submitting || !checkIfAllFieldsFilled()}
-      >
-        <Text
-          style={[
-            styles.sendButtonText,
-            (submitting || !checkIfAllFieldsFilled()) &&
-              styles.disabledSendButtonText, // Change text color if button is disabled
-          ]}
-        >
-          Send
-        </Text>
-      </TouchableOpacity>
+      <View className="w-full mb-12 px-6">
+        <CustomButton
+          title="Send"
+          role="tutor"
+          onPress={handleSend}
+          active={errorMsg === "" && !submitting && checkIfAllFieldsFilled()}
+          loading={submitting}
+        />
+      </View>
     </View>
   );
 }
@@ -336,7 +497,7 @@ const LabelledInput = ({
   <>
     <Text style={styles.label}>{label}</Text>
     <TextInput
-      style={styles.input}
+      style={editable ? styles.input : styles.disabledInput}
       value={value}
       onChangeText={onChangeText}
       editable={editable}
@@ -367,7 +528,8 @@ const styles = StyleSheet.create({
     fontFamily: "Asap-Regular",
   },
   input: {
-    backgroundColor: "#eee",
+    borderColor: "#8e8e93",
+    borderWidth: 2,
     borderRadius: 20,
     padding: 12,
     fontSize: 16,
@@ -375,27 +537,20 @@ const styles = StyleSheet.create({
     fontFamily: "Asap-Regular",
     marginBottom: 12,
   },
-  timingRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 12,
-  },
-  timingBox: {
-    flex: 1,
-    backgroundColor: "#eee",
+  disabledInput: {
+    backgroundColor: "#ebebeb",
+    borderColor: "#8e8e93",
+    borderWidth: 2,
     borderRadius: 20,
-    padding: 12,
+    padding: 14,
     fontSize: 16,
     color: "#000",
-  },
-  dash: {
-    marginHorizontal: 10,
-    fontSize: 18,
-    color: "#14317A",
+    fontFamily: "Asap-Regular",
+    marginBottom: 12,
   },
   sendButton: {
     marginTop: 20,
-    backgroundColor: "#D8ECFF",
+    backgroundColor: "#59AEFF",
     paddingVertical: 15,
     borderRadius: 10,
     alignItems: "center",

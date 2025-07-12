@@ -4,6 +4,8 @@ import { router } from "expo-router";
 import { doc, onSnapshot } from "firebase/firestore";
 import React, { useEffect, useState } from "react";
 import {
+  ActivityIndicator,
+  Alert,
   Image,
   ScrollView,
   StyleSheet,
@@ -11,6 +13,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { WebView } from "react-native-webview";
 
 type Lesson = {
   id: string;
@@ -20,40 +23,58 @@ type Lesson = {
   startTime: string;
   endTime: string;
   isPaid?: boolean;
+  tutorId: string;
+  tuteeId: string;
 };
 
 export default function TutorSchedule() {
   const { userDoc } = useAuth();
-  const [lessons, setLessons] = useState<Lesson[]>([]); // State to hold the lessons
+  const [lessons, setLessons] = useState<Lesson[]>([]);
+  const [onboardingUrl, setOnboardingUrl] = useState<string | null>(null);
+  const [showWebView, setShowWebView] = useState(false);
+  const [loading, setLoading] = useState(false);
 
+  const handleJoinCall = (
+    lessonId: string,
+    tutorId: string,
+    tuteeId: string
+  ) => {
+    router.push({
+      pathname: "/videoScreen/[callId]",
+      params: { callId: lessonId, tutorId: tutorId, tuteeId: tuteeId },
+    });
+  };
+
+  // Firestore: Fetch lessons
   useEffect(() => {
     if (!userDoc?.userId) return;
 
     const userRef = doc(db, "users", userDoc.userId);
 
-    // Listen to changes in the user's document to get paymentIds
     const unsubscribe = onSnapshot(userRef, (userSnap) => {
       const userData = userSnap.data();
       const ids = userData?.paymentIds || [];
-      // Clear old payment listeners
       const unsubscribers: (() => void)[] = [];
-      // Listen to each payment document
+
       ids.forEach((id: string) => {
         const paymentRef = doc(db, "payments", id);
-
         const unsubscribePayment = onSnapshot(paymentRef, (paymentSnap) => {
-          // Listen to changes in each payment document
           if (!paymentSnap.exists()) return;
-
-          const data = paymentSnap.data(); // Get the payment data
+          const data = paymentSnap.data();
           if (!data) return;
 
           setLessons((prevLessons) => {
             const filtered = prevLessons.filter((l) => l.id !== id); // Remove old lesson if it exists
-            // Only add if the payment is marked as paid
-            if (data.isPaid) {
+            // Only add if the payment is marked as paid and not ended yet
+
+            const now = new Date();
+            const end = new Date(data.endTime);
+
+            const hasEnded = end < now;
+
+            if (data.isPaid && !hasEnded) {
               return [
-                ...filtered, // Add the new lesson
+                ...filtered,
                 {
                   id,
                   paidBy: data.paidBy,
@@ -61,12 +82,15 @@ export default function TutorSchedule() {
                   date: data.date,
                   startTime: data.startTime,
                   endTime: data.endTime,
+                  tutorId: data.tutorId,
+                  tuteeId: data.tuteeId,
                 },
               ];
             }
-            return filtered; // Remove if not paid
+            return filtered;
           });
         });
+
         unsubscribers.push(unsubscribePayment);
       });
 
@@ -78,59 +102,156 @@ export default function TutorSchedule() {
     return () => unsubscribe();
   }, [userDoc]);
 
+  // Start onboarding
+  async function startOnboarding() {
+    if (!userDoc?.userId) {
+      Alert.alert("Error", "User not logged in");
+      return;
+    }
+    setLoading(true);
+    try {
+      const res = await fetch( // Create Stripe Connect account
+        "https://ynikykgyystdyitckguc.functions.supabase.co/create-connect-account",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ userId: userDoc.userId }),
+        }
+      );
+
+      if (!res.ok) {
+        const errorText = await res.text();
+        console.error("Onboarding fetch failed:", res.status, errorText);
+        throw new Error("Failed to get onboarding URL");
+      }
+
+      const data = await res.json(); 
+
+      if (!data.onboardingUrl) throw new Error("No onboarding URL returned");
+
+      setOnboardingUrl(data.onboardingUrl); // Set the onboarding URL
+      setShowWebView(true);
+    } catch (err) {
+      console.error("Onboarding error:", err);
+      Alert.alert("Error", "Could not start onboarding. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  }
+  // WebView redirect detection
+  function onNavigationStateChange(navState: { url: string }) {
+    const { url } = navState;
+
+    if (url.startsWith("tutorlah://onboarding-complete")) {
+      setShowWebView(false);
+      Alert.alert("Onboarding Complete!", "You can receive payment now.");
+    } else if (url.startsWith("tutorlah://onboarding-refresh")) {
+      startOnboarding();
+    }
+  }
+
+  if (showWebView && onboardingUrl) { // Show WebView for onboarding
+    return (
+      <View style={{ flex: 1 }}>
+        <WebView
+          source={{ uri: onboardingUrl }}
+          onNavigationStateChange={onNavigationStateChange}
+          startInLoadingState
+        />
+      </View>
+    );
+  }
+
   return (
-    <View className="flex-1 bg-white w-full">
+    <View style={styles.container}>
       {/* Header */}
-      <View className="border-8 w-full justify-center items-center h-1/6 border-primaryBlue bg-primaryBlue">
-        <View className="flex-row w-11/12 items-center inset-y-6">
-          <TouchableOpacity
-            onPress={() => router.back()}
-            className="items-center h-full justify-center mt-1 mr-2"
-          >
-            <Image
-              className="w-10"
-              resizeMode="contain"
-              source={require("../../assets/images/arrowBack.png")}
-            />
-          </TouchableOpacity>
-          <Text className="font-asap-bold text-3xl text-white">Schedules</Text>
-        </View>
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+          <Image
+            style={styles.backIcon}
+            resizeMode="contain"
+            source={require("../../assets/images/arrowBack.png")}
+          />
+        </TouchableOpacity>
+        <Text style={styles.headerText}>Your Schedules</Text>
+        <TouchableOpacity
+          onPress={startOnboarding}
+          style={[
+            styles.stripeButton,
+            loading && { backgroundColor: "#999" }, // Disable button when loading
+          ]}
+          disabled={loading}
+        >
+          {loading ? (
+            <ActivityIndicator color="white" />
+          ) : (
+            <Text style={styles.stripeButtonText}>
+              Stripe Account
+            </Text>
+          )}
+        </TouchableOpacity>
       </View>
 
-      <ScrollView contentContainerStyle={styles.container} className="w-full">
+      <ScrollView contentContainerStyle={styles.lessonsContainer}>
         {lessons.length === 0 ? (
-          <Text style={styles.noLessonsText}>No meetings scheduled.</Text>
+          <Text style={styles.noLessonsText}>No lessons scheduled</Text>
         ) : (
-          lessons.map((lesson) => (
-            <View style={styles.card} key={lesson.id}>
-              <Text style={styles.name}>{lesson.paidBy}</Text>
-              <View style={styles.divider} />
+          lessons.map((lesson) => {
+            const now = new Date();
 
-              <View style={styles.detail}>
-                <Text style={styles.label}>Subject:</Text>
-                <Text style={styles.value}>{lesson.subject}</Text>
+            const lessonDate = new Date(lesson.date);
+            const start = new Date(lesson.startTime);
+            const end = new Date(lesson.endTime);
+
+            const onGoing =
+              now >= start &&
+              now <= end &&
+              lessonDate.toDateString() === now.toDateString();
+
+            return (
+              <View style={styles.card} key={lesson.id}>
+                <Text style={styles.name}>{lesson.paidBy}</Text>
+                <View style={styles.divider} />
+
+                <View style={styles.detail}>
+                  <Text style={styles.label}>Subject:</Text>
+                  <Text style={styles.value}>{lesson.subject}</Text>
+                </View>
+
+                <View style={styles.detail}>
+                  <Text style={styles.label}>Date:</Text>
+                  <Text style={styles.value}>{lessonDate.toDateString()}</Text>
+                </View>
+
+                <View style={styles.detail}>
+                  <Text style={styles.label}>Timing:</Text>
+                  <Text style={styles.value}>
+                    {new Date(lesson.startTime).toLocaleTimeString("en-GB", {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}{" "}
+                    -{" "}
+                    {new Date(lesson.endTime).toLocaleTimeString("en-GB", {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </Text>
+                </View>
+
+                {/* Only show join button if the class is ongoing */}
+                {onGoing && (
+                  <TouchableOpacity
+                    onPress={() =>
+                      handleJoinCall(lesson.id, lesson.tutorId, lesson.tuteeId)
+                    }
+                    style={styles.joinButton}
+                  >
+                    <Text style={styles.joinText}>Join Class</Text>
+                  </TouchableOpacity>
+                )}
               </View>
-
-              <View style={styles.detail}>
-                <Text style={styles.label}>Date:</Text>
-                <Text style={styles.value}>{lesson.date}</Text>
-              </View>
-
-              <View style={styles.detail}>
-                <Text style={styles.label}>Timing:</Text>
-                <Text style={styles.value}>
-                  {lesson.startTime} - {lesson.endTime}
-                </Text>
-              </View>
-
-              <TouchableOpacity
-                onPress={() => router.push("/comingSoon")}
-                style={styles.joinButton}
-              >
-                <Text style={styles.joinText}>Join Class</Text>
-              </TouchableOpacity>
-            </View>
-          ))
+            );
+          })
         )}
       </ScrollView>
     </View>
@@ -138,17 +259,47 @@ export default function TutorSchedule() {
 }
 
 const styles = StyleSheet.create({
-  container: {
+  container: { flex: 1, backgroundColor: "#fff" },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    backgroundColor: "#1A4F82", 
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  backButton: {
+    padding: 8,
+  },
+  backIcon: {
+    width: 24,
+    height: 24,
+    tintColor: "#fff",
+  },
+  headerText: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "white",
+  },
+  stripeButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    backgroundColor: "#59AEFF",
+    borderRadius: 8,
+  },
+  stripeButtonText: {
+    color: "white",
+    fontWeight: "600",
+  },
+  lessonsContainer: {
     paddingVertical: 20,
     alignItems: "center",
-    backgroundColor: "#fff",
   },
   noLessonsText: {
-    textAlign: "center",
-    fontFamily: "Asap-Regular",
     fontSize: 18,
     color: "#999",
     marginTop: 40,
+    textAlign: "center",
   },
   card: {
     backgroundColor: "#D8ECFF",
@@ -156,7 +307,6 @@ const styles = StyleSheet.create({
     padding: 20,
     width: "90%",
     marginBottom: 30,
-    alignSelf: "center",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -165,7 +315,7 @@ const styles = StyleSheet.create({
   },
   name: {
     fontSize: 18,
-    fontFamily: "Asap-Bold",
+    fontWeight: "700",
     color: "#1A4F82",
   },
   divider: {
@@ -176,26 +326,22 @@ const styles = StyleSheet.create({
   detail: {
     marginBottom: 12,
     flexDirection: "row",
-    alignItems: "center",
-    width: "100%",
   },
   label: {
     fontSize: 16,
-    fontFamily: "Asap-Semibold",
     color: "#1A4F82",
     marginRight: 20,
     width: 90,
+    fontWeight: "600",
   },
   value: {
     fontSize: 15,
-    fontFamily: "Asap-Regular",
     color: "#1A4F82",
   },
   joinButton: {
     marginTop: 20,
     backgroundColor: "#59AEFF",
     paddingVertical: 10,
-    paddingHorizontal: 12,
     borderRadius: 12,
     alignItems: "center",
   },
