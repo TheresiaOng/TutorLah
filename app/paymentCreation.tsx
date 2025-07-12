@@ -1,6 +1,8 @@
 import { useAuth } from "@/contexts/AuthProvider";
 import { useChat } from "@/contexts/ChatProvider";
 import { db } from "@/firebase";
+import { createClient } from "@supabase/supabase-js";
+import Constants from "expo-constants";
 import { router } from "expo-router";
 import {
   addDoc,
@@ -35,6 +37,10 @@ export default function PaymentCreation() {
   const [totalCost, setTotalCost] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  // Supabase client
+  const supabaseUrl = Constants.expoConfig?.extra?.supabaseUrl;
+  const supabaseAnonKey = Constants.expoConfig?.extra?.supabaseAnonKey;
+  const supabase = createClient(supabaseUrl!, supabaseAnonKey!);
 
   const { userDoc } = useAuth();
   const { channel } = useChat();
@@ -131,20 +137,59 @@ export default function PaymentCreation() {
         paymentIds: arrayUnion(paymentDoc.id), // Add the payment ID to the other user's document
       });
 
-      await channel?.sendMessage({
+      const { data, error } = await supabase // Fetch the Stripe account ID for the user
+      .from("users")
+      .select("stripe_account_id")
+      .eq("tutorId", userDoc.userId)
+      .single();  
+
+      const stripeAccountId = data?.stripe_account_id;
+
+      if (!stripeAccountId) {
+        setErrorMsg("Stripe account not found. Please create a Stripe account in the Schedule Screen.");
+        setSubmitting(false);
+        return;
+      }
+
+      const checkoutRes = await fetch( // Create a PayNow checkout session
+        "https://ynikykgyystdyitckguc.functions.supabase.co/create-checkout-session",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            amount: parseFloat(totalCost),
+            stripeAccountId,
+            description: `Lesson: ${subject} on ${date}`,
+          }),
+        }
+      );
+
+      const checkoutData = await checkoutRes.json(); 
+
+    if (!checkoutRes.ok || !checkoutData?.url) {
+      setErrorMsg("Failed to generate PayNow link.");
+      setSubmitting(false);
+      return;
+    }
+
+    const paynowUrl = checkoutData.url; // Extract the PayNow URL from the response
+
+    // Send message to the channel with payment details
+      await channel?.sendMessage({ 
         text: `New class created by **${userDoc.name}** for **${otherUserName}**:
           \nSubject: ${subject}
           \nDate: ${date}
           \nTime: ${startTime} - ${endTime}
           \nCost/hr: S$${costPerHour}
-          \nTotal cost: S$${totalCost}`,
+          \nTotal cost: S$${totalCost}
+          \n\n 👉 [Click here to pay via PayNow](${paynowUrl})`, 
         user_id: userDoc.userId,
       });
 
-      Alert.alert("Success", "Payment details created.");
+      Alert.alert("Success", "Lesson booked.");
       router.back();
     } catch (error) {
-      Alert.alert("Error", "Failed to create payment details.");
+      Alert.alert("Error", "Failed to book lesson.");
       console.error("Error adding document: ", error);
     } finally {
       setSubmitting(false);
@@ -258,7 +303,7 @@ export default function PaymentCreation() {
         style={[
           styles.sendButton,
           (submitting || !checkIfAllFieldsFilled()) &&
-            styles.disabledSendButton, // Disable button if submitting or fields are not filled
+            styles.disabledSendButton, // Disable button if submitting is false or fields are not filled
         ]}
         onPress={handleSend}
         disabled={submitting || !checkIfAllFieldsFilled()}
