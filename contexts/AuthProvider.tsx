@@ -1,7 +1,7 @@
 import { auth, db } from "@/firebase";
 import { onAuthStateChanged, User } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
-import {
+import React, {
   createContext,
   ReactNode,
   useContext,
@@ -14,6 +14,7 @@ import {
 
 type AuthContextType = {
   userDoc: any;
+  setUserDoc: React.Dispatch<React.SetStateAction<any>>;
   fetchUserDoc: (uid?: string) => Promise<void>;
 };
 
@@ -60,6 +61,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     <AuthContext.Provider
       value={{
         userDoc,
+        setUserDoc,
         fetchUserDoc,
       }}
     >

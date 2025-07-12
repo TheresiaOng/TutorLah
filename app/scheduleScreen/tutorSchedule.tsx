@@ -4,7 +4,6 @@ import { router } from "expo-router";
 import { doc, onSnapshot } from "firebase/firestore";
 import React, { useEffect, useState } from "react";
 import {
-  Image,
   ScrollView,
   StyleSheet,
   Text,
@@ -20,11 +19,24 @@ type Lesson = {
   startTime: string;
   endTime: string;
   isPaid?: boolean;
+  tutorId: string;
+  tuteeId: string;
 };
 
 export default function TutorSchedule() {
   const { userDoc } = useAuth();
   const [lessons, setLessons] = useState<Lesson[]>([]); // State to hold the lessons
+
+  const handleJoinCall = (
+    lessonId: string,
+    tutorId: string,
+    tuteeId: string
+  ) => {
+    router.push({
+      pathname: "/videoScreen/[callId]",
+      params: { callId: lessonId, tutorId: tutorId, tuteeId: tuteeId },
+    });
+  };
 
   useEffect(() => {
     if (!userDoc?.userId) return;
@@ -50,8 +62,14 @@ export default function TutorSchedule() {
 
           setLessons((prevLessons) => {
             const filtered = prevLessons.filter((l) => l.id !== id); // Remove old lesson if it exists
-            // Only add if the payment is marked as paid
-            if (data.isPaid) {
+            // Only add if the payment is marked as paid and not ended yet
+
+            const now = new Date();
+            const end = new Date(data.endTime);
+
+            const hasEnded = end < now;
+
+            if (data.isPaid && !hasEnded) {
               return [
                 ...filtered, // Add the new lesson
                 {
@@ -61,6 +79,8 @@ export default function TutorSchedule() {
                   date: data.date,
                   startTime: data.startTime,
                   endTime: data.endTime,
+                  tutorId: data.tutorId,
+                  tuteeId: data.tuteeId,
                 },
               ];
             }
@@ -83,54 +103,72 @@ export default function TutorSchedule() {
       {/* Header */}
       <View className="border-8 w-full justify-center items-center h-1/6 border-primaryBlue bg-primaryBlue">
         <View className="flex-row w-11/12 items-center inset-y-6">
-          <TouchableOpacity
-            onPress={() => router.back()}
-            className="items-center h-full justify-center mt-1 mr-2"
-          >
-            <Image
-              className="w-10"
-              resizeMode="contain"
-              source={require("../../assets/images/arrowBack.png")}
-            />
-          </TouchableOpacity>
-          <Text className="font-asap-bold text-3xl text-white">Schedules</Text>
+          <Text className="font-asap-bold text-3xl text-white">
+            Your Schedules
+          </Text>
         </View>
       </View>
 
       <ScrollView contentContainerStyle={styles.container} className="w-full">
         {lessons.length === 0 ? (
-          <Text style={styles.noLessonsText}>No meetings scheduled.</Text>
+          <Text style={styles.noLessonsText}>No lessons scheduled</Text>
         ) : (
-          lessons.map((lesson) => (
-            <View style={styles.card} key={lesson.id}>
-              <Text style={styles.name}>{lesson.paidBy}</Text>
-              <View style={styles.divider} />
+          lessons.map((lesson) => {
+            const now = new Date();
 
-              <View style={styles.detail}>
-                <Text style={styles.label}>Subject:</Text>
-                <Text style={styles.value}>{lesson.subject}</Text>
+            const lessonDate = new Date(lesson.date);
+            const start = new Date(lesson.startTime);
+            const end = new Date(lesson.endTime);
+
+            const onGoing =
+              now >= start &&
+              now <= end &&
+              lessonDate.toDateString() === now.toDateString();
+
+            return (
+              <View style={styles.card} key={lesson.id}>
+                <Text style={styles.name}>{lesson.paidBy}</Text>
+                <View style={styles.divider} />
+
+                <View style={styles.detail}>
+                  <Text style={styles.label}>Subject:</Text>
+                  <Text style={styles.value}>{lesson.subject}</Text>
+                </View>
+
+                <View style={styles.detail}>
+                  <Text style={styles.label}>Date:</Text>
+                  <Text style={styles.value}>{lessonDate.toDateString()}</Text>
+                </View>
+
+                <View style={styles.detail}>
+                  <Text style={styles.label}>Timing:</Text>
+                  <Text style={styles.value}>
+                    {new Date(lesson.startTime).toLocaleTimeString("en-GB", {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}{" "}
+                    -{" "}
+                    {new Date(lesson.endTime).toLocaleTimeString("en-GB", {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </Text>
+                </View>
+
+                {/* Only show join button if the class is ongoing */}
+                {onGoing && (
+                  <TouchableOpacity
+                    onPress={() =>
+                      handleJoinCall(lesson.id, lesson.tutorId, lesson.tuteeId)
+                    }
+                    style={styles.joinButton}
+                  >
+                    <Text style={styles.joinText}>Join Class</Text>
+                  </TouchableOpacity>
+                )}
               </View>
-
-              <View style={styles.detail}>
-                <Text style={styles.label}>Date:</Text>
-                <Text style={styles.value}>{lesson.date}</Text>
-              </View>
-
-              <View style={styles.detail}>
-                <Text style={styles.label}>Timing:</Text>
-                <Text style={styles.value}>
-                  {lesson.startTime} - {lesson.endTime}
-                </Text>
-              </View>
-
-              <TouchableOpacity
-                onPress={() => router.push("/comingSoon")}
-                style={styles.joinButton}
-              >
-                <Text style={styles.joinText}>Join Class</Text>
-              </TouchableOpacity>
-            </View>
-          ))
+            );
+          })
         )}
       </ScrollView>
     </View>

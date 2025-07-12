@@ -2,7 +2,6 @@
 // (login and signup) and returns user-friendly messages.
 
 function errorhandling(error) {
-  console.log("errorHandling: checking for error");
   if (error.code === "auth/email-already-in-use") {
     return "Email already in use. Please use a different email address.";
   } else if (error.code === "auth/weak-password") {

@@ -26,6 +26,7 @@ import {
   View,
 } from "react-native";
 import { StreamChat } from "stream-chat";
+import NullScreen from "../nullScreen";
 
 type following = {
   userId: string;
@@ -42,11 +43,12 @@ const TuteeProfile = () => {
   const [following, setFollowing] = useState<following[]>([]);
   const [currentListings, setCurrentListings] = useState<Listing[]>([]);
   const [currentDoc, setCurrentDoc] = useState<any>(null);
-  const { userDoc } = useAuth();
   const { id: viewingUserId } = useGlobalSearchParams();
   const otherUserId = Array.isArray(viewingUserId)
     ? viewingUserId[0]
     : viewingUserId;
+  const { userDoc } = useAuth();
+  if (!userDoc) return <NullScreen />;
 
   function getStreamApiKey(): string {
     const key = Constants.expoConfig?.extra?.streamApiKey;
@@ -147,16 +149,18 @@ const TuteeProfile = () => {
       <View className="border-8 border-primaryOrange bg-primaryOrange w-full justify-center items-center h-1/4">
         {/* Profile pic and Name */}
         <View className="flex-row w-11/12 items-center inset-y-8">
-          <TouchableOpacity
-            onPress={() => router.back()}
-            className="items-center justify-center mr-2"
-          >
-            <Image
-              className="w-10"
-              resizeMode="contain"
-              source={require("../../assets/images/arrowBack.png")}
-            />
-          </TouchableOpacity>
+          {!isOwnProfile && (
+            <TouchableOpacity
+              onPress={() => router.back()}
+              className="items-center justify-center mr-2"
+            >
+              <Image
+                className="w-10"
+                resizeMode="contain"
+                source={require("../../assets/images/arrowBack.png")}
+              />
+            </TouchableOpacity>
+          )}
 
           <View className="w-20 h-20 mr-4 bg-white items-center rounded-full">
             <Image

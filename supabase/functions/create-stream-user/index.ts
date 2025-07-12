@@ -1,15 +1,32 @@
 import { StreamChat } from "npm:stream-chat";
 
-const streamClient = StreamChat.getInstance(
-  Deno.env.get("STREAM_API_KEY")!,
-  Deno.env.get("STREAM_API_SECRET")!,
-);
+const apiKey = Deno.env.get("STREAM_API_KEY");
+const apiSecret = Deno.env.get("STREAM_API_SECRET");
+
+if (!apiKey || !apiSecret) {
+  console.error("Missing Stream API key or secret");
+  throw new Error("Missing Stream API credentials");
+}
+
+const streamClient = StreamChat.getInstance(apiKey, apiSecret);
 
 Deno.serve(async (req) => {
-  const { id, name, role } = await req.json();
+  let payload;
+  try {
+    payload = await req.json();
+  } catch (err) {
+    console.error("Invalid JSON body", err);
+    return new Response("Invalid JSON", { status: 400 });
+  }
+
+  const { id, name, role } = payload;
 
   if (!id || !name || !role) {
-    return new Response("Missing fields", { status: 400 });
+    console.error("Missing required fields:", { id, name, role });
+    return new Response(JSON.stringify({ error: "Missing fields" }), {
+      status: 400,
+      headers: { "Content-Type": "application/json" },
+    });
   }
 
   try {
@@ -22,6 +39,7 @@ Deno.serve(async (req) => {
     );
 
     const token = streamClient.createToken(id);
+    console.log("Generated token:", token);
 
     return new Response(JSON.stringify({ token }), {
       headers: { "Content-type": "application/json" },

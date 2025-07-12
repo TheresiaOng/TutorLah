@@ -5,23 +5,28 @@ export default {
     name: "TutorLah!",
     slug: "TutorLah",
     version: "2.0.0",
-    runtimeVersion: {
-      policy: "appVersion"
-    },
+    runtimeVersion: "1.0.0",
     orientation: "portrait",
     icon: "./assets/images/TutorLahLogo.png",
     scheme: "tutorlah",
     userInterfaceStyle: "automatic",
     newArchEnabled: true,
     ios: {
+      bundleIdentifier: "com.theresiaong.TutorLah",
       supportsTablet: true,
     },
     android: {
+      "minSdkVersion": 24,
+      extraMavenRepos: [
+          "$rootDir/../../../node_modules/@notifee/react-native/android/libs",
+      ],
+      package: "com.theresiaong.TutorLah",
       adaptiveIcon: {
         foregroundImage: "./assets/images/TutorLahLogo.png",
         backgroundColor: "#ffffff",
       },
       edgeToEdgeEnabled: true,
+      permissions: ["INTERNET"],
     },
     web: {
       bundler: "metro",
@@ -39,6 +44,16 @@ export default {
           backgroundColor: "#ffffff",
         },
       ],
+      "expo-build-properties",
+      "@stream-io/video-react-native-sdk",
+      [
+        "@config-plugins/react-native-webrtc",
+        {
+          // add your explanations for camera and microphone
+          "cameraPermission": "$(PRODUCT_NAME) requires camera access in order to capture and transmit video",
+          "microphonePermission": "$(PRODUCT_NAME) requires microphone access in order to capture and transmit audio"
+        }
+      ]
     ],
     experiments: {
       typedRoutes: true,
@@ -56,13 +71,10 @@ export default {
         "projectId": "0f928a3d-92ed-4ca5-aef1-c6bf5bcb769f"
       },
       streamApiKey: process.env.STREAM_API_KEY,
-      streamSecretKey: process.env.STREAM_SECRET_KEY
+      supabaseApiKey: process.env.SUPABASE_API_KEY
     },
     "updates": {
       "url": "https://u.expo.dev/0f928a3d-92ed-4ca5-aef1-c6bf5bcb769f"
     },
-    "runtimeVersion": {
-      "policy": "appVersion"
-    }
   },
 };

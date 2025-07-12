@@ -1,7 +1,13 @@
+import CustomButton from "@/components/customButton";
+import { useAuth } from "@/contexts/AuthProvider";
 import { auth, db } from "@/firebase";
 import Constants from "expo-constants";
-import { router } from "expo-router";
-import { sendEmailVerification } from "firebase/auth";
+import { router, useLocalSearchParams } from "expo-router";
+import {
+  onAuthStateChanged,
+  sendEmailVerification,
+  signInWithEmailAndPassword,
+} from "firebase/auth";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
 import React, { useEffect, useState } from "react";
 import {
@@ -16,25 +22,41 @@ import {
 const secret = Constants.expoConfig?.extra?.streamSecretKey;
 
 const VerifyEmail = () => {
+  const { email, password } = useLocalSearchParams();
   const [checking, setChecking] = useState(false);
   const [verified, setVerified] = useState(false);
-  const [cooldown, setCooldown] = useState(0);
+  const [cooldown, setCooldown] = useState(60);
+  const [loading, setLoading] = useState(false);
+  const { setUserDoc } = useAuth();
 
   useEffect(() => {
     let timer: ReturnType<typeof setTimeout>;
 
+    // Reduce cooldown time by one per second
     if (cooldown > 0) {
       timer = setTimeout(() => setCooldown(cooldown - 1), 1000);
     }
     return () => clearTimeout(timer);
   }, [cooldown]);
 
+  // Email resend only available after every 60 seconds
   const handleResendEmail = async () => {
     if (auth.currentUser && cooldown === 0) {
+      setLoading(true);
       try {
         await sendEmailVerification(auth.currentUser);
+        Alert.alert(
+          "Email sent!",
+          "A verification link has been sent to your email. Please verify to continue."
+        );
         setCooldown(60);
+        setLoading(false);
       } catch (error) {
+        Alert.alert(
+          "Error",
+          "There seems to be a problem, please try again in a moment."
+        );
+        setLoading(false);
         console.error("Error sending verification email again:", error);
       }
     }
@@ -50,12 +72,13 @@ const VerifyEmail = () => {
           setChecking(true);
 
           const userDocRef = doc(db, "users", user.uid);
-          await updateDoc(userDocRef, { verified: true });
+          await updateDoc(userDocRef, { verified: true }); // Update verified state in document
 
           const docSnap = await getDoc(userDocRef);
           const userData = docSnap.exists() ? docSnap.data() : null;
 
           try {
+            // Connect user to stream
             const streamUser = await fetch(
               "https://ynikykgyystdyitckguc.supabase.co/functions/v1/create-stream-user",
               {
@@ -78,7 +101,31 @@ const VerifyEmail = () => {
 
             console.log("Stream user created:", result);
             clearInterval(interval);
-            router.replace("/loginScreen/login");
+
+            // Sign user in with their email and password
+            const userCredential = await signInWithEmailAndPassword(
+              auth,
+              typeof email === "string" ? email : email?.[0] ?? "",
+              typeof password === "string" ? password : password?.[0] ?? ""
+            );
+
+            console.log("User Logged in: ", userCredential);
+
+            const unsubscribe = onAuthStateChanged(auth, async (newUser) => {
+              if (newUser && newUser.emailVerified) {
+                const userDocRef = doc(db, "users", newUser.uid);
+                const docSnap = await getDoc(userDocRef);
+
+                if (docSnap.exists()) {
+                  setUserDoc(docSnap.data());
+                  unsubscribe();
+                  router.replace("/homeScreen/home");
+                } else {
+                  console.log("❌ No Firestore doc found for user");
+                  Alert.alert("Error", "User profile data not found.");
+                }
+              }
+            });
           } catch (err) {
             console.log("Stream user creation error:", err);
             Alert.alert("Unexpected error occurred. Please try again later.");
@@ -96,6 +143,7 @@ const VerifyEmail = () => {
       <TouchableOpacity
         onPress={() => router.back()}
         className="mt-16 mb-10 w-10 h-10 left-5 items-center justify-center"
+        disabled={loading}
       >
         <Image
           className="w-10"
@@ -130,21 +178,15 @@ const VerifyEmail = () => {
             <Text className="text-sm mt-12 font-asap-medium">
               Did not get the email?
             </Text>
-            <TouchableOpacity
-              className={`h-14 w-64 mt-2 rounded-lg items-center justify-center ${
-                cooldown > 0 ? "bg-lightGray" : " bg-secondaryBlue"
-              }`}
-              disabled={cooldown > 0}
-              onPress={handleResendEmail}
-            >
-              <Text
-                className={`font-asap-bold text-lg ${
-                  cooldown > 0 ? "text-gray" : " text-darkBlue"
-                }`}
-              >
-                {cooldown > 0 ? `Next resend in: ${cooldown}` : "Resend"}
-              </Text>
-            </TouchableOpacity>
+            <View className="w-64 mt-3">
+              <CustomButton
+                title={cooldown > 0 ? `Next resend in: ${cooldown}` : "Resend"}
+                role="tutor"
+                onPress={handleResendEmail}
+                active={cooldown == 0}
+                loading={loading}
+              />
+            </View>
           </>
         )}
       </View>

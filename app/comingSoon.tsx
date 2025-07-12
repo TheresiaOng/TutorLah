@@ -12,12 +12,14 @@ const comingSoon = () => {
       <Text className="text-lg font-asap-medium">
         This feature is coming in the next update
       </Text>
-      <CustomButton
-        title="Go Back"
-        role={userDoc?.role}
-        onPress={() => router.back()}
-        extraClassName="w-32 mt-6"
-      />
+      <View className="w-64">
+        <CustomButton
+          title="Go Back"
+          role={userDoc?.role}
+          onPress={() => router.back()}
+          extraClassName="w-32 mt-6"
+        />
+      </View>
     </View>
   );
 };
