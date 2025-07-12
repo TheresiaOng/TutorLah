@@ -28,8 +28,6 @@ type Lesson = {
 export default function TutorSchedule() {
   const { userDoc } = useAuth();
   const [lessons, setLessons] = useState<Lesson[]>([]);
-
-  // Stripe onboarding states
   const [onboardingUrl, setOnboardingUrl] = useState<string | null>(null);
   const [showWebView, setShowWebView] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -88,11 +86,9 @@ export default function TutorSchedule() {
       Alert.alert("Error", "User not logged in");
       return;
     }
-
     setLoading(true);
-
     try {
-      const res = await fetch(
+      const res = await fetch( // Create Stripe Connect account
         "https://ynikykgyystdyitckguc.functions.supabase.co/create-connect-account",
         {
           method: "POST",
@@ -107,11 +103,11 @@ export default function TutorSchedule() {
         throw new Error("Failed to get onboarding URL");
       }
 
-      const data = await res.json();
+      const data = await res.json(); 
 
       if (!data.onboardingUrl) throw new Error("No onboarding URL returned");
 
-      setOnboardingUrl(data.onboardingUrl);
+      setOnboardingUrl(data.onboardingUrl); // Set the onboarding URL
       setShowWebView(true);
     } catch (err) {
       console.error("Onboarding error:", err);
@@ -120,21 +116,19 @@ export default function TutorSchedule() {
       setLoading(false);
     }
   }
-
   // WebView redirect detection
   function onNavigationStateChange(navState: { url: string }) {
     const { url } = navState;
 
     if (url.startsWith("tutorlah://onboarding-complete")) {
       setShowWebView(false);
-      Alert.alert("Onboarding Complete!", "You're ready to start tutoring.");
+      Alert.alert("Onboarding Complete!", "You can receive payment now.");
     } else if (url.startsWith("tutorlah://onboarding-refresh")) {
       startOnboarding();
     }
   }
 
-  // Show WebView if onboarding is active
-  if (showWebView && onboardingUrl) {
+  if (showWebView && onboardingUrl) { // Show WebView for onboarding
     return (
       <View style={{ flex: 1 }}>
         <WebView
@@ -158,11 +152,20 @@ export default function TutorSchedule() {
           />
         </TouchableOpacity>
         <Text style={styles.headerText}>Schedules</Text>
-        <TouchableOpacity onPress={startOnboarding} style={styles.stripeButton}>
+        <TouchableOpacity
+          onPress={startOnboarding}
+          style={[
+            styles.stripeButton,
+            loading && { backgroundColor: "#999" }, // Disable button when loading
+          ]}
+          disabled={loading}
+        >
           {loading ? (
             <ActivityIndicator color="white" />
           ) : (
-            <Text style={styles.stripeButtonText}>Stripe Account</Text>
+            <Text style={styles.stripeButtonText}>
+              Stripe Account
+            </Text>
           )}
         </TouchableOpacity>
       </View>
@@ -209,7 +212,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    backgroundColor: "#1A4F82", // dark blue
+    backgroundColor: "#1A4F82", 
     paddingHorizontal: 16,
     paddingVertical: 12,
   },

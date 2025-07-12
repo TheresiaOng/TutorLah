@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { serve } from "https://deno.land/std/http/server.ts";
 import Stripe from 'stripe';
 
 const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY")!, {
@@ -11,7 +11,7 @@ const supabase = createClient(
   Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
 );
 
-serve(async (req: Request) => {
+serve(async (req: Request) => { // Handle POST requests only
   try {
     const { userId } = await req.json();
 
@@ -21,17 +21,18 @@ serve(async (req: Request) => {
       });
     }
 
-    // Create Stripe Connect Express account
+    // Create Stripe Connect account
     const account = await stripe.accounts.create({
       type: "express",
       country: "SG",
       capabilities: {
         transfers: { requested: true },
+        card_payments: { requested: true },
+        paynow_payments: { requested: true },
       },
     });
 
-    // Save Stripe account ID to Supabase users table
-    const { error } = await supabase
+    const { error } = await supabase // Insert or update user record with Stripe account ID
       .from("users")
       .upsert([{ tutorId: userId, stripe_account_id: account.id }]);
 
@@ -43,15 +44,14 @@ serve(async (req: Request) => {
       );
     }
 
-    // Create onboarding link
-    const onboarding = await stripe.accountLinks.create({
+    const onboarding = await stripe.accountLinks.create({ // Create onboarding link
       account: account.id,
-      refresh_url: "https://yourdomain.com/onboarding-refresh.html",
-      return_url: "https://yourdomain.com/onboarding-complete.html",
+      refresh_url: "https://super-seahorse-cc9608.netlify.app/onboarding-refresh.html",
+      return_url: "https://super-seahorse-cc9608.netlify.app/onboarding-complete.html",
       type: "account_onboarding",
     });
 
-    return new Response(
+    return new Response( // Return onboarding URL
       JSON.stringify({ onboardingUrl: onboarding.url }),
       { status: 200 }
     );
