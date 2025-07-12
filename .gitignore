@@ -39,9 +39,6 @@ yarn-error.*
 # NEVER PUBLICIZE
 .env
 
-# DEPLOYMENT BUILD
-/ios
-/android
 # Deployment Build
 ios/
 android/
