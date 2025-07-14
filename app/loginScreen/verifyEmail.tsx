@@ -19,7 +19,7 @@ import {
   View,
 } from "react-native";
 
-const secret = Constants.expoConfig?.extra?.streamSecretKey;
+const secret = Constants.expoConfig?.extra?.supbaseApiKey;
 
 const VerifyEmail = () => {
   const { email, password } = useLocalSearchParams();

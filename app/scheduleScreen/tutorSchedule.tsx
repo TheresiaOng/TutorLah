@@ -111,7 +111,7 @@ export default function TutorSchedule() {
     try {
       const res = await fetch(
         // Create Stripe Connect account
-        "https://ynikykgyystdyitckguc.functions.supabase.co/create-connect-account",
+        "https://ynikykgyystdyitckguc.supabase.co/functions/v1/create-checkout-session",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
