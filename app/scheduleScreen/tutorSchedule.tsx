@@ -6,7 +6,6 @@ import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
-  Image,
   ScrollView,
   StyleSheet,
   Text,
@@ -110,7 +109,8 @@ export default function TutorSchedule() {
     }
     setLoading(true);
     try {
-      const res = await fetch( // Create Stripe Connect account
+      const res = await fetch(
+        // Create Stripe Connect account
         "https://ynikykgyystdyitckguc.functions.supabase.co/create-connect-account",
         {
           method: "POST",
@@ -125,7 +125,7 @@ export default function TutorSchedule() {
         throw new Error("Failed to get onboarding URL");
       }
 
-      const data = await res.json(); 
+      const data = await res.json();
 
       if (!data.onboardingUrl) throw new Error("No onboarding URL returned");
 
@@ -150,7 +150,8 @@ export default function TutorSchedule() {
     }
   }
 
-  if (showWebView && onboardingUrl) { // Show WebView for onboarding
+  if (showWebView && onboardingUrl) {
+    // Show WebView for onboarding
     return (
       <View style={{ flex: 1 }}>
         <WebView
@@ -165,31 +166,26 @@ export default function TutorSchedule() {
   return (
     <View style={styles.container}>
       {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <Image
-            style={styles.backIcon}
-            resizeMode="contain"
-            source={require("../../assets/images/arrowBack.png")}
-          />
-        </TouchableOpacity>
-        <Text style={styles.headerText}>Your Schedules</Text>
-        <TouchableOpacity
-          onPress={startOnboarding}
-          style={[
-            styles.stripeButton,
-            loading && { backgroundColor: "#999" }, // Disable button when loading
-          ]}
-          disabled={loading}
-        >
-          {loading ? (
-            <ActivityIndicator color="white" />
-          ) : (
-            <Text style={styles.stripeButtonText}>
-              Stripe Account
-            </Text>
-          )}
-        </TouchableOpacity>
+      <View className="border-8 w-full justify-center items-center h-1/6 border-primaryBlue bg-primaryBlue">
+        <View className="flex-row w-11/12 items-center justify-between inset-y-6">
+          <Text className="font-asap-bold text-3xl text-white">
+            Your Schedules
+          </Text>
+          <TouchableOpacity
+            onPress={startOnboarding}
+            style={[
+              styles.stripeButton,
+              loading && { backgroundColor: "#999" }, // Disable button when loading
+            ]}
+            disabled={loading}
+          >
+            {loading ? (
+              <ActivityIndicator color="white" />
+            ) : (
+              <Text style={styles.stripeButtonText}>Stripe Account</Text>
+            )}
+          </TouchableOpacity>
+        </View>
       </View>
 
       <ScrollView contentContainerStyle={styles.lessonsContainer}>
@@ -264,7 +260,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    backgroundColor: "#1A4F82", 
+    backgroundColor: "#1A4F82",
     paddingHorizontal: 16,
     paddingVertical: 12,
   },
@@ -283,13 +279,14 @@ const styles = StyleSheet.create({
   },
   stripeButton: {
     paddingHorizontal: 12,
-    paddingVertical: 6,
+    paddingVertical: 8,
     backgroundColor: "#59AEFF",
     borderRadius: 8,
   },
   stripeButtonText: {
     color: "white",
     fontWeight: "600",
+    fontFamily: "Asap",
   },
   lessonsContainer: {
     paddingVertical: 20,
