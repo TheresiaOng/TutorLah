@@ -106,6 +106,7 @@ export default function EditTuteeProfile() {
     try {
       const userDocRef = await doc(db, "users", userDoc.userId); // Get user document reference
       await updateDoc(userDocRef, { // Update user document with new profile data
+        name: name.trim(),
         educationLevel: educationLevel.trim(),
         educationInstitute: educationInstitute.trim(),
       });
