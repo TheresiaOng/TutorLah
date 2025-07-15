@@ -2,11 +2,13 @@ import { useAuth } from "@/contexts/AuthProvider";
 import { createClient } from "@supabase/supabase-js";
 import Constants from "expo-constants";
 import { collection, onSnapshot, query, where } from "firebase/firestore";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, FlatList, Image, Text, View } from "react-native";
 import { db } from "../../firebase";
 
 import CustomSearchBar from "@/components/customSearchBar";
+import { createClient } from "@supabase/supabase-js";
+import Constants from "expo-constants";
 import NullScreen from "../nullScreen";
 import TuteeCard from "./tuteeCard";
 import TutorCard from "./tutorCard";
@@ -14,6 +16,7 @@ import TutorCard from "./tutorCard";
 type Listing = {
   listId: string;
   role: "tutor" | "tutee";
+  subjects: string;
 };
 
 const HomeScreen = () => {
@@ -22,14 +25,69 @@ const HomeScreen = () => {
   const [searchResults, setSearchResults] = useState<Listing[]>([]);
   const [searchFields, setSearchFields] = useState<string[]>([]);
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
+  const [subjectRanking, setSubjectRanking] = useState<Map<string, number>>(
+    new Map()
+  );
+  const [loadingMatching, setLoadingMatching] = useState(false);
+
   const { userDoc } = useAuth();
   if (!userDoc) return <NullScreen />;
-
+  
   // Supabase client setup
   const supabaseUrl = Constants.expoConfig?.extra?.supabaseUrl;
   const supabaseAnonKey = Constants.expoConfig?.extra?.supabaseAnonKey;
   const supabase = createClient(supabaseUrl!, supabaseAnonKey!);
 
+  useEffect(() => {
+    const fetchMatchingSubjects = async () => {
+      setLoadingMatching(true);
+      console.log("Running match_subjects with embedding of", userDoc.name);
+
+      const isTutor = userDoc?.role === "tutor";
+      const userEmbedding = isTutor
+        ? userDoc.embeddedSubjectToTeach
+        : userDoc.embeddedSubjectToLearn;
+
+      if (!userEmbedding) {
+        setLoadingMatching(false); // <-- ADD THIS LINE
+        return;
+      }
+
+      // call supabase table function to match subject based on users' preferences
+      const { data, error } = await supabase.rpc("match_subjects", {
+        user_embedding: userEmbedding,
+        match_limit: 10, // take the top 10 subjects
+        threshold: 0.5,
+      });
+
+      if (error) {
+        console.error("Error calling match_subjects:", error);
+        setLoadingMatching(false);
+        return;
+      }
+
+      if (!data || data.length === 0) {
+        console.warn(
+          "No matched subjects found. Falling back to default sorting."
+        );
+        setSubjectRanking(new Map()); // reset to empty map = default fallback
+        setLoadingMatching(false);
+        return;
+      }
+
+      // rank each subject based on similarity / match
+      const ranked = new Map<string, number>();
+      (data as { name: string }[]).forEach((item, index) => {
+        ranked.set(item.name.toLowerCase(), 10 - index);
+      });
+
+      setSubjectRanking(ranked);
+      setLoadingMatching(false);
+    };
+
+    fetchMatchingSubjects();
+  }, [userDoc]);
+    
   useEffect(() => { // Fetching photo_url from Supabase
     const fetchData = async () => {
       if (!userDoc?.userId) return; // Ensure id is available
@@ -83,6 +141,33 @@ const HomeScreen = () => {
 
     return () => unsubscribe(); // Cleanup listener on unmount
   }, [searchFields]);
+
+  // give each subject a score if it does not have a score, mark it 0
+  // 0 means it will be displayed at the bottom
+  const scoreListing = (subjects: string): number => {
+    const subjectList = subjects.split(",").map((s) => s.trim().toLowerCase());
+
+    const total = subjectList.reduce(
+      (score, s) => score + (subjectRanking.get(s) || 0),
+      0
+    );
+
+    return subjectList.length > 0 ? total / subjectList.length : 0;
+  };
+
+  // sort the listing based on its score
+  // te higher the score, the higher the placement
+  const sortedListings = useMemo(() => {
+    if (searchQuery.trim() !== "") return searchResults;
+
+    return [...listings].sort(
+      (a, b) => scoreListing(b.subjects) - scoreListing(a.subjects)
+    );
+  }, [listings, searchQuery, searchResults, subjectRanking]);
+
+  useEffect(() => {
+    setListings((prev) => [...prev]); // Triggers FlatList re-render
+  }, [subjectRanking]);
 
   return (
     <View className="flex-1 bg-white justify-center items-center">
@@ -141,7 +226,7 @@ const HomeScreen = () => {
 
       <View className="h-5/6 w-full justify-center items-center">
         {/* Loading indicator */}
-        {listings.length == 0 && (
+        {loadingMatching && (
           <View className="items-center flex-col justify-center w-full h-full">
             <ActivityIndicator size="large" />
             <Text className="font-asap-medium mt-4">Loading listings...</Text>
@@ -155,7 +240,7 @@ const HomeScreen = () => {
           </Text>
         ) : (
           <FlatList
-            data={searchQuery.trim() === "" ? listings : searchResults} //get everything from listings or searchResults
+            data={sortedListings}
             keyExtractor={(item) => item.listId} //every flatlist need a unique key id
             renderItem={({ item }) => {
               return item.role === "tutee" ? (

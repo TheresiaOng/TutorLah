@@ -51,6 +51,8 @@ export default function LessonCreation() {
   const supabase = createClient(supabaseUrl!, supabaseAnonKey!);
   const secret = Constants.expoConfig?.extra?.supabaseApiKey;
 
+  const secret = Constants.expoConfig?.extra?.supabaseApiKey;
+
   const { userDoc } = useAuth();
   const { channel } = useChat();
 
@@ -181,15 +183,17 @@ export default function LessonCreation() {
       });
 
       const { data, error } = await supabase // Fetch the Stripe account ID for the user
-      .from("users")
-      .select("stripe_account_id")
-      .eq("tutorId", userDoc.userId)
-      .single();  
+        .from("users")
+        .select("stripe_account_id")
+        .eq("tutorId", userDoc.userId)
+        .single();
 
       const stripeAccountId = data?.stripe_account_id;
 
       if (!stripeAccountId) {
-        setErrorMsg("Stripe account not found. Please create a Stripe account in the Schedule Screen.");
+        setErrorMsg(
+          "Stripe account not found. Please create a Stripe account in the Schedule Screen."
+        );
         setSubmitting(false);
         return;
       }
@@ -213,15 +217,15 @@ export default function LessonCreation() {
       const checkoutData = await checkoutRes.json(); 
       console.log("Checkout Data:", checkoutData);
 
-    if (!checkoutRes.ok || !checkoutData?.url) {
-      setErrorMsg("Failed to generate PayNow link.");
-      setSubmitting(false);
-      return;
-    }
+      if (!checkoutRes.ok || !checkoutData?.url) {
+        setErrorMsg("Failed to generate PayNow link.");
+        setSubmitting(false);
+        return;
+      }
 
-    const paynowUrl = checkoutData.url; // Extract the PayNow URL from the response
+      const paynowUrl = checkoutData.url; // Extract the PayNow URL from the response
 
-    // Send message to the channel with payment details
+      // Send message to the channel with payment details
       await channel?.sendMessage({
         text: `New class created by **${
           userDoc.name
@@ -239,7 +243,7 @@ export default function LessonCreation() {
         })}
           \nCost/hr: S$${costPerHour}
           \nTotal cost: S$${totalCost}
-          \n\n 👉 [Click here to pay via PayNow](${paynowUrl})`, 
+          \n\n 👉 [Click here to pay via PayNow](${paynowUrl})`,
         user_id: userDoc.userId,
       });
 

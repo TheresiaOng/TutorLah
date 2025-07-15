@@ -122,7 +122,7 @@ const RoleSelectionScreen = () => {
                 Email Address
               </Text>
               <TextInput
-                className="border-2 border-gray font-asap-regular rounded-full p-2 mb-4 w-full"
+                className="border-2 border-gray font-asap-regular rounded-full p-3 mb-4 w-full"
                 placeholderTextColor={"#000"}
                 value={email}
                 onChangeText={setEmail}
@@ -140,7 +140,7 @@ const RoleSelectionScreen = () => {
               </Text>
               <View className="flex flex-row items-center">
                 <TextInput
-                  className="border-2 border-gray p-2 font-asap-regular rounded-full mb-4 flex-1"
+                  className="border-2 border-gray p-3 font-asap-regular rounded-full mb-4 flex-1"
                   secureTextEntry={hidden}
                   placeholderTextColor={"#000"}
                   value={password}

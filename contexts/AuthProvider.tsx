@@ -37,8 +37,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     try {
       const docRef = doc(db, "users", uid); 
       const snapshot = await getDoc(docRef);
-      if (snapshot.exists()) { 
-        setUserDoc(snapshot.data()); // set the userDoc state with the fetched data
+      if (snapshot.exists()) {
+        if (snapshot.exists()) {
+          setUserDoc({ userId: uid, ...(snapshot.data() as any) });
+        }
       } else {
         console.log("AuthContext: No such user document found.");
       }

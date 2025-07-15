@@ -19,7 +19,7 @@ import {
   View,
 } from "react-native";
 
-const secret = Constants.expoConfig?.extra?.supbaseApiKey;
+const secret = Constants.expoConfig?.extra?.supabaseApiKey;
 
 const VerifyEmail = () => {
   const { email, password } = useLocalSearchParams();
@@ -119,7 +119,7 @@ const VerifyEmail = () => {
                 if (docSnap.exists()) {
                   setUserDoc(docSnap.data());
                   unsubscribe();
-                  router.replace("/homeScreen/home");
+                  router.replace("/loginScreen/personalQuestions");
                 } else {
                   console.log("❌ No Firestore doc found for user");
                   Alert.alert("Error", "User profile data not found.");
