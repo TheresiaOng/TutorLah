@@ -96,7 +96,7 @@ const HomeScreen = () => {
         .single();
 
       if (error) {
-        console.error("Error fetching photo_url:", error);
+        console.log("Error fetching photo_url:", error);
       } else {
         console.log("Photo URL:", data?.photo_url);
         setPhotoUrl(data?.photo_url || null); // Set photoUrl state
@@ -174,23 +174,19 @@ const HomeScreen = () => {
         <View className="border-8 border-primaryBlue bg-primaryBlue w-full justify-center items-center h-60">
           <View className="flex-row w-11/12 items-center inset-y-8">
             <View
-              className={`mr-4 items-center rounded-full${
-                photoUrl ? "h-20, w-20" : "h-20, w-20 bg-white"
-              }`}
-            >
-              <Image
-                source={
-                  photoUrl
+              className={`mr-4 items-center justify-center rounded-full ${
+                photoUrl ? "h-20 w-20" : "h-20 w-20 bg-white"
+                  } overflow-hidden`}>
+                <Image
+                  source={
+                    photoUrl
                     ? { uri: photoUrl }
                     : require("../../assets/images/hatLogo.png")
-                }
-                className={
-                  photoUrl
-                    ? "h-20 w-20 rounded-full"
-                    : "h-20 w-20 rounded-full mt-1 p-2"
-                }
-              />
-            </View>
+                  }
+                    className="h-20 w-20 rounded-full"
+                  resizeMode="cover"
+                        />
+                 </View>
             <Text
               numberOfLines={1} // Ensuring only one-line name display
               ellipsizeMode="tail" // Adding "..." at the end for the remainder of letters
@@ -204,23 +200,20 @@ const HomeScreen = () => {
         <View className="border-8 border-primaryOrange bg-primaryOrange w-full justify-center items-center h-60">
           <View className="flex-row w-11/12 items-center inset-y-8">
             <View
-              className={`mr-4 items-center rounded-full${
-                photoUrl ? "h-20, w-20" : "h-20, w-20 bg-white"
-              }`}
-            >
-              <Image
-                source={
-                  photoUrl
-                    ? { uri: photoUrl }
-                    : require("../../assets/images/hatLogo.png")
-                }
-                className={
-                  photoUrl
-                    ? "h-20 w-20 rounded-full"
-                    : "h-20 w-20 rounded-full mt-1 p-2"
-                }
-              />
-            </View>
+                        className={`mr-4 items-center justify-center rounded-full ${
+                          photoUrl ? "h-20 w-20" : "h-20 w-20 bg-white"
+                        } overflow-hidden`}
+                      >
+                        <Image
+                          source={
+                            photoUrl
+                              ? { uri: photoUrl }
+                              : require("../../assets/images/hatLogo.png")
+                          }
+                          className="h-20 w-20 rounded-full"
+                          resizeMode="cover"
+                        />
+                      </View>
             <Text className="text-4xl w-4/5 pl-4 color-darkBrown font-asap-bold">
               {userDoc ? userDoc.name : "User"}
             </Text>

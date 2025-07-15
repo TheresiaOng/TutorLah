@@ -189,17 +189,20 @@ const TuteeProfile = () => {
             </TouchableOpacity>
           )}
 
-          <View className={`mr-4 items-center rounded-full${
-            photoUrl ? "h-20, w-20" : "h-20, w-20 bg-white"
-          }`}>  
+          <View
+            className={`mr-4 items-center justify-center rounded-full ${
+              photoUrl ? "h-20 w-20" : "h-20 w-20 bg-white"
+            } overflow-hidden`}>
             <Image
               source={
                 photoUrl
-                ? { uri: photoUrl }
-                :require("../../assets/images/hatLogo.png")}
-              className={photoUrl ? "h-20 w-20 rounded-full" : "h-20 w-20 rounded-full mt-1 p-2"}
-            />
-          </View>
+                  ? { uri: photoUrl }
+                  : require("../../assets/images/hatLogo.png")
+                }
+                  className="h-20 w-20 rounded-full"
+                  resizeMode="cover"/>
+            </View>
+            
           <View className="flex-1 flex-col items-start">
             <Text
               numberOfLines={1}
