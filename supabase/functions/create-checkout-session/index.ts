@@ -36,8 +36,8 @@ serve(async (req: Request) => { // Handle POST requests only
             quantity: 1,
           },
         ],
-        success_url: "https://your-app.com/payment-success",
-        cancel_url: "https://your-app.com/payment-cancel",
+        success_url: "https://example.com/payment-success",
+      cancel_url: "https://example.com/payment-cancel"
       },
       {
         stripeAccount: stripeAccountId,

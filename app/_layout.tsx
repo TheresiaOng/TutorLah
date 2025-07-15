@@ -24,7 +24,8 @@ function LayoutWithFooter() {
     pathname == "/lessonCreation" ||
     pathname == "/createReview" ||
     pathname == "/comingSoon" ||
-    pathname.startsWith("/videoScreen");
+    pathname.startsWith("/videoScreen") ||
+    pathname.startsWith("/editProfile");
 
   return (
     <View className="flex-1">

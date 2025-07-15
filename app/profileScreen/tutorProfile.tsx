@@ -219,7 +219,7 @@ const TutorProfile = () => {
             {isOwnProfile && (
               <CustomButton
                 title="Edit Profile"
-                onPress={() => router.push("/comingSoon")}
+                onPress={() => router.push("../editProfile/editTutorProfile")}
                 role="tutor"
                 extraClassName="h-11 inset-y-4"
               />

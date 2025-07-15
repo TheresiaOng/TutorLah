@@ -179,7 +179,7 @@ const TuteeProfile = () => {
             {isOwnProfile && (
               <CustomButton
                 title="Edit Profile"
-                onPress={() => router.push("/comingSoon")}
+                onPress={() => router.push("../editProfile/editTuteeProfile")}
                 role="tutee"
                 extraClassName="h-11 inset-y-4"
               />
