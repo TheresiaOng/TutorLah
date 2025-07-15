@@ -8,10 +8,12 @@ import Constants from "expo-constants";
 import { router } from "expo-router";
 import {
   addDoc,
+  arrayRemove,
   arrayUnion,
   collection,
+  deleteDoc,
   doc,
-  updateDoc,
+  updateDoc
 } from "firebase/firestore";
 import React, { useEffect, useState } from "react";
 import {
@@ -170,6 +172,8 @@ export default function LessonCreation() {
         isPaid: true,
       });
 
+      const paymentId = paymentDoc.id;
+
       const userDocRef = doc(db, "users", userDoc.userId); // Reference to the user's document
       await updateDoc(userDocRef, {
         paymentIds: arrayUnion(paymentDoc.id), // Add the payment ID to the user's document
@@ -189,6 +193,13 @@ export default function LessonCreation() {
       const stripeAccountId = data?.stripe_account_id;
 
       if (!stripeAccountId) {
+        await deleteDoc(doc(db, "payments", paymentId)); // Rollback payment document creation
+        await updateDoc(doc(db, "users", userDoc.userId), { // Rollback payment ID from user document
+        paymentIds: arrayRemove(paymentId),
+      });
+        await updateDoc(doc(db, "users", otherUserId), { // Rollback payment ID from other user document
+        paymentIds: arrayRemove(paymentId),
+      });
         setErrorMsg(
           "Stripe account not found. Please create a Stripe account in the Schedule Screen."
         );
@@ -217,7 +228,14 @@ export default function LessonCreation() {
       console.log("Checkout Data:", checkoutData);
 
       if (!checkoutRes.ok || !checkoutData?.url) {
-        setErrorMsg("Failed to generate PayNow link.");
+        await deleteDoc(doc(db, "payments", paymentId)); // Rollback payment document creation
+        await updateDoc(doc(db, "users", userDoc.userId), { // Rollback payment ID from user document
+        paymentIds: arrayRemove(paymentId),
+      });
+        await updateDoc(doc(db, "users", otherUserId), { // Rollback payment ID from other user document
+        paymentIds: arrayRemove(paymentId),
+      });
+        setErrorMsg("Failed to generate PayNow link. Please enure you have set up your Stripe account correctly. If not please create another account in the Schedule Screen.");
         setSubmitting(false);
         return;
       }
