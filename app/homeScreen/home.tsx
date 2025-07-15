@@ -184,7 +184,9 @@ const HomeScreen = () => {
                     ? { uri: photoUrl }
                     : require("../../assets/images/hatLogo.png")
                 }
-                className="h-20 w-20 rounded-full"
+                className={`h-20 w-20 rounded-full border-2 border-white ${
+                  !photoUrl && "p-2 mt-2"
+                }`}
                 resizeMode="cover"
               />
             </View>
@@ -211,7 +213,7 @@ const HomeScreen = () => {
                     ? { uri: photoUrl }
                     : require("../../assets/images/hatLogo.png")
                 }
-                className="h-20 w-20 rounded-full"
+                className="h-20 w-20 rounded-full p-2 mt-2"
                 resizeMode="cover"
               />
             </View>
