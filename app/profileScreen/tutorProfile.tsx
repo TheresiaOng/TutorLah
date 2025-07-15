@@ -69,7 +69,7 @@ const TutorProfile = () => {
         .single();
 
       if (error) {
-        console.log("Error fetching photo_url:", error);
+        console.log("No photo uploaded yet, using default image");
       } else {
         console.log("Photo URL:", data?.photo_url);
         setPhotoUrl(data?.photo_url || null); // Set photoUrl state
