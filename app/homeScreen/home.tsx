@@ -200,20 +200,19 @@ const HomeScreen = () => {
         <View className="border-8 border-primaryOrange bg-primaryOrange w-full justify-center items-center h-60">
           <View className="flex-row w-11/12 items-center inset-y-8">
             <View
-                        className={`mr-4 items-center justify-center rounded-full ${
-                          photoUrl ? "h-20 w-20" : "h-20 w-20 bg-white"
-                        } overflow-hidden`}
-                      >
-                        <Image
-                          source={
-                            photoUrl
-                              ? { uri: photoUrl }
-                              : require("../../assets/images/hatLogo.png")
-                          }
-                          className="h-20 w-20 rounded-full"
-                          resizeMode="cover"
-                        />
-                      </View>
+              className={`mr-4 items-center justify-center rounded-full ${
+                photoUrl ? "h-20 w-20" : "h-20 w-20 bg-white"
+              } overflow-hidden`}>
+          <Image
+              source={
+                photoUrl
+                  ? { uri: photoUrl }
+                  : require("../../assets/images/hatLogo.png")
+                }
+                className="h-20 w-20 rounded-full"
+                resizeMode="cover"/>
+         </View>
+         
             <Text className="text-4xl w-4/5 pl-4 color-darkBrown font-asap-bold">
               {userDoc ? userDoc.name : "User"}
             </Text>
