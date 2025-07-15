@@ -56,24 +56,25 @@ const TuteeProfile = () => {
   const supabaseAnonKey = Constants.expoConfig?.extra?.supabaseAnonKey;
   const supabase = createClient(supabaseUrl!, supabaseAnonKey!);
 
-  useEffect(() => { // Fetching photo_url from Supabase
-  const fetchData = async () => {
-    if (!userDoc?.userId) return; // Ensure id is available
-    const { data, error } = await supabase 
-      .from("profiles")
-      .select("photo_url")
-      .eq("id", userDoc.userId)
-      .single();
+  useEffect(() => {
+    // Fetching photo_url from Supabase
+    const fetchData = async () => {
+      if (!userDoc?.userId) return; // Ensure id is available
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("photo_url")
+        .eq("id", userDoc.userId)
+        .single();
 
-    if (error) {
-      console.error("Error fetching photo_url:", error);
-    } else {
-      console.log("Photo URL:", data?.photo_url);
-      setPhotoUrl(data?.photo_url || null); // Set photoUrl state
-    }
-  };
-  fetchData();
-}, [userDoc]);
+      if (error) {
+        console.error("Error fetching photo_url:", error);
+      } else {
+        console.log("Photo URL:", data?.photo_url);
+        setPhotoUrl(data?.photo_url || null); // Set photoUrl state
+      }
+    };
+    fetchData();
+  }, [userDoc]);
 
   if (!userDoc) return <NullScreen />;
 
@@ -192,17 +193,19 @@ const TuteeProfile = () => {
           <View
             className={`mr-4 items-center justify-center rounded-full ${
               photoUrl ? "h-20 w-20" : "h-20 w-20 bg-white"
-            } overflow-hidden`}>
+            } overflow-hidden`}
+          >
             <Image
               source={
                 photoUrl
                   ? { uri: photoUrl }
                   : require("../../assets/images/hatLogo.png")
-                }
-                  className="h-20 w-20 rounded-full"
-                  resizeMode="cover"/>
-            </View>
-            
+              }
+              className="h-20 w-20 rounded-full"
+              resizeMode="cover"
+            />
+          </View>
+
           <View className="flex-1 flex-col items-start">
             <Text
               numberOfLines={1}

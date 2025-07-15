@@ -58,15 +58,16 @@ const TutorProfile = () => {
   const supabaseAnonKey = Constants.expoConfig?.extra?.supabaseAnonKey;
   const supabase = createClient(supabaseUrl!, supabaseAnonKey!);
 
-  useEffect(() => { // Fetching photo_url from Supabase
+  useEffect(() => {
+    // Fetching photo_url from Supabase
     const fetchData = async () => {
       if (!userDoc?.userId) return; // Ensure id is available
-      const { data, error } = await supabase 
+      const { data, error } = await supabase
         .from("profiles")
         .select("photo_url")
         .eq("id", userDoc.userId)
         .single();
-  
+
       if (error) {
         console.log("Error fetching photo_url:", error);
       } else {
