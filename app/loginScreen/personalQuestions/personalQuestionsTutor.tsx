@@ -10,13 +10,11 @@ import { collection, doc, updateDoc } from "firebase/firestore";
 import React, { useEffect, useState } from "react";
 import {
   Alert,
-  Image,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
   StyleSheet,
   Text,
-  TouchableOpacity,
   View,
 } from "react-native";
 
@@ -185,19 +183,8 @@ const PersonalQuestions = () => {
   return (
     <View className={`flex-1 bg-primaryBlue`}>
       {/* Header */}
-      <TouchableOpacity
-        onPress={() => router.back()}
-        className="mt-16 w-10 h-10 left-5 items-center justify-center"
-        disabled={submitting}
-      >
-        <Image
-          className="w-10"
-          resizeMode="contain"
-          source={require("../../../assets/images/arrowBack.png")}
-        />
-      </TouchableOpacity>
       <View className="items-center">
-        <Text className={`mt-4 mb-10 text-3xl font-asap-bold text-white`}>
+        <Text className={`mt-20 mb-10 text-3xl font-asap-bold text-white`}>
           You are almost done!
         </Text>
       </View>

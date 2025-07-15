@@ -119,7 +119,15 @@ const VerifyEmail = () => {
                 if (docSnap.exists()) {
                   setUserDoc(docSnap.data());
                   unsubscribe();
-                  router.replace("/loginScreen/personalQuestions");
+                  if (docSnap.data()?.role == "tutor") {
+                    router.replace(
+                      "/loginScreen/personalQuestions/personalQuestionsTutor"
+                    );
+                  } else {
+                    router.replace(
+                      "/loginScreen/personalQuestions/personalQuestionsTutee"
+                    );
+                  }
                 } else {
                   console.log("❌ No Firestore doc found for user");
                   Alert.alert("Error", "User profile data not found.");
