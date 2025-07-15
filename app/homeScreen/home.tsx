@@ -1,4 +1,6 @@
 import { useAuth } from "@/contexts/AuthProvider";
+import { createClient } from "@supabase/supabase-js";
+import Constants from "expo-constants";
 import { collection, onSnapshot, query, where } from "firebase/firestore";
 import React, { useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, FlatList, Image, Text, View } from "react-native";
@@ -22,6 +24,7 @@ const HomeScreen = () => {
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [searchResults, setSearchResults] = useState<Listing[]>([]);
   const [searchFields, setSearchFields] = useState<string[]>([]);
+  const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const [subjectRanking, setSubjectRanking] = useState<Map<string, number>>(
     new Map()
   );
@@ -29,8 +32,8 @@ const HomeScreen = () => {
 
   const { userDoc } = useAuth();
   if (!userDoc) return <NullScreen />;
-
-  // Supabase client
+  
+  // Supabase client setup
   const supabaseUrl = Constants.expoConfig?.extra?.supabaseUrl;
   const supabaseAnonKey = Constants.expoConfig?.extra?.supabaseAnonKey;
   const supabase = createClient(supabaseUrl!, supabaseAnonKey!);
@@ -83,6 +86,25 @@ const HomeScreen = () => {
     };
 
     fetchMatchingSubjects();
+  }, [userDoc]);
+    
+  useEffect(() => { // Fetching photo_url from Supabase
+    const fetchData = async () => {
+      if (!userDoc?.userId) return; // Ensure id is available
+      const { data, error } = await supabase 
+        .from("profiles")
+        .select("photo_url")
+        .eq("id", userDoc.userId)
+        .single();
+  
+      if (error) {
+        console.error("Error fetching photo_url:", error);
+      } else {
+        console.log("Photo URL:", data?.photo_url);
+        setPhotoUrl(data?.photo_url || null); // Set photoUrl state
+      }
+    };
+    fetchData();
   }, [userDoc]);
 
   useEffect(() => {
@@ -153,12 +175,17 @@ const HomeScreen = () => {
       {userDoc?.role === "tutor" ? (
         <View className="border-8 border-primaryBlue bg-primaryBlue w-full justify-center items-center h-60">
           <View className="flex-row w-11/12 items-center inset-y-8">
-            <View className="w-20 h-20 bg-white items-center rounded-full">
-              <Image
-                source={require("../../assets/images/hatLogo.png")}
-                className="h-20 w-20 rounded-full mt-1 p-2"
-              />
-            </View>
+            <View className={`mr-4 items-center rounded-full${
+                 photoUrl ? "h-20, w-20" : "h-20, w-20 bg-white"
+               }`}>  
+                  <Image
+                    source={
+                      photoUrl
+                      ? { uri: photoUrl }
+                      :require("../../assets/images/hatLogo.png")}
+                      className={photoUrl ? "h-20 w-20 rounded-full" : "h-20 w-20 rounded-full mt-1 p-2"}
+                   />
+             </View>
             <Text
               numberOfLines={1} // Ensuring only one-line name display
               ellipsizeMode="tail" // Adding "..." at the end for the remainder of letters
@@ -171,12 +198,17 @@ const HomeScreen = () => {
       ) : (
         <View className="border-8 border-primaryOrange bg-primaryOrange w-full justify-center items-center h-60">
           <View className="flex-row w-11/12 items-center inset-y-8">
-            <View className="w-20 h-20 bg-white items-center rounded-full">
-              <Image
-                source={require("../../assets/images/hatLogo.png")}
-                className="h-20 w-20 rounded-full mt-1 p-2"
-              />
-            </View>
+            <View className={`mr-4 items-center rounded-full${
+                photoUrl ? "h-20, w-20" : "h-20, w-20 bg-white"
+               }`}>  
+                  <Image
+                     source={
+                       photoUrl
+                       ? { uri: photoUrl }
+                       :require("../../assets/images/hatLogo.png")}
+                       className={photoUrl ? "h-20 w-20 rounded-full" : "h-20 w-20 rounded-full mt-1 p-2"}
+                     />
+                </View>
             <Text className="text-4xl w-4/5 pl-4 color-darkBrown font-asap-bold">
               {userDoc ? userDoc.name : "User"}
             </Text>

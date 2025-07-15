@@ -1,6 +1,6 @@
 import { auth, db } from "@/firebase";
-import { onAuthStateChanged } from "firebase/auth";
-import { doc, getDoc } from "firebase/firestore";
+import { onAuthStateChanged, User } from "firebase/auth";
+import { doc, getDoc, onSnapshot } from "firebase/firestore";
 import React, {
   createContext,
   ReactNode,
@@ -20,10 +20,12 @@ type AuthContextType = {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// AuthProvider component to provide user document context
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  // the states that can be shared/used globally
+ // the states that can be shared/used globally
   const [userDoc, setUserDoc] = useState<any>(null);
 
+  // Function to fetch user document by userId
   const fetchUserDoc = async (uid?: string) => {
     if (!uid) {
       console.log("fetchUserDoc skipped: userId is null");
@@ -33,7 +35,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     console.log("fetchUserDoc: fetching for userId =", uid);
 
     try {
-      const docRef = doc(db, "users", uid);
+      const docRef = doc(db, "users", uid); 
       const snapshot = await getDoc(docRef);
       if (snapshot.exists()) {
         if (snapshot.exists()) {
@@ -47,26 +49,43 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  // Listen for auth state changes and user document updates
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+    let unsubscribeFromUserDoc: (() => void) | null = null;
+
+    const unsubscribeFromAuth = onAuthStateChanged(auth, (user: User | null) => { 
       if (user) {
         const docRef = doc(db, "users", user.uid);
-        const docSnap = await getDoc(docRef);
-        setUserDoc({ userId: user.uid, ...(docSnap.data() as any) });
+
+        // Fetch user document on auth state change
+        unsubscribeFromUserDoc = onSnapshot(docRef, (snapshot) => {
+          if (snapshot.exists()) {
+            setUserDoc(snapshot.data()); // Update userDoc state with the fetched data
+          } else {
+            console.log("AuthContext: No such user document found.");
+            setUserDoc(null);
+          }
+        });
       } else {
-        setUserDoc(null); // clear it!
+        setUserDoc(null);
+        if (unsubscribeFromUserDoc) { // Cleanup previous listener if user logs out
+          unsubscribeFromUserDoc();
+          unsubscribeFromUserDoc = null;
+        }
       }
     });
-
-    return () => unsubscribe();
+    return () => { // Cleanup listeners on unmount
+      unsubscribeFromAuth();
+      if (unsubscribeFromUserDoc) unsubscribeFromUserDoc();
+    };
   }, []);
 
   return (
     <AuthContext.Provider
       value={{
         userDoc,
-        setUserDoc,
-        fetchUserDoc,
+        setUserDoc, 
+        fetchUserDoc, 
       }}
     >
       {children}

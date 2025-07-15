@@ -49,6 +49,7 @@ export default function LessonCreation() {
   const supabaseUrl = Constants.expoConfig?.extra?.supabaseUrl;
   const supabaseAnonKey = Constants.expoConfig?.extra?.supabaseAnonKey;
   const supabase = createClient(supabaseUrl!, supabaseAnonKey!);
+  const secret = Constants.expoConfig?.extra?.supabaseApiKey;
 
   const secret = Constants.expoConfig?.extra?.supabaseApiKey;
 
@@ -197,16 +198,14 @@ export default function LessonCreation() {
         return;
       }
 
-      const checkoutRes = await fetch(
-        // Create a PayNow checkout session
+      const checkoutRes = await fetch( // Create a PayNow checkout session
         "https://ynikykgyystdyitckguc.supabase.co/functions/v1/create-checkout-session",
-
         {
           method: "POST",
           headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${secret}`,
-          },
+                  "Content-Type": "application/json",
+                  Authorization: `Bearer ${secret}`, // Use the secret key for authentication
+                },
           body: JSON.stringify({
             amount: parseFloat(totalCost),
             stripeAccountId,
@@ -215,8 +214,8 @@ export default function LessonCreation() {
         }
       );
 
-      const checkoutData = await checkoutRes.json();
-      console.log("checkout result:", checkoutData);
+      const checkoutData = await checkoutRes.json(); 
+      console.log("Checkout Data:", checkoutData);
 
       if (!checkoutRes.ok || !checkoutData?.url) {
         setErrorMsg("Failed to generate PayNow link.");
