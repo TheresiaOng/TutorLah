@@ -1,6 +1,6 @@
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from "@supabase/supabase-js";
 import { serve } from "https://deno.land/std/http/server.ts";
-import Stripe from 'stripe';
+import Stripe from "stripe";
 
 const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY")!, {
   apiVersion: "2023-10-16",
@@ -8,7 +8,7 @@ const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY")!, {
 
 const supabase = createClient(
   Deno.env.get("SUPABASE_URL")!,
-  Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+  Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
 );
 
 serve(async (req: Request) => { // Handle POST requests only
@@ -40,20 +40,22 @@ serve(async (req: Request) => { // Handle POST requests only
       console.error("Supabase insert error:", error);
       return new Response(
         JSON.stringify({ error: "Failed to save account in Supabase" }),
-        { status: 500 }
+        { status: 500 },
       );
     }
 
     const onboarding = await stripe.accountLinks.create({ // Create onboarding link
       account: account.id,
-      refresh_url: "https://super-seahorse-cc9608.netlify.app/onboarding-refresh.html",
-      return_url: "https://super-seahorse-cc9608.netlify.app/onboarding-complete.html",
+      refresh_url:
+        "https://super-seahorse-cc9608.netlify.app/onboarding-refresh.html",
+      return_url:
+        "https://super-seahorse-cc9608.netlify.app/onboarding-complete.html",
       type: "account_onboarding",
     });
 
     return new Response( // Return onboarding URL
       JSON.stringify({ onboardingUrl: onboarding.url }),
-      { status: 200 }
+      { status: 200 },
     );
   } catch (err) {
     console.error("Unexpected error:", err);

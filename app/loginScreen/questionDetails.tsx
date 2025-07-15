@@ -93,6 +93,7 @@ const QuestionDetails = forwardRef<QuestionDetailsRef, QuestionDetailsProps>(
               educationInstitute,
               achievements,
               verified: false,
+              personalised: false,
             });
 
             router.push({
@@ -139,6 +140,7 @@ const QuestionDetails = forwardRef<QuestionDetailsRef, QuestionDetailsProps>(
               educationLevel,
               educationInstitute,
               verified: false,
+              personalised: false,
             });
 
             router.push("./verifyEmail");
@@ -167,7 +169,7 @@ const QuestionDetails = forwardRef<QuestionDetailsRef, QuestionDetailsProps>(
               Name
             </Text>
             <TextInput
-              className="border-2 font-asap-regular rounded-full border-gray p-2 mb-4"
+              className="border-2 font-asap-regular rounded-full border-gray p-3 mb-4"
               autoCapitalize="none"
               value={name}
               onChangeText={setName}
@@ -176,7 +178,7 @@ const QuestionDetails = forwardRef<QuestionDetailsRef, QuestionDetailsProps>(
               Education Institute Name
             </Text>
             <TextInput
-              className="border-2 font-asap-regular rounded-full border-gray p-2 mb-4"
+              className="border-2 font-asap-regular rounded-full border-gray p-3 mb-4"
               autoCapitalize="none"
               value={educationInstitute}
               onChangeText={setEducationInstitute}
@@ -185,7 +187,7 @@ const QuestionDetails = forwardRef<QuestionDetailsRef, QuestionDetailsProps>(
               Educational Level
             </Text>
             <TextInput
-              className="border-2 font-asap-regular rounded-full border-gray p-2 mb-4"
+              className="border-2 font-asap-regular rounded-full border-gray p-3 mb-4"
               autoCapitalize="none"
               value={educationLevel}
               onChangeText={setEducationLevel}
@@ -194,7 +196,7 @@ const QuestionDetails = forwardRef<QuestionDetailsRef, QuestionDetailsProps>(
               Achievements
             </Text>
             <TextInput
-              className="border-2 font-asap-regular rounded-full border-gray p-2 mb-4"
+              className="border-2 font-asap-regular rounded-full border-gray p-3 mb-4"
               autoCapitalize="none"
               value={achievements}
               onChangeText={setAchievements}
@@ -208,7 +210,7 @@ const QuestionDetails = forwardRef<QuestionDetailsRef, QuestionDetailsProps>(
               Name
             </Text>
             <TextInput
-              className="border-2 font-asap-regular rounded-full border-gray p-2 mb-4"
+              className="border-2 font-asap-regular rounded-full border-gray p-3 mb-4"
               autoCapitalize="none"
               value={name}
               onChangeText={setName}
@@ -217,7 +219,7 @@ const QuestionDetails = forwardRef<QuestionDetailsRef, QuestionDetailsProps>(
               Education Institute Name
             </Text>
             <TextInput
-              className="border-2 font-asap-regular rounded-full border-gray p-2 mb-4"
+              className="border-2 font-asap-regular rounded-full border-gray p-3 mb-4"
               autoCapitalize="none"
               value={educationInstitute}
               onChangeText={setEducationInstitute}
@@ -226,7 +228,7 @@ const QuestionDetails = forwardRef<QuestionDetailsRef, QuestionDetailsProps>(
               Educational Level
             </Text>
             <TextInput
-              className="border-2 font-asap-regular rounded-full border-gray p-2 mb-4"
+              className="border-2 font-asap-regular rounded-full border-gray p-3 mb-4"
               autoCapitalize="none"
               value={educationLevel}
               onChangeText={setEducationLevel}

@@ -1,5 +1,5 @@
 import { auth, db } from "@/firebase";
-import { onAuthStateChanged, User } from "firebase/auth";
+import { onAuthStateChanged } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
 import React, {
   createContext,
@@ -36,7 +36,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const docRef = doc(db, "users", uid);
       const snapshot = await getDoc(docRef);
       if (snapshot.exists()) {
-        setUserDoc(snapshot.data()); // set the userDoc state with the fetched data
+        if (snapshot.exists()) {
+          setUserDoc({ userId: uid, ...(snapshot.data() as any) });
+        }
       } else {
         console.log("AuthContext: No such user document found.");
       }
@@ -46,15 +48,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user: User | null) => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
-        await fetchUserDoc(user.uid);
+        const docRef = doc(db, "users", user.uid);
+        const docSnap = await getDoc(docRef);
+        setUserDoc({ userId: user.uid, ...(docSnap.data() as any) });
       } else {
-        setUserDoc(null);
+        setUserDoc(null); // clear it!
       }
     });
 
-    return unsubscribe;
+    return () => unsubscribe();
   }, []);
 
   return (

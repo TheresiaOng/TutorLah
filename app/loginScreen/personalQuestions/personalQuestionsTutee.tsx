@@ -1,0 +1,238 @@
+import CustomButton from "@/components/customButton";
+import CustomSearchDropDown from "@/components/customSearchDropDown";
+import { useAuth } from "@/contexts/AuthProvider";
+import { db } from "@/firebase";
+import { createClient } from "@supabase/supabase-js";
+import Constants from "expo-constants";
+import { router } from "expo-router";
+import { collection, doc, updateDoc } from "firebase/firestore";
+import React, { useEffect, useState } from "react";
+import {
+  Alert,
+  Image,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
+
+const PersonalQuestions = () => {
+  const { userDoc } = useAuth();
+  const [submitting, setSubmitting] = useState(false);
+  const [subjectsToLearn, setSubjectsToLearn] = useState<string[]>([]);
+  const [sourcePool, setSourcePool] = useState<string[]>([]);
+
+  const isAllFieldsFilled = subjectsToLearn.length > 0;
+
+  // Supabase client
+  const supabaseUrl = Constants.expoConfig?.extra?.supabaseUrl;
+  const supabaseAnonKey = Constants.expoConfig?.extra?.supabaseAnonKey;
+  const supabase = createClient(supabaseUrl!, supabaseAnonKey!);
+
+  const secret = Constants.expoConfig?.extra?.supabaseApiKey;
+
+  useEffect(() => {
+    // retrive all subjects stored in supabase
+    const fetchSubjects = async () => {
+      const { data, error } = await supabase.from("subjects").select("name");
+
+      if (error) {
+        console.error("Error fetching subjects:", error);
+      }
+
+      const names = (data ?? [])
+        .map((item) => item.name)
+        .filter((name): name is string => typeof name === "string");
+
+      setSourcePool(names);
+      console.log("Subject pool updated:", names);
+    };
+
+    fetchSubjects();
+  }, []);
+
+  const handleSubmit = async () => {
+    setSubmitting(true);
+    const usersRef = collection(db, "users");
+    const docRef = doc(usersRef, userDoc?.userId);
+
+    for (const subject of subjectsToLearn) {
+      // try to embed each subject
+      try {
+        const res = await fetch(
+          "https://ynikykgyystdyitckguc.supabase.co/functions/v1/embed-subjects",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${secret}`,
+            },
+            body: JSON.stringify({ subject, role: userDoc?.role }),
+          }
+        );
+
+        if (!res.ok) {
+          console.warn(`Failed for ${subject}`);
+        }
+      } catch (error) {
+        console.error(`Error calling function for ${subject}:`, error);
+      }
+    }
+
+    // retrieve embedding data for each subject
+    const { data: subjectEmbeddings, error } = await supabase
+      .from("subjects")
+      .select("embedding")
+      .in("name", subjectsToLearn.sort());
+
+    console.log("Embedding for each subjects retrieved");
+
+    function averageVectors(vectors: number[][]): number[] {
+      if (vectors.length === 0) {
+        throw new Error("No vectors provided to averageVectors");
+      }
+
+      const length = vectors[0].length;
+
+      for (const vec of vectors) {
+        // check to make sure all vectors are of equal length
+        if (vec.length !== length) {
+          throw new Error("Inconsistent vector lengths");
+        }
+      }
+
+      const summed = vectors.reduce((acc, vec) =>
+        acc.map((val, i) => val + vec[i])
+      );
+      return summed.map((val) => val / vectors.length); // return one combined vector
+    }
+
+    if (!subjectEmbeddings || subjectEmbeddings.length === 0) {
+      console.error("No embeddings found for selected subjects");
+      return;
+    }
+
+    console.log("Embedding for each subjects exists");
+
+    const rawEmbeddings = subjectEmbeddings
+      // raw embeddings is a 2D array of numbers
+      ?.map((e) =>
+        typeof e.embedding === "string" ? JSON.parse(e.embedding) : e.embedding
+      )
+      .filter((e): e is number[] => Array.isArray(e));
+
+    console.log("Raw Embeddings:", JSON.stringify(rawEmbeddings));
+
+    let userEmbedding: number[];
+
+    try {
+      userEmbedding = averageVectors(rawEmbeddings as number[][]);
+      console.log("Averaging successful");
+    } catch (e) {
+      console.error("Error during averaging:", e);
+      Alert.alert("Averaging failed", "Check subject embedding shapes");
+      setSubmitting(false);
+      return;
+    }
+    console.log("Averaging subjects embeddings");
+
+    const roundedEmbedding = userEmbedding.map(
+      (x) => Math.round(x * 1e6) / 1e6
+      // reduce vector length to accomodate firestore document size limit
+    );
+    console.log("Rounding average vector successful");
+
+    try {
+      await updateDoc(docRef, {
+        subjectToLearn: subjectsToLearn.sort(),
+        embeddedSubjectToLearn: roundedEmbedding,
+        personalised: true,
+      });
+      console.log("Personalisation sucessful!");
+      Alert.alert("Success", "We will start personalising your feed!");
+      setSubmitting(false);
+      router.replace("/homeScreen/home");
+    } catch (error) {
+      console.log("Error personalising user document:", error);
+      Alert.alert("Error", "An error occured, please try again later.");
+      setSubmitting(false);
+      router.back();
+    }
+  };
+
+  return (
+    <View className={`flex-1 bg-primaryOrange`}>
+      {/* Header */}
+      <TouchableOpacity
+        onPress={() => router.back()}
+        className="mt-16 w-10 h-10 left-5 items-center justify-center"
+        disabled={submitting}
+      >
+        <Image
+          className="w-10"
+          resizeMode="contain"
+          source={require("../../../assets/images/arrowBack.png")}
+        />
+      </TouchableOpacity>
+      <View className="items-center">
+        <Text className={`mt-12 mb-20 text-3xl font-asap-bold text-darkBrown`}>
+          You are almost done!
+        </Text>
+      </View>
+      <View className="flex-1 bg-white rounded-t-3xl pt-12 px-6">
+        {/* Scrollable Form and Question Fields */}
+        <KeyboardAvoidingView
+          className="flex-1"
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+        >
+          <View className="items-center">
+            <Text
+              style={{ textAlign: "center", lineHeight: 18 }}
+              className={`text-xl font-asap-medium text-darkPrimaryOrange mb-8`}
+            >
+              {`These information will help us personalize \nyour feed and won't be shown to others`}
+            </Text>
+          </View>
+          <ScrollView
+            className="flex-1"
+            contentContainerStyle={{ paddingBottom: 200 }}
+            keyboardShouldPersistTaps="handled"
+          >
+            {/* Questions */}
+            <View className="w-full mt-2">
+              <Text
+                className={`text-sm pl-4 mb-3 font-asap-medium text-darkPrimaryOrange`}
+              >
+                Which subjects are you interested in learning?
+              </Text>
+            </View>
+            <CustomSearchDropDown
+              source={sourcePool}
+              placeHolder="E.g. Math, Biology, CS2040S"
+              onChange={setSubjectsToLearn}
+              selected={subjectsToLearn}
+            />
+          </ScrollView>
+        </KeyboardAvoidingView>
+
+        {/* Bottom Section */}
+        <View className="mb-12">
+          <CustomButton
+            title="Submit"
+            role={userDoc?.role as "tutor" | "tutee"}
+            onPress={handleSubmit}
+            active={isAllFieldsFilled}
+            loading={submitting}
+          />
+        </View>
+      </View>
+    </View>
+  );
+};
+
+export default PersonalQuestions;
+
+const styles = StyleSheet.create({});

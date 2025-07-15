@@ -1,9 +1,11 @@
 import CustomButton from "@/components/customButton";
+import { useAuth } from "@/contexts/AuthProvider";
 import { router } from "expo-router";
 import {
   sendEmailVerification,
   signInWithEmailAndPassword,
 } from "firebase/auth";
+import { doc, getDoc } from "firebase/firestore";
 import React, { useState } from "react";
 import {
   Alert,
@@ -13,7 +15,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { auth } from "../../firebase";
+import { auth, db } from "../../firebase";
 import errorhandling from "./errorhandling";
 
 const Login = () => {
@@ -21,6 +23,7 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [hidden, setHidden] = useState(true);
   const [isLogingIn, setIsLoggingIn] = useState(false);
+  const { userDoc } = useAuth();
 
   const isAllFieldFilled = () => {
     return email.trim() != "" && password.trim() != "";
@@ -44,6 +47,29 @@ const Login = () => {
           "Please verify your email first before logging in."
         );
         router.push("./verifyEmail");
+        return;
+      }
+
+      // 👇 fetch Firestore userDoc directly
+      const userRef = doc(db, "users", userCredential?.user?.uid);
+      const userSnapshot = await getDoc(userRef);
+
+      if (!userSnapshot.exists()) {
+        Alert.alert("Error", "User document not found.");
+        return;
+      }
+
+      const userData = userSnapshot.data();
+
+      if (!userData?.personalised) {
+        setIsLoggingIn(false);
+        if (userData?.role === "tutor") {
+          router.push("/loginScreen/personalQuestions/personalQuestionsTutor");
+        } else if (userData?.role === "tutee") {
+          router.push("/loginScreen/personalQuestions/personalQuestionsTutee");
+        } else {
+          Alert.alert("Login error", "User role not recognized");
+        }
       } else {
         console.log(userCredential.user);
       }

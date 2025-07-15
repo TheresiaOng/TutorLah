@@ -11,12 +11,12 @@ serve(async (req: Request) => { // Handle POST requests only
       return new Response("Only POST requests allowed", { status: 405 });
     }
 
-    const { amount, stripeAccountId, description } = await req.json(); 
+    const { amount, stripeAccountId, description } = await req.json();
 
     if (!amount || !stripeAccountId) {
       return new Response(
         JSON.stringify({ error: "Missing amount or stripeAccountId" }),
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -36,12 +36,12 @@ serve(async (req: Request) => { // Handle POST requests only
             quantity: 1,
           },
         ],
-        success_url: "https://your-app.com/payment-success",
-        cancel_url: "https://your-app.com/payment-cancel",
+        success_url: "https://example.com/payment-success",
+        cancel_url: "https://example.com/payment-cancel",
       },
       {
         stripeAccount: stripeAccountId,
-      }
+      },
     );
 
     return new Response(JSON.stringify({ url: session.url }), { // Return the session URL
@@ -52,7 +52,7 @@ serve(async (req: Request) => { // Handle POST requests only
     console.error("Stripe error:", error);
     return new Response(
       JSON.stringify({ error: "Failed to create checkout session" }),
-      { status: 500 }
+      { status: 500 },
     );
   }
 });

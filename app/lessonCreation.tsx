@@ -50,6 +50,8 @@ export default function LessonCreation() {
   const supabaseAnonKey = Constants.expoConfig?.extra?.supabaseAnonKey;
   const supabase = createClient(supabaseUrl!, supabaseAnonKey!);
 
+  const secret = Constants.expoConfig?.extra?.supabaseApiKey;
+
   const { userDoc } = useAuth();
   const { channel } = useChat();
 
@@ -180,24 +182,31 @@ export default function LessonCreation() {
       });
 
       const { data, error } = await supabase // Fetch the Stripe account ID for the user
-      .from("users")
-      .select("stripe_account_id")
-      .eq("tutorId", userDoc.userId)
-      .single();  
+        .from("users")
+        .select("stripe_account_id")
+        .eq("tutorId", userDoc.userId)
+        .single();
 
       const stripeAccountId = data?.stripe_account_id;
 
       if (!stripeAccountId) {
-        setErrorMsg("Stripe account not found. Please create a Stripe account in the Schedule Screen.");
+        setErrorMsg(
+          "Stripe account not found. Please create a Stripe account in the Schedule Screen."
+        );
         setSubmitting(false);
         return;
       }
 
-      const checkoutRes = await fetch( // Create a PayNow checkout session
-        "https://ynikykgyystdyitckguc.functions.supabase.co/create-checkout-session",
+      const checkoutRes = await fetch(
+        // Create a PayNow checkout session
+        "https://ynikykgyystdyitckguc.supabase.co/functions/v1/create-checkout-session",
+
         {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${secret}`,
+          },
           body: JSON.stringify({
             amount: parseFloat(totalCost),
             stripeAccountId,
@@ -206,17 +215,18 @@ export default function LessonCreation() {
         }
       );
 
-      const checkoutData = await checkoutRes.json(); 
+      const checkoutData = await checkoutRes.json();
+      console.log("checkout result:", checkoutData);
 
-    if (!checkoutRes.ok || !checkoutData?.url) {
-      setErrorMsg("Failed to generate PayNow link.");
-      setSubmitting(false);
-      return;
-    }
+      if (!checkoutRes.ok || !checkoutData?.url) {
+        setErrorMsg("Failed to generate PayNow link.");
+        setSubmitting(false);
+        return;
+      }
 
-    const paynowUrl = checkoutData.url; // Extract the PayNow URL from the response
+      const paynowUrl = checkoutData.url; // Extract the PayNow URL from the response
 
-    // Send message to the channel with payment details
+      // Send message to the channel with payment details
       await channel?.sendMessage({
         text: `New class created by **${
           userDoc.name
@@ -234,7 +244,7 @@ export default function LessonCreation() {
         })}
           \nCost/hr: S$${costPerHour}
           \nTotal cost: S$${totalCost}
-          \n\n 👉 [Click here to pay via PayNow](${paynowUrl})`, 
+          \n\n 👉 [Click here to pay via PayNow](${paynowUrl})`,
         user_id: userDoc.userId,
       });
 

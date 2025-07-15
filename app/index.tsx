@@ -27,7 +27,7 @@ export default function Index() {
   }
 
   useEffect(() => {
-    if (userDoc && isChatReady) {
+    if (userDoc && userDoc?.personalised && isChatReady) {
       setShowOverlay(true);
       router.replace("/homeScreen/home");
     }
