@@ -4,6 +4,8 @@ import CustomButton from "@/components/customButton";
 import { useAuth } from "@/contexts/AuthProvider";
 import { useChat } from "@/contexts/ChatProvider";
 import { auth, db } from "@/firebase";
+import { createClient } from "@supabase/supabase-js";
+import Constants from "expo-constants";
 import { router } from "expo-router";
 import { useGlobalSearchParams } from "expo-router/build/hooks";
 import { signOut } from "firebase/auth";
@@ -39,6 +41,7 @@ const TutorProfile = () => {
   const [currentDoc, setCurrentDoc] = useState<DocumentData | null>(null);
   const [reviewList, setReviewList] = useState<Review[]>([]);
   const [follow, setFollow] = useState<boolean>(false);
+  const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const { id: viewingUserId } = useGlobalSearchParams();
   const otherUserId = Array.isArray(viewingUserId)
     ? viewingUserId[0]
@@ -49,6 +52,30 @@ const TutorProfile = () => {
   const { client } = useChat();
 
   const userIdToView = otherUserId ?? userDoc?.userId;
+
+  // Supabase client setup
+  const supabaseUrl = Constants.expoConfig?.extra?.supabaseUrl;
+  const supabaseAnonKey = Constants.expoConfig?.extra?.supabaseAnonKey;
+  const supabase = createClient(supabaseUrl!, supabaseAnonKey!);
+
+  useEffect(() => { // Fetching photo_url from Supabase
+    const fetchData = async () => {
+      if (!userDoc?.userId) return; // Ensure id is available
+      const { data, error } = await supabase 
+        .from("profiles")
+        .select("photo_url")
+        .eq("id", userDoc.userId)
+        .single();
+  
+      if (error) {
+        console.error("Error fetching photo_url:", error);
+      } else {
+        console.log("Photo URL:", data?.photo_url);
+        setPhotoUrl(data?.photo_url || null); // Set photoUrl state
+      }
+    };
+    fetchData();
+  }, [userDoc]);
 
   // Fetching currently viewed user's listings
   useEffect(() => {
@@ -202,10 +229,15 @@ const TutorProfile = () => {
             </TouchableOpacity>
           )}
 
-          <View className="w-20 h-20 mr-4 bg-white items-center rounded-full">
+          <View className={`mr-4 items-center rounded-full${
+              photoUrl ? "h-20, w-20" : "h-20, w-20 bg-white"
+          }`}>  
             <Image
-              source={require("../../assets/images/hatLogo.png")}
-              className="h-20 w-20 rounded-full mt-1 p-2"
+              source={
+                photoUrl
+                ? { uri: photoUrl }
+                :require("../../assets/images/hatLogo.png")}
+                className={photoUrl ? "h-20 w-20 rounded-full" : "h-20 w-20 rounded-full mt-1 p-2"}
             />
           </View>
           <View className="flex-1 flex-col items-start">

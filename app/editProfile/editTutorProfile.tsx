@@ -1,5 +1,9 @@
 import { useAuth } from "@/contexts/AuthProvider";
 import { db } from "@/firebase";
+import { createClient } from "@supabase/supabase-js";
+import { decode } from "base64-arraybuffer";
+import Constants from "expo-constants";
+import * as ImagePicker from "expo-image-picker";
 import { router } from "expo-router";
 import {
   doc,
@@ -21,7 +25,70 @@ export default function EditTutorProfile() {
     const [educationLevel, setEducationLevel] = useState("");
     const [educationInstitute, setEducationInstitute] = useState("");
     const [achievements, setAchievements] = useState("");
+    const [photoUrl, setPhotoUrl] = useState<string | null>(null);
     const { userDoc } = useAuth();
+
+    const supabaseUrl = Constants.expoConfig?.extra?.supabaseUrl;
+    const supabaseAnonKey = Constants.expoConfig?.extra?.supabaseAnonKey;
+    const supabase = createClient(supabaseUrl!, supabaseAnonKey!);
+
+    const handlePickImage = async () => {
+    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!permission.granted) {
+      alert("Permission required to access media library.");
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.7,
+      base64: true,
+    });
+
+    if (!result.canceled) {
+      const file = result.assets[0];
+      const fileName = `${userDoc.userId}_${Date.now()}.jpg`;
+
+      if (!file.base64) {
+        alert("Image encoding failed. Try again.");
+        return;
+      }
+      const fileBuffer = decode(file.base64);
+
+      // Upload to Supabase Storage
+      const { error: uploadError } = await supabase.storage
+        .from("profile-pictures")
+        .upload(fileName, fileBuffer, {
+          contentType: "image/jpeg",
+          upsert: true,
+        });
+
+      if (uploadError) {
+        console.error("Upload failed:", uploadError);
+        alert("Failed to upload image.");
+        return;
+      }
+
+      // Get the public URL
+      const { data } = supabase.storage.from("profile-pictures").getPublicUrl(fileName);
+      const publicUrl = data.publicUrl;
+
+      // Save to Supabase `profiles` table
+      const { error: upsertError } = await supabase
+        .from("profiles")
+        .upsert({ id: userDoc.userId, photo_url: publicUrl });
+
+      if (upsertError) {
+        console.error("Error saving URL to database:", upsertError);
+        alert("Upload succeeded but failed to save profile picture.");
+        return;
+      }
+
+      setPhotoUrl(publicUrl);
+      alert("Profile picture uploaded successfully!");
+    }
+  };
 
     useEffect(() => {
       if (userDoc) {
@@ -120,6 +187,10 @@ export default function EditTutorProfile() {
           placeholderTextColor="#5d5d5d"
         />
 
+        <TouchableOpacity style={styles.uploadButton} onPress={handlePickImage}>
+          <Text style={styles.uploadButtonText}>Upload Profile Picture</Text>
+        </TouchableOpacity>
+
       </ScrollView>
       <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
         <Text style={styles.submitText}>Submit</Text>
@@ -164,6 +235,20 @@ const styles = StyleSheet.create({
     fontFamily: "Asap-Regular",
     color: "#000",
     marginBottom: 20,
+  },
+  uploadButton: {
+    backgroundColor: "#59AEFF", 
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 12,
+    marginTop: 16,
+    alignItems: "center",
+    alignSelf: "center",
+  },
+  uploadButtonText: {
+    color: "#14317A",  
+    fontSize: 16,
+    fontFamily: "Asap-Bold",
   },
   submitButton: {
     backgroundColor: "#59AEFF", 
