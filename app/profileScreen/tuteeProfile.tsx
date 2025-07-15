@@ -67,7 +67,7 @@ const TuteeProfile = () => {
         .single();
 
       if (error) {
-        console.error("Error fetching photo_url:", error);
+        console.log("Error fetching photo_url:", error);
       } else {
         console.log("Photo URL:", data?.photo_url);
         setPhotoUrl(data?.photo_url || null); // Set photoUrl state
@@ -205,7 +205,6 @@ const TuteeProfile = () => {
               resizeMode="cover"
             />
           </View>
-
           <View className="flex-1 flex-col items-start">
             <Text
               numberOfLines={1}
