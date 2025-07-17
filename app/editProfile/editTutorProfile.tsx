@@ -100,7 +100,7 @@ export default function EditTutorProfile() {
     }, [userDoc]);
 
   const handleSubmit = async () => {
-    if (!educationInstitute.trim() || !educationLevel.trim()) {
+    if (!educationInstitute.trim() || !educationLevel.trim() || !name.trim()) {
       alert("Please fill all necessary fields before submitting.");
       return;
     }

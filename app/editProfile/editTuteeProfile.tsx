@@ -98,7 +98,7 @@ export default function EditTuteeProfile() {
 }, [userDoc]);
 
   const handleSubmit = async () => {
-    if (!educationInstitute.trim() || !educationLevel.trim()) {
+    if (!educationInstitute.trim() || !educationLevel.trim() || !name.trim()) {
       alert("Please fill all fields before submitting.");
       return;
     }
