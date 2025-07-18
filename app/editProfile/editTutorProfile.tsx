@@ -90,6 +90,31 @@ export default function EditTutorProfile() {
     }
   };
 
+    const handleRemoveImage = async () => {
+      if (!userDoc?.userId) {
+        alert("User not found.");
+        return;
+      }
+      try {
+        const { error: deleteError } = await supabase // Delete profile picture from Supabase 'profiles' table
+          .from("profiles")
+          .delete()
+          .eq("id", userDoc.userId);
+
+        if (deleteError) {
+          alert("No previous profile picture uploaded so no profile picture to remove!");
+          return;
+        }
+
+        setPhotoUrl(null);
+        alert("Profile picture removed successfully!");
+      } catch (error) {
+        console.error("Unexpected error removing profile picture:", error);
+        alert("Something went wrong. Please try again.");
+      }
+    };
+
+
     useEffect(() => {
       if (userDoc) {
         setName(userDoc.name || "");
@@ -192,6 +217,10 @@ export default function EditTutorProfile() {
           <Text style={styles.uploadButtonText}>Upload Profile Picture</Text>
         </TouchableOpacity>
 
+        <TouchableOpacity style={styles.removeButton} onPress={handleRemoveImage}>
+          <Text style={styles.removeButtonText}>Remove Profile Picture</Text>
+        </TouchableOpacity>
+
       </ScrollView>
       <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
         <Text style={styles.submitText}>Submit</Text>
@@ -247,6 +276,20 @@ const styles = StyleSheet.create({
     alignSelf: "center",
   },
   uploadButtonText: {
+    color: "#14317A",  
+    fontSize: 16,
+    fontFamily: "Asap-Bold",
+  },
+  removeButton: {
+    backgroundColor: "#59AEFF", 
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 12,
+    marginTop: 16,
+    alignItems: "center",
+    alignSelf: "center",
+  },
+  removeButtonText: {
     color: "#14317A",  
     fontSize: 16,
     fontFamily: "Asap-Bold",
