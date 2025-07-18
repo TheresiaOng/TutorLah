@@ -112,6 +112,26 @@ export default function EditTuteeProfile() {
     };
 
     useEffect(() => {
+        // Fetching photo_url from Supabase
+        const fetchData = async () => {
+          if (!userDoc?.userId) return; // Ensure id is available
+          const { data, error } = await supabase
+            .from("profiles")
+            .select("photo_url")
+            .eq("id", userDoc.userId)
+            .single();
+    
+          if (error) {
+            console.log("No photo uploaded yet, using default image");
+          } else {
+            console.log("Photo URL:", data?.photo_url);
+            setPhotoUrl(data?.photo_url || null); // Set photoUrl state
+          }
+        };
+        fetchData();
+      }, [userDoc]);
+
+    useEffect(() => {
   if (userDoc) {
     setName(userDoc.name || "");
     setEducationLevel(userDoc.educationLevel || "");
@@ -167,6 +187,22 @@ export default function EditTuteeProfile() {
         contentContainerStyle={styles.container}
         style={styles.scrollView}
       > 
+        {photoUrl && (
+          <View style={styles.photoContainer}>
+            <Image source={photoUrl ? { uri: photoUrl } : require("../../assets/images/hatLogo.png")} style={styles.profilePhoto} />
+          </View>
+        )}
+
+        <View style={styles.buttonRow}>
+        <TouchableOpacity style={styles.uploadButton} onPress={handlePickImage}>
+          <Text style={styles.uploadButtonText}>Upload</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.removeButton} onPress={handleRemoveImage}>
+          <Text style={styles.removeButtonText}>Remove</Text>
+        </TouchableOpacity>
+        </View>
+
         <Text style={styles.label}>Name</Text>
         <TextInput
           style={styles.input}
@@ -196,14 +232,6 @@ export default function EditTuteeProfile() {
           placeholder="Enter your education institute name"
           placeholderTextColor="#5d5d5d"
         />
-        
-        <TouchableOpacity style={styles.uploadButton} onPress={handlePickImage}>
-          <Text style={styles.uploadButtonText}>Upload Profile Picture</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.uploadButton} onPress={handleRemoveImage}>
-          <Text style={styles.removeButtonText}>Remove Profile Picture</Text>
-        </TouchableOpacity>
 
       </ScrollView>
       <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
@@ -250,28 +278,43 @@ const styles = StyleSheet.create({
     color: "#000",
     marginBottom: 20,
   },
-  uploadButton: {
-    backgroundColor: "#FFD256", 
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    borderRadius: 12,
-    marginTop: 16,
-    alignItems: "center",
-    alignSelf: "center",
-  },
+  photoContainer: {
+  alignItems: "center",
+  marginBottom: 20,
+  marginTop: 10,
+},
+profilePhoto: {
+  width: 120,
+  height: 120,
+  borderRadius: 60,
+  borderWidth: 2,
+  borderColor: "#8B402E",
+  backgroundColor: "white",
+},
+buttonRow: {
+  flexDirection: "row",
+  justifyContent: "space-between",
+  gap: 12,
+  marginTop: 12,
+},
+uploadButton: {
+  flex: 1,
+  backgroundColor: "#FFD256",
+  paddingVertical: 12,
+  borderRadius: 12,
+  alignItems: "center",
+},
+removeButton: {
+  flex: 1,
+  backgroundColor: "#FFD256",
+  paddingVertical: 12,
+  borderRadius: 12,
+  alignItems: "center",
+},
   uploadButtonText: {
     color: "#8B402E",  
     fontSize: 16,
     fontFamily: "Asap-Bold",
-  },
-  removeButton: {
-    backgroundColor: "#FFD256", 
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    borderRadius: 12,
-    marginTop: 16,
-    alignItems: "center",
-    alignSelf: "center",
   },
   removeButtonText: {
     color: "#8B402E",  
