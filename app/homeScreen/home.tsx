@@ -2,7 +2,7 @@ import CustomSearchBar from "@/components/customSearchBar";
 import { useAuth } from "@/contexts/AuthProvider";
 import { createClient } from "@supabase/supabase-js";
 import Constants from "expo-constants";
-import { collection, onSnapshot, query, where } from "firebase/firestore";
+import { collection, onSnapshot, query, Query, where } from "firebase/firestore";
 import React, { useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, FlatList, Image, Text, View } from "react-native";
 import { db } from "../../firebase";
@@ -106,39 +106,20 @@ const HomeScreen = () => {
   }, [userDoc]);
 
   useEffect(() => {
-    let listingsQuery = query(collection(db, "listings")); // Query to fetch all listings
-    // Listen for real-time updates to the listings collection
-    // This will automatically update the listings state whenever there are changes in the database
+  let listingsQuery: Query = collection(db, "listings"); // Query to fetch listings
+  const oppositeRole = userDoc.role === "tutor" ? "tutee" : "tutor";
+  listingsQuery = query(listingsQuery, where("role", "==", oppositeRole)); // Filter listings by opposite role
 
-    // To filter listings based on roles only
-    const selectedRole = searchFields
-      .filter((field) => field.startsWith("role:"))
-      .map((field) => field.split(":")[1]);
+  const unsubscribe = onSnapshot(listingsQuery, (snapshot) => {
+    const fetchedListings: Listing[] = snapshot.docs.map((doc) => ({
+      listId: doc.id,
+      ...(doc.data() as Omit<Listing, "listId">),
+    }));
+    setListings(fetchedListings);
+  });
 
-    if (selectedRole.includes("tutor") && selectedRole.includes("tutee")) {
-    } else if (selectedRole.includes("tutor")) {
-      listingsQuery = query(
-        collection(db, "listings"),
-        where("role", "==", "tutor")
-      );
-    } else if (selectedRole.includes("tutee")) {
-      listingsQuery = query(
-        collection(db, "listings"),
-        where("role", "==", "tutee")
-      );
-    }
-
-    const unsubscribe = onSnapshot(listingsQuery, (snapshot) => {
-      // each specific document in the collection
-      const fetchedListings: Listing[] = snapshot.docs.map((doc) => ({
-        listId: doc.id,
-        ...(doc.data() as Omit<Listing, "listId">),
-      }));
-      setListings(fetchedListings);
-    });
-
-    return () => unsubscribe(); // Cleanup listener on unmount
-  }, [searchFields]);
+  return () => unsubscribe();
+}, [userDoc]);
 
   // give each subject a score if it does not have a score, mark it 0
   // 0 means it will be displayed at the bottom
