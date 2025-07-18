@@ -140,7 +140,7 @@ const CustomSearchDropDown = ({
           </ScrollView>
         </View>
       )}
-      {debouncedInput && filteredSource.length == 0 && (
+      {debouncedInput && (
         <TouchableOpacity
           className={`${
             userDoc?.role == "tutor" ? "bg-secondaryBlue" : "bg-secondaryOrange"
