@@ -2,7 +2,13 @@ import CustomSearchBar from "@/components/customSearchBar";
 import { useAuth } from "@/contexts/AuthProvider";
 import { createClient } from "@supabase/supabase-js";
 import Constants from "expo-constants";
-import { collection, onSnapshot, query, Query, where } from "firebase/firestore";
+import {
+  collection,
+  onSnapshot,
+  query,
+  Query,
+  where,
+} from "firebase/firestore";
 import React, { useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, FlatList, Image, Text, View } from "react-native";
 import { db } from "../../firebase";
@@ -54,7 +60,8 @@ const HomeScreen = () => {
       const { data, error } = await supabase.rpc("match_subjects", {
         user_embedding: userEmbedding,
         match_limit: 10, // take the top 10 subjects
-        threshold: 0.5,
+        user_role: userDoc?.role,
+        similarity_threshold: 0.5,
       });
 
       if (error) {
@@ -74,8 +81,16 @@ const HomeScreen = () => {
 
       // rank each subject based on similarity / match
       const ranked = new Map<string, number>();
-      (data as { name: string }[]).forEach((item, index) => {
-        ranked.set(item.name.toLowerCase(), 10 - index);
+      (
+        data as {
+          name: string;
+          similarity: number; // how similar the subject to user's preferences
+          availability_score: number; // how many of this subject is available
+        }[]
+      ).forEach((item) => {
+        // combine similarity and availability_score for smarter ranking
+        const weightedScore = item.similarity * item.availability_score;
+        ranked.set(item.name.toLowerCase(), weightedScore);
       });
 
       setSubjectRanking(ranked);
@@ -106,20 +121,20 @@ const HomeScreen = () => {
   }, [userDoc]);
 
   useEffect(() => {
-  let listingsQuery: Query = collection(db, "listings"); // Query to fetch listings
-  const oppositeRole = userDoc.role === "tutor" ? "tutee" : "tutor";
-  listingsQuery = query(listingsQuery, where("role", "==", oppositeRole)); // Filter listings by opposite role
+    let listingsQuery: Query = collection(db, "listings"); // Query to fetch listings
+    const oppositeRole = userDoc.role === "tutor" ? "tutee" : "tutor";
+    listingsQuery = query(listingsQuery, where("role", "==", oppositeRole)); // Filter listings by opposite role
 
-  const unsubscribe = onSnapshot(listingsQuery, (snapshot) => {
-    const fetchedListings: Listing[] = snapshot.docs.map((doc) => ({
-      listId: doc.id,
-      ...(doc.data() as Omit<Listing, "listId">),
-    }));
-    setListings(fetchedListings);
-  });
+    const unsubscribe = onSnapshot(listingsQuery, (snapshot) => {
+      const fetchedListings: Listing[] = snapshot.docs.map((doc) => ({
+        listId: doc.id,
+        ...(doc.data() as Omit<Listing, "listId">),
+      }));
+      setListings(fetchedListings);
+    });
 
-  return () => unsubscribe();
-}, [userDoc]);
+    return () => unsubscribe();
+  }, [userDoc]);
 
   // give each subject a score if it does not have a score, mark it 0
   // 0 means it will be displayed at the bottom
@@ -131,7 +146,8 @@ const HomeScreen = () => {
       0
     );
 
-    return subjectList.length > 0 ? total / subjectList.length : 0;
+    // Diminishing returns to avoid people listing more subjects just to be put at the top
+    return Math.log(1 + total);
   };
 
   // sort the listing based on its score
