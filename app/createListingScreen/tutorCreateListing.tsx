@@ -33,6 +33,7 @@ export default function CreateListingTutor() {
   const [education, setEducation] = useState("");
   const [negotiable, setNegotiable] = useState("")
   const [day, setDay] = useState<string[]>([]);
+  const [teachingLevel, setTeachingLevel] = useState<string[]>([]);
   const [errorMsg, setErrorMsg] = useState("");
 
   const { userDoc } = useAuth();
@@ -73,6 +74,14 @@ export default function CreateListingTutor() {
     "Sunday",
   ];
 
+  const levelOrder = [
+    "primary",
+    "secondary",
+    "poly",
+    "JC",
+    "University/College"
+  ]
+
   const listingRef = collection(db, "listings");
 
   const checkIfAllFieldsFilled = () => {
@@ -82,7 +91,8 @@ export default function CreateListingTutor() {
     endTime instanceof Date &&
     price.trim() !== "" &&
     negotiable.length > 0 &&
-    day.length > 0
+    day.length > 0 &&
+    teachingLevel.length > 0
     );
   };
 
@@ -123,6 +133,10 @@ export default function CreateListingTutor() {
       .slice()
       .sort((a, b) => dayOrder.indexOf(a) - dayOrder.indexOf(b));
 
+    const sortedTeachingLevels = teachingLevel
+       .slice()
+       .sort((a, b) => levelOrder.indexOf(a) - levelOrder.indexOf(b));
+
     try {
       await addDoc(listingRef, {
         name: userDoc?.name,
@@ -133,6 +147,7 @@ export default function CreateListingTutor() {
         startTime: startTime.toISOString(),
         endTime: endTime.toISOString(),
         date: sortedDays,
+        teachingLevel: sortedTeachingLevels,
         negotiable,
         education: `${userDoc?.educationInstitute} ${userDoc?.educationLevel}`,
       });
@@ -200,6 +215,24 @@ export default function CreateListingTutor() {
           </View>
         )}
 
+        <Text style={styles.label}>Teaching Level</Text>
+        <CustomDropDown
+          options={[
+            "primary",
+            "secondary",
+            "poly",
+            "JC",
+            "University/College"
+          ]}
+          selected={teachingLevel}
+          multiple={true}
+          onSelect={(values) => {
+            if (Array.isArray(values)) {
+              setTeachingLevel(values);
+            }
+          }}
+        />
+        
         <Text style={styles.label}>Available Days</Text>
         <CustomDropDown
           options={[
