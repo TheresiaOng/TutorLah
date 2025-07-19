@@ -61,10 +61,16 @@ const Footer = () => {
   };
 
   const handleCreate = () => {
-    if (pathname !== "/createListingScreen/createListing") {
+    if (pathname !== "/createListingScreen/tuteeCreateListing" &&
+        pathname !== "/createListingScreen/tutorCreateListing") 
+        {
       // Used push because user might navigate back
+      const createPath = 
+      userDoc.role === "tutor"
+          ? "/createListingScreen/tutorCreateListing"
+          : "/createListingScreen/tuteeCreateListing";
       router.push({
-        pathname: "/createListingScreen/createListing",
+        pathname: createPath,
       });
     }
   };
