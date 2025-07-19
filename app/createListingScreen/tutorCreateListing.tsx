@@ -4,17 +4,17 @@ import { useAuth } from "@/contexts/AuthProvider";
 import { db } from "@/firebase";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { router } from "expo-router";
-import { addDoc, collection } from "firebase/firestore";
+import { addDoc, collection, doc, getDoc, getDocs, onSnapshot, query, updateDoc, where } from "firebase/firestore";
 import React, { useEffect, useState } from "react";
 import {
-  Alert,
-  Image,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    Alert,
+    Image,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from "react-native";
 
 export default function CreateListingTutor() {
@@ -32,8 +32,33 @@ export default function CreateListingTutor() {
   const [day, setDay] = useState<string[]>([]);
   const [teachingLevel, setTeachingLevel] = useState<string[]>([]);
   const [errorMsg, setErrorMsg] = useState("");
+  const [reviewCount, setReviewCount] = useState(0);
+  const [totalRating, setTotalRating] = useState(0);
 
   const { userDoc } = useAuth();
+
+  useEffect(() => { 
+  const userRef = doc(db, "users", userDoc.userId);
+
+  const unsubscribe = onSnapshot(userRef, async (docSnap) => {
+    if (docSnap.exists()) {
+      const reviewIds = docSnap.data().reviewIds || [];
+      setReviewCount(reviewIds.length);
+
+      let sum = 0;
+      for (const reviewId of reviewIds) {
+        const reviewSnap = await getDoc(doc(db, "reviews", reviewId));
+        if (reviewSnap.exists()) {
+          const ratingStr = reviewSnap.data().ratings;
+          const ratingNum = parseFloat(ratingStr); 
+          if (!isNaN(ratingNum)) sum += ratingNum;
+        }
+      }
+      setTotalRating(sum);
+    }
+  });
+  return () => unsubscribe();
+}, []);
 
   useEffect(() => {
     if (userDoc?.educationInstitute && userDoc?.educationLevel) {
@@ -146,13 +171,25 @@ export default function CreateListingTutor() {
         date: sortedDays,
         teachingLevel: sortedTeachingLevels,
         negotiable,
+        reviewCount: Number(reviewCount),
+        totalRating: Number(totalRating),
         education: `${userDoc?.educationInstitute} ${userDoc?.educationLevel}`,
       });
-
-      Alert.alert("Success", "Your listing has been created successfully!");
+        const q = query(collection(db, "listings"), where("userId", "==", userDoc?.userId)); 
+        const querySnapshot = await getDocs(q); 
+        const updatePromises = querySnapshot.docs.map(async (docSnap) => {
+        const docRef = doc(db, "listings", docSnap.id);
+        return updateDoc(docRef, { //update all reviewCount and totalRating of the user
+        reviewCount: Number(reviewCount),
+        totalRating: Number(totalRating),
+        });
+    });
+        await Promise.all(updatePromises);
+        console.log("All listings updated successfully.");
+        Alert.alert("Success", "Your listing has been created successfully!");
     } catch (error) {
       Alert.alert("Error", "Failed to create listing. Please try again later.");
-      console.error("Error creating listing:", error);
+      console.error("Error creating or updating listing:", error);
     } finally {
       setPosting(false);
       router.push("/homeScreen/home");

@@ -58,14 +58,16 @@ const TuteeProfile = () => {
   const supabaseAnonKey = Constants.expoConfig?.extra?.supabaseAnonKey;
   const supabase = createClient(supabaseUrl!, supabaseAnonKey!);
 
+  const userIdToView = otherUserId ?? userDoc?.userId;
+
   useEffect(() => {
     // Fetching photo_url from Supabase
     const fetchData = async () => {
-      if (!userDoc?.userId) return; // Ensure id is available
+      if (!userIdToView) return; // Ensure id is available
       const { data, error } = await supabase
         .from("profiles")
         .select("photo_url")
-        .eq("id", userDoc.userId)
+        .eq("id", userIdToView)
         .single();
 
       if (error) {
@@ -76,7 +78,7 @@ const TuteeProfile = () => {
       }
     };
     fetchData();
-  }, [userDoc]);
+  }, [userIdToView]);
 
   if (!userDoc) return <NullScreen />;
 
@@ -89,8 +91,6 @@ const TuteeProfile = () => {
   }
 
   const client = StreamChat.getInstance(getStreamApiKey());
-
-  const userIdToView = otherUserId ?? userDoc?.userId;
 
   useEffect(() => {
     const fetchProfileDoc = async () => {
@@ -257,6 +257,7 @@ const TuteeProfile = () => {
               resizeMode="cover"
             />
           </View>
+
           <View className="flex-1 flex-col items-start">
             <Text
               numberOfLines={1}

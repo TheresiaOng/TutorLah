@@ -96,6 +96,30 @@ const TuteeCard = ({ item, listId, onDelete }: cardProps) => {
         </View>
         <View className="flex-row items-start">
           <Text className="font-asap-semibold my-4 w-40 text-darkBrown">
+            Availability
+          </Text>
+          <Text className="font-asap-regular my-4 flex-shrink text-darkBrown">
+            : {item.date?.join(", ")}
+          </Text>
+        </View>
+        <View className="flex-row items-start">
+          <Text className="font-asap-semibold my-4 w-40 text-darkBrown">
+            Timing
+          </Text>
+          <Text className="font-asap-regular my-4 flex-shrink text-darkBrown">
+            : {new Date(item?.startTime).toLocaleTimeString("en-GB", {
+                hour: "2-digit",
+                minute: "2-digit",
+              })}{" "}
+                -{" "}
+              {new Date(item?.endTime).toLocaleTimeString("en-GB", {
+                  hour: "2-digit",
+                  minute: "2-digit",
+              })}
+          </Text>
+        </View>
+        <View className="flex-row items-start">
+          <Text className="font-asap-semibold my-4 w-40 text-darkBrown">
             Price Range
           </Text>
           <Text className="font-asap-regular my-4 flex-shrink text-darkBrown">

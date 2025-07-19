@@ -21,6 +21,7 @@ const TutorCard = ({ item, listId, onDelete }: cardProps) => {
 
   const { client, setChannel } = useChat();
 
+
   const handleChatPress = async () => {
     setLoading(true);
 
@@ -62,22 +63,28 @@ const TutorCard = ({ item, listId, onDelete }: cardProps) => {
       )}
       <BlueCard id={item.userId}>
         {/* Pressable Name -> Profile */}
-        <TouchableOpacity
-          onPress={() =>
-            router.push({
-              pathname:
-                item.role === "tutor"
-                  ? "/profileScreen/tutorProfile"
-                  : "/profileScreen/tuteeProfile",
-              params: { id: item?.userId },
-            })
-          }
-        >
-          {/* Card details */}
-          <Text className="font-asap-bold text-xl text-darkBlue">
-            {item?.name}
+        <View className="flex-row items-center">
+          <TouchableOpacity
+            onPress={() =>
+              router.push({
+                pathname:
+                  item.role === "tutor"
+                    ? "/profileScreen/tutorProfile"
+                    : "/profileScreen/tuteeProfile",
+                params: { id: item?.userId },
+              })
+            }>
+            <Text className="font-asap-bold text-xl text-darkBlue">
+              {item?.name}
+            </Text>
+          </TouchableOpacity>
+          <Text className="ml-2 font-asap-bold text-lg text-primaryOrange">★</Text>
+          <Text className="ml-1 font-asap-bold text-base text-darkBlue">
+            {item?.reviewCount == 0 || item?.totalRating == 0
+              ? "0"
+              : (item?.totalRating / item?.reviewCount).toFixed(1)}
           </Text>
-        </TouchableOpacity>
+        </View>
         <View className="border-b border-secondaryBlue border-2 mt-2" />
         <View className="flex-row items-start">
           <Text className="font-asap-semibold my-4 w-40 text-darkBlue">
@@ -96,6 +103,38 @@ const TutorCard = ({ item, listId, onDelete }: cardProps) => {
           </Text>
         </View>
         <View className="flex-row items-start">
+          <Text className="font-asap-semibold my-4 w-40 text-darkBlue">
+            Teaching level
+          </Text>
+          <Text className="font-asap-regular flex-shrink my-4 text-darkBlue">
+            : {item.teachingLevel?.join(", ")}
+          </Text>
+        </View>
+        <View className="flex-row items-start">
+          <Text className="font-asap-semibold my-4 w-40 text-darkBlue">
+            Availability
+          </Text>
+          <Text className="font-asap-regular my-4 flex-shrink text-darkBlue">
+            : {item.date?.join(", ")}
+          </Text>
+        </View>
+        <View className="flex-row items-start">
+          <Text className="font-asap-semibold my-4 w-40 text-darkBlue">
+            Timing
+          </Text>
+          <Text className="font-asap-regular my-4 flex-shrink text-darkBlue">
+              : {new Date(item?.startTime).toLocaleTimeString("en-GB", {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}{" "}
+                  -{" "}
+                {new Date(item?.endTime).toLocaleTimeString("en-GB", {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                })}
+            </Text>
+          </View>
+          <View className="flex-row items-start">
           <Text className="font-asap-semibold my-4 w-40 text-darkBlue">
             Price
           </Text>
