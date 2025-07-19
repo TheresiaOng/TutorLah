@@ -40,7 +40,7 @@ export default function CreateListingTutor() {
   useEffect(() => { 
   const userRef = doc(db, "users", userDoc.userId);
 
-  const unsubscribe = onSnapshot(userRef, async (docSnap) => {
+  const unsubscribe = onSnapshot(userRef, async (docSnap) => { //store totalRatings and its count to later find the average rating
     if (docSnap.exists()) {
       const reviewIds = docSnap.data().reviewIds || [];
       setReviewCount(reviewIds.length);
