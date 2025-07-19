@@ -25,7 +25,10 @@ function LayoutWithFooter() {
     pathname == "/createReview" ||
     pathname == "/comingSoon" ||
     pathname.startsWith("/videoScreen") ||
-    pathname.startsWith("/editProfile");
+    pathname.startsWith("/editProfile") ||
+    pathname.startsWith("/allListingsScreen") ||
+    pathname.startsWith("/allReviewsScreen") ||
+    pathname.startsWith("/allFollowingsScreen");
 
   return (
     <View className="flex-1">

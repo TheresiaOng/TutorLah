@@ -4,8 +4,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 const NullScreen = () => {
   return (
-    <SafeAreaView>
-      <View className="items-center flex-col justify-center w-full h-full">
+    <SafeAreaView className="bg-white">
+      <View className="items-center bg-white flex-col justify-center w-full h-full">
         <ActivityIndicator size="large" />
         <Text className="font-asap-medium mt-4">
           Hold on tight! We are getting your content ready...

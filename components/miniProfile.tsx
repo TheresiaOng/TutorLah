@@ -31,7 +31,7 @@ const MiniProfile = ({ item }: MniProfile) => {
           ellipsizeMode="tail"
           className="text-darkBrown font-asap-bold text-lg"
         >
-          {item.name}
+          {item.name.length > 10 ? `${item.name.slice(0, 10)}...` : item.name}
         </Text>
       </TouchableOpacity>
     </View>
