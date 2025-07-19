@@ -4,20 +4,17 @@ import { useAuth } from "@/contexts/AuthProvider";
 import { db } from "@/firebase";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { router } from "expo-router";
-import {
-    addDoc,
-    collection,
-} from "firebase/firestore";
+import { addDoc, collection } from "firebase/firestore";
 import React, { useEffect, useState } from "react";
 import {
-    Alert,
-    Image,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  Alert,
+  Image,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 
 export default function CreateListingTutee() {
@@ -158,53 +155,58 @@ export default function CreateListingTutee() {
   return (
     <View style={styles.page}>
       <View className="border-8 w-full items-center h-1/6 border-primaryOrange bg-primaryOrange">
-            <View className="flex-row w-11/12 items-center justify-start inset-y-6">
-                <TouchableOpacity
-                  className="items-center h-full justify-center mt-3 mr-2"
-                  onPress={() => router.back()}
-                  activeOpacity={0.7}>
-                  <Image
-                    source={require("../../assets/images/cancel.png")}
-                    className="w-10"
-                    resizeMode="contain"/>
-                </TouchableOpacity>
-            <Text style={styles.header}>Create Listing</Text>
+        <View className="flex-row w-11/12 items-center justify-start inset-y-6">
+          <TouchableOpacity
+            className="items-center h-full justify-center mt-3 mr-2"
+            onPress={() => router.back()}
+            activeOpacity={0.7}
+          >
+            <Image
+              source={require("../../assets/images/cancel.png")}
+              className="w-10"
+              resizeMode="contain"
+            />
+          </TouchableOpacity>
+          <Text style={styles.header}>Create Listing</Text>
         </View>
       </View>
 
-      <ScrollView contentContainerStyle={styles.container} style={styles.scrollView}>
-
+      <ScrollView
+        contentContainerStyle={styles.container}
+        style={styles.scrollView}
+      >
         <Text style={styles.label}>Educational Level</Text>
-        <TextInput 
-        style={styles.disabledInput} 
-        value={education} 
-        editable={false} />
+        <TextInput
+          style={styles.disabledInput}
+          value={education}
+          editable={false}
+        />
 
         <Text style={styles.label}>Subjects Wanted</Text>
-          <TextInput
-            style={styles.input}
-            placeholderTextColor="#000"
-            value={subjects}
-            onChangeText={handleSubject}
-            autoCapitalize="none"
-            multiline
-            maxLength={1000}
+        <TextInput
+          style={styles.input}
+          placeholderTextColor="#000"
+          value={subjects}
+          onChangeText={handleSubject}
+          autoCapitalize="none"
+          multiline
+          maxLength={1000}
         />
         <View className="flex-row justify-between items-center px-4 mb-2">
           <Text className="text-xs font-asap-medium text-darkBrown">
-                Subject Count ({wordCount}/10)
+            Subject Count ({wordCount}/10)
           </Text>
-             <Text className="text-xs font-asap-medium text-darkBrown">
-                Separate each subject with a comma (,)
-            </Text>
+          <Text className="text-xs font-asap-medium text-darkBrown">
+            Separate each subject with a comma (,)
+          </Text>
         </View>
 
         {length === 1000 && (
-        <View className="items-center justify-center w-full">
+          <View className="items-center justify-center w-full">
             <Text className="text-sm font-asap-regular mb-4 text-red-500">
-            You have hit the limit of 1000 characters
+              You have hit the limit of 1000 characters
             </Text>
-        </View>
+          </View>
         )}
 
         <Text style={styles.label}>Available Days</Text>
@@ -250,6 +252,7 @@ export default function CreateListingTutee() {
             <DateTimePicker
               value={startTime}
               mode="time"
+              textColor="black"
               display="spinner"
               onChange={(event, selectedTime) => {
                 const currentTime = selectedTime || startTime;
@@ -287,6 +290,7 @@ export default function CreateListingTutee() {
             <DateTimePicker
               value={endTime}
               mode="time"
+              textColor="black"
               display="spinner"
               onChange={(event, selectedTime) => {
                 const currentTime = selectedTime || endTime;
@@ -303,97 +307,109 @@ export default function CreateListingTutee() {
 
         <Text style={styles.label}>Price Range per Hour</Text>
 
-            <View
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "center",
+            width: "100%",
+            marginBottom: 24,
+          }}
+        >
+          {/* Start Price Input */}
+          <View
             style={{
-                flexDirection: "row",
-                alignItems: "center", 
-                justifyContent: "center",
-                width: "100%",
-                marginBottom: 24,
+              flexDirection: "row",
+              alignItems: "center",
+              borderWidth: 2,
+              height: 56,
+              borderColor: "#8e8e93",
+              borderRadius: 24,
+              paddingHorizontal: 15,
+              width: "40%",
             }}
+          >
+            <Text
+              style={{
+                fontSize: 18,
+                fontFamily: "Asap-Regular",
+                marginRight: 4,
+              }}
             >
-            {/* Start Price Input */}
-            <View
-                style={{
-                flexDirection: "row",
-                alignItems: "center",
-                borderWidth: 2,
-                height: 56,
-                borderColor: "#8e8e93",
-                borderRadius: 24,
-                paddingHorizontal: 15,
-                width: "40%",
-                }}
-            >
-                <Text style={{ fontSize: 18, fontFamily: "Asap-Regular", marginRight: 4 }}>
-                S$
-                </Text>
-                <TextInput
-                style={{ flex: 1, fontFamily: "Asap-Regular", fontSize: 16 }}
-                placeholderTextColor="#8e8e93"
-                placeholder="From"
-                value={startPrice}
-                onChangeText={(text) => {
-                    let cleaned = text.replace(/[^0-9.,]/g, "").replace(",", ".");
-                    const parts = cleaned.split(".");
-                    if (parts.length > 2 || parts[1]?.length > 2) return;
-                    setStartPrice(cleaned);
-                }}
-                keyboardType="numeric"
-                maxLength={10}
-                />
-            </View>
+              S$
+            </Text>
+            <TextInput
+              style={{ flex: 1, fontFamily: "Asap-Regular", fontSize: 16 }}
+              placeholderTextColor="#8e8e93"
+              placeholder="From"
+              value={startPrice}
+              onChangeText={(text) => {
+                let cleaned = text.replace(/[^0-9.,]/g, "").replace(",", ".");
+                const parts = cleaned.split(".");
+                if (parts.length > 2 || parts[1]?.length > 2) return;
+                setStartPrice(cleaned);
+              }}
+              keyboardType="numeric"
+              maxLength={10}
+            />
+          </View>
 
-            {/* Dash */}
-            <View
-                style={{
-                width: "10%",
-                alignItems: "center",
-                justifyContent: "center",
-                }}
+          {/* Dash */}
+          <View
+            style={{
+              width: "10%",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <Text
+              style={{
+                fontSize: 28,
+                fontFamily: "Asap-Bold",
+                color: "#E9901B",
+              }}
             >
-                <Text
-                style={{
-                    fontSize: 28,
-                    fontFamily: "Asap-Bold",
-                    color: "#E9901B",
-                }}
-                >
-                -
-                </Text>
-            </View>
+              -
+            </Text>
+          </View>
 
-            {/* End Price Input */}
-            <View
-                style={{
-                flexDirection: "row",
-                alignItems: "center",
-                borderWidth: 2,
-                height: 56,
-                borderColor: "#8e8e93",
-                borderRadius: 24,
-                paddingHorizontal: 12,
-                width: "40%",
-                }}
+          {/* End Price Input */}
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              borderWidth: 2,
+              height: 56,
+              borderColor: "#8e8e93",
+              borderRadius: 24,
+              paddingHorizontal: 12,
+              width: "40%",
+            }}
+          >
+            <Text
+              style={{
+                fontSize: 18,
+                fontFamily: "Asap-Regular",
+                marginRight: 4,
+              }}
             >
-                <Text style={{ fontSize: 18, fontFamily: "Asap-Regular", marginRight: 4 }}>
-                S$
-                </Text>
-                <TextInput
-                style={{ flex: 1, fontFamily: "Asap-Regular", fontSize: 16 }}
-                placeholderTextColor="#8e8e93"
-                placeholder="To"
-                value={endPrice}
-                onChangeText={(text) => {
-                    let cleaned = text.replace(/[^0-9.,]/g, "").replace(",", ".");
-                    const parts = cleaned.split(".");
-                    if (parts.length > 2 || parts[1]?.length > 2) return;
-                    setEndPrice(cleaned);
-                }}
-                keyboardType="numeric"
-                maxLength={10}
-                />
-            </View>
+              S$
+            </Text>
+            <TextInput
+              style={{ flex: 1, fontFamily: "Asap-Regular", fontSize: 16 }}
+              placeholderTextColor="#8e8e93"
+              placeholder="To"
+              value={endPrice}
+              onChangeText={(text) => {
+                let cleaned = text.replace(/[^0-9.,]/g, "").replace(",", ".");
+                const parts = cleaned.split(".");
+                if (parts.length > 2 || parts[1]?.length > 2) return;
+                setEndPrice(cleaned);
+              }}
+              keyboardType="numeric"
+              maxLength={10}
+            />
+          </View>
         </View>
       </ScrollView>
 
@@ -403,7 +419,11 @@ export default function CreateListingTutee() {
         </Text>
       )}
 
-      <TouchableOpacity style={styles.submitButton} onPress={handlePost} disabled={posting}>
+      <TouchableOpacity
+        style={styles.submitButton}
+        onPress={handlePost}
+        disabled={posting}
+      >
         <Text style={styles.submitText}>{posting ? "Posting..." : "Post"}</Text>
       </TouchableOpacity>
     </View>

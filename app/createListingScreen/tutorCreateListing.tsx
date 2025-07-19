@@ -4,20 +4,17 @@ import { useAuth } from "@/contexts/AuthProvider";
 import { db } from "@/firebase";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { router } from "expo-router";
-import {
-    addDoc,
-    collection,
-} from "firebase/firestore";
+import { addDoc, collection } from "firebase/firestore";
 import React, { useEffect, useState } from "react";
 import {
-    Alert,
-    Image,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  Alert,
+  Image,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 
 export default function CreateListingTutor() {
@@ -31,7 +28,7 @@ export default function CreateListingTutor() {
   const [endTime, setEndTime] = useState(new Date());
   const [showEndTime, setShowEndTime] = useState(false);
   const [education, setEducation] = useState("");
-  const [negotiable, setNegotiable] = useState("")
+  const [negotiable, setNegotiable] = useState("");
   const [day, setDay] = useState<string[]>([]);
   const [teachingLevel, setTeachingLevel] = useState<string[]>([]);
   const [errorMsg, setErrorMsg] = useState("");
@@ -79,20 +76,20 @@ export default function CreateListingTutor() {
     "secondary",
     "poly",
     "JC",
-    "University/College"
-  ]
+    "University/College",
+  ];
 
   const listingRef = collection(db, "listings");
 
   const checkIfAllFieldsFilled = () => {
     return !!(
-    subjects.trim() !== "" &&
-    startTime instanceof Date &&
-    endTime instanceof Date &&
-    price.trim() !== "" &&
-    negotiable.length > 0 &&
-    day.length > 0 &&
-    teachingLevel.length > 0
+      subjects.trim() !== "" &&
+      startTime instanceof Date &&
+      endTime instanceof Date &&
+      price.trim() !== "" &&
+      negotiable.length > 0 &&
+      day.length > 0 &&
+      teachingLevel.length > 0
     );
   };
 
@@ -134,8 +131,8 @@ export default function CreateListingTutor() {
       .sort((a, b) => dayOrder.indexOf(a) - dayOrder.indexOf(b));
 
     const sortedTeachingLevels = teachingLevel
-       .slice()
-       .sort((a, b) => levelOrder.indexOf(a) - levelOrder.indexOf(b));
+      .slice()
+      .sort((a, b) => levelOrder.indexOf(a) - levelOrder.indexOf(b));
 
     try {
       await addDoc(listingRef, {
@@ -166,26 +163,30 @@ export default function CreateListingTutor() {
     <View style={styles.page}>
       <View className="border-8 w-full items-center h-1/6 border-primaryBlue bg-primaryBlue">
         <View className="flex-row w-11/12 items-center justify-start inset-y-6">
-            <TouchableOpacity
+          <TouchableOpacity
             className="items-center h-full justify-center mt-3 mr-2"
             onPress={() => router.back()}
-            activeOpacity={0.7}>
+            activeOpacity={0.7}
+          >
             <Image
-            source={require("../../assets/images/cancel.png")}
-            className="w-10"
-            resizeMode="contain"/>
-            </TouchableOpacity>
-              <Text style={styles.header}>Create Listing</Text>
+              source={require("../../assets/images/cancel.png")}
+              className="w-10"
+              resizeMode="contain"
+            />
+          </TouchableOpacity>
+          <Text style={styles.header}>Create Listing</Text>
         </View>
-    </View>
+      </View>
 
-      <ScrollView contentContainerStyle={styles.container} style={styles.scrollView}>
-
+      <ScrollView
+        contentContainerStyle={styles.container}
+        style={styles.scrollView}
+      >
         <Text style={styles.label}>Educational Level</Text>
-        <TextInput 
-        style={styles.disabledInput} 
-        value={education} 
-        editable={false} 
+        <TextInput
+          style={styles.disabledInput}
+          value={education}
+          editable={false}
         />
 
         <Text style={styles.label}>Teaching Subjects</Text>
@@ -198,13 +199,13 @@ export default function CreateListingTutor() {
           multiline
           maxLength={1000}
         />
-            <View className="flex-row justify-between items-center px-4 mb-2">
-            <Text className="text-xs font-asap-medium text-darkBlue">
-                Subject Count ({wordCount}/10)
-            </Text>
-            <Text className="text-xs font-asap-medium text-darkBlue">
-                Separate each subject with a comma (,)
-            </Text>
+        <View className="flex-row justify-between items-center px-4 mb-2">
+          <Text className="text-xs font-asap-medium text-darkBlue">
+            Subject Count ({wordCount}/10)
+          </Text>
+          <Text className="text-xs font-asap-medium text-darkBlue">
+            Separate each subject with a comma (,)
+          </Text>
         </View>
 
         {length === 1000 && (
@@ -217,13 +218,7 @@ export default function CreateListingTutor() {
 
         <Text style={styles.label}>Teaching Level</Text>
         <CustomDropDown
-          options={[
-            "primary",
-            "secondary",
-            "poly",
-            "JC",
-            "University/College"
-          ]}
+          options={["primary", "secondary", "poly", "JC", "University/College"]}
           selected={teachingLevel}
           multiple={true}
           onSelect={(values) => {
@@ -232,7 +227,7 @@ export default function CreateListingTutor() {
             }
           }}
         />
-        
+
         <Text style={styles.label}>Available Days</Text>
         <CustomDropDown
           options={[
@@ -276,6 +271,7 @@ export default function CreateListingTutor() {
             <DateTimePicker
               value={startTime}
               mode="time"
+              textColor="black"
               display="spinner"
               onChange={(event, selectedTime) => {
                 const currentTime = selectedTime || startTime;
@@ -313,6 +309,7 @@ export default function CreateListingTutor() {
             <DateTimePicker
               value={endTime}
               mode="time"
+              textColor="black"
               display="spinner"
               onChange={(event, selectedTime) => {
                 const currentTime = selectedTime || endTime;
@@ -339,14 +336,14 @@ export default function CreateListingTutor() {
 
         <Text style={styles.label}>Negotiable Pricing</Text>
         <CustomDropDown
-        options={["Yes", "No"]}
-        selected={negotiable}
-        multiple={false}
-        onSelect={(value) => {
+          options={["Yes", "No"]}
+          selected={negotiable}
+          multiple={false}
+          onSelect={(value) => {
             if (typeof value === "string") {
-            setNegotiable(value);
+              setNegotiable(value);
             }
-        }}
+          }}
         />
       </ScrollView>
 
@@ -356,7 +353,11 @@ export default function CreateListingTutor() {
         </Text>
       )}
 
-      <TouchableOpacity style={styles.postButton} onPress={handlePost} disabled={posting}>
+      <TouchableOpacity
+        style={styles.postButton}
+        onPress={handlePost}
+        disabled={posting}
+      >
         <Text style={styles.postText}>{posting ? "Posting..." : "Post"}</Text>
       </TouchableOpacity>
     </View>
@@ -377,7 +378,7 @@ const styles = StyleSheet.create({
     fontFamily: "Asap-Bold",
     color: "white",
     textAlign: "left",
-    marginTop: 15
+    marginTop: 15,
   },
   container: {
     paddingHorizontal: 24,
@@ -413,7 +414,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   postButton: {
-    backgroundColor: "#59AEFF", 
+    backgroundColor: "#59AEFF",
     borderRadius: 12,
     paddingVertical: 12,
     marginBottom: 35,
