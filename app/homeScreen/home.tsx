@@ -229,6 +229,7 @@ const HomeScreen = () => {
         onResult={setSearchResults}
         onQueryChange={setSearchQuery}
         onSearchFieldsChange={setSearchFields}
+        filter
       />
 
       <View className="h-5/6 w-full justify-center items-center">

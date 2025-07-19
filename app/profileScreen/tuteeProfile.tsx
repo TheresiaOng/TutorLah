@@ -1,4 +1,3 @@
-import CardViewer from "@/components/cardViewer";
 import CustomButton from "@/components/customButton";
 import MiniProfile from "@/components/miniProfile";
 import OrangeCard from "@/components/orangeCard";
@@ -11,6 +10,7 @@ import { useGlobalSearchParams } from "expo-router/build/hooks";
 import { signOut } from "firebase/auth";
 import {
   collection,
+  deleteDoc,
   doc,
   getDoc,
   onSnapshot,
@@ -19,6 +19,7 @@ import {
 } from "firebase/firestore";
 import React, { useEffect, useState } from "react";
 import {
+  Alert,
   FlatList,
   Image,
   ScrollView,
@@ -27,6 +28,7 @@ import {
   View,
 } from "react-native";
 import { StreamChat } from "stream-chat";
+import TuteeCard from "../homeScreen/tuteeCard";
 import NullScreen from "../nullScreen";
 
 type following = {
@@ -171,6 +173,54 @@ const TuteeProfile = () => {
     router.push("/");
   };
 
+  const handleDelete = (id: string) => {
+    Alert.alert(
+      "Confirm Deletion",
+      "Are you sure you want to delete this listing? This action is irreversible.",
+      [
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
+        {
+          text: "Delete",
+          onPress: async () => {
+            try {
+              const listingRef = doc(db, "listings", id);
+              await deleteDoc(listingRef);
+              console.log("Listing deleted successfully.");
+              setCurrentListings((prev) =>
+                prev.filter((item) => item.listId !== id)
+              );
+            } catch (error) {
+              console.error("Error deleting listing:", error);
+            }
+          },
+          style: "destructive",
+        },
+      ]
+    );
+  };
+
+  const handleShowMoreListings = () => {
+    router.push({
+      pathname: "/allListingsScreen/allListingsTutee",
+      params: {
+        currentListings: JSON.stringify(currentListings),
+        viewingUserId,
+      },
+    });
+  };
+
+  const handleShowMoreFollowings = () => {
+    router.push({
+      pathname: "/allFollowingsScreen/allFollowingsTutee",
+      params: {
+        currentFollowings: JSON.stringify(following),
+      },
+    });
+  };
+
   return (
     <View className="flex-1 bg-white justify-center items-center">
       {/* Header */}
@@ -211,17 +261,29 @@ const TuteeProfile = () => {
             <Text
               numberOfLines={1}
               ellipsizeMode="tail"
-              className="text-4xl flex-wrap text-darkBrown font-asap-bold"
+              className="text-4xl flex-wrap inset-y-2 text-darkBrown font-asap-bold"
             >
               {currentDoc?.name || "User"}
             </Text>
             {isOwnProfile && (
-              <CustomButton
-                title="Edit Profile"
-                onPress={() => router.push("../editProfile/editTuteeProfile")}
-                role="tutee"
-                extraClassName="h-11 inset-y-4"
-              />
+              <View className="flex-row inset-y-4 w-full justify-between">
+                <View className="w-36">
+                  <CustomButton
+                    title="Edit Profile"
+                    onPress={() =>
+                      router.push("../editProfile/editTuteeProfile")
+                    }
+                    role="tutee"
+                  />
+                </View>
+                <View className="w-36">
+                  <CustomButton
+                    title="Logout"
+                    onPress={handleLogout}
+                    role="tutee"
+                  />
+                </View>
+              </View>
             )}
           </View>
         </View>
@@ -254,13 +316,27 @@ const TuteeProfile = () => {
           {/* Following Section */}
           {isOwnProfile && (
             <View className="flex-col border-primaryOrange border-t-2 pt-2 mx-4 mt-4">
-              <Text className="color-darkBrown text-2xl font-asap-bold">
-                Following [{following.length}]
-              </Text>
+              <View className="flex-row justify-between">
+                <Text className="color-darkBrown text-2xl font-asap-bold">
+                  Following [{following.length}]
+                </Text>
+                {following?.length > 4 && (
+                  <>
+                    <View className="w-32">
+                      <CustomButton
+                        title="Show All"
+                        onPress={handleShowMoreFollowings}
+                        role="tutee"
+                        extraClassName="h-9"
+                      />
+                    </View>
+                  </>
+                )}
+              </View>
               <View className="items-center mb-4">
                 {following.length > 0 ? (
                   <FlatList
-                    data={following}
+                    data={following.slice(0, 4)}
                     keyExtractor={(item) => item.userId}
                     renderItem={({ item }) => {
                       return (
@@ -284,14 +360,48 @@ const TuteeProfile = () => {
 
           {/* Listing Section */}
           <View className="flex-col border-primaryOrange border-t-2 pt-2 mx-4 mt-4">
-            <Text className="color-darkBrown text-2xl font-asap-bold">
-              {isOwnProfile
-                ? `Your Listings [${currentListings.length}]`
-                : `Listings [${currentListings.length}]`}
-            </Text>
+            <View className="flex-row justify-between">
+              <Text className="color-darkBrown text-2xl font-asap-bold">
+                {isOwnProfile
+                  ? `Your Listings [${currentListings.length}]`
+                  : `Listings [${currentListings.length}]`}
+              </Text>
+              {currentListings?.length > 3 && (
+                <>
+                  <View className="w-32">
+                    <CustomButton
+                      title="Show All"
+                      onPress={handleShowMoreListings}
+                      role="tutee"
+                      extraClassName="h-9"
+                    />
+                  </View>
+                </>
+              )}
+            </View>
             <View className="items-center mb-4">
               {currentListings?.length > 0 ? (
-                <CardViewer listings={currentListings} />
+                <>
+                  <FlatList
+                    horizontal
+                    data={currentListings.slice(0, 3)}
+                    keyExtractor={(item) => item.listId} //every flatlist need a unique key id
+                    renderItem={({ item }) => {
+                      return (
+                        <View className="items-center justify-center">
+                          <TuteeCard
+                            item={item}
+                            listId={item.listId}
+                            {...(isOwnProfile && {
+                              onDelete: (id) => handleDelete(id),
+                            })}
+                          />
+                        </View>
+                      );
+                    }}
+                    className="mt-2 p-2 mb-4 w-full"
+                  />
+                </>
               ) : (
                 <Text className="p-8 font-asap-regular text-darkGray">
                   {isOwnProfile
@@ -300,15 +410,6 @@ const TuteeProfile = () => {
                 </Text>
               )}
             </View>
-
-            {/* Logout Button */}
-            {isOwnProfile && (
-              <CustomButton
-                title="Logout"
-                onPress={handleLogout}
-                role="tutee"
-              />
-            )}
           </View>
         </ScrollView>
       </View>

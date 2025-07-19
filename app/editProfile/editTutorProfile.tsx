@@ -5,13 +5,13 @@ import { decode } from "base64-arraybuffer";
 import Constants from "expo-constants";
 import * as ImagePicker from "expo-image-picker";
 import { router } from "expo-router";
-import {
-  doc,
-  updateDoc,
-} from "firebase/firestore";
+import { doc, updateDoc } from "firebase/firestore";
 import React, { useEffect, useState } from "react";
 import {
+  Alert,
   Image,
+  KeyboardAvoidingView,
+  Platform,
   ScrollView,
   StyleSheet,
   Text,
@@ -21,18 +21,18 @@ import {
 } from "react-native";
 
 export default function EditTutorProfile() {
-    const [name, setName] = useState("");
-    const [educationLevel, setEducationLevel] = useState("");
-    const [educationInstitute, setEducationInstitute] = useState("");
-    const [achievements, setAchievements] = useState("");
-    const [photoUrl, setPhotoUrl] = useState<string | null>(null);
-    const { userDoc } = useAuth();
+  const [name, setName] = useState("");
+  const [educationLevel, setEducationLevel] = useState("");
+  const [educationInstitute, setEducationInstitute] = useState("");
+  const [achievements, setAchievements] = useState("");
+  const [photoUrl, setPhotoUrl] = useState<string | null>(null);
+  const { userDoc } = useAuth();
 
-    const supabaseUrl = Constants.expoConfig?.extra?.supabaseUrl;
-    const supabaseAnonKey = Constants.expoConfig?.extra?.supabaseAnonKey;
-    const supabase = createClient(supabaseUrl!, supabaseAnonKey!);
+  const supabaseUrl = Constants.expoConfig?.extra?.supabaseUrl;
+  const supabaseAnonKey = Constants.expoConfig?.extra?.supabaseAnonKey;
+  const supabase = createClient(supabaseUrl!, supabaseAnonKey!);
 
-    const handlePickImage = async () => {
+  const handlePickImage = async () => {
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permission.granted) {
       alert("Permission required to access media library.");
@@ -71,7 +71,9 @@ export default function EditTutorProfile() {
       }
 
       // Get the public URL
-      const { data } = supabase.storage.from("profile-pictures").getPublicUrl(fileName);
+      const { data } = supabase.storage
+        .from("profile-pictures")
+        .getPublicUrl(fileName);
       const publicUrl = data.publicUrl;
 
       // Save to Supabase `profiles` table
@@ -90,58 +92,60 @@ export default function EditTutorProfile() {
     }
   };
 
-    const handleRemoveImage = async () => {
-      if (!userDoc?.userId) {
-        alert("User not found.");
+  const handleRemoveImage = async () => {
+    if (!userDoc?.userId) {
+      alert("User not found.");
+      return;
+    }
+    try {
+      const { error: deleteError } = await supabase // Delete profile picture from Supabase 'profiles' table
+        .from("profiles")
+        .delete()
+        .eq("id", userDoc.userId);
+
+      if (deleteError) {
+        alert(
+          "No previous profile picture uploaded so no profile picture to remove!"
+        );
         return;
       }
-      try {
-        const { error: deleteError } = await supabase // Delete profile picture from Supabase 'profiles' table
-          .from("profiles")
-          .delete()
-          .eq("id", userDoc.userId);
 
-        if (deleteError) {
-          alert("No previous profile picture uploaded so no profile picture to remove!");
-          return;
-        }
+      setPhotoUrl(null);
+      alert("Profile picture removed successfully!");
+    } catch (error) {
+      console.error("Unexpected error removing profile picture:", error);
+      alert("Something went wrong. Please try again.");
+    }
+  };
 
-        setPhotoUrl(null);
-        alert("Profile picture removed successfully!");
-      } catch (error) {
-        console.error("Unexpected error removing profile picture:", error);
-        alert("Something went wrong. Please try again.");
+  useEffect(() => {
+    // Fetching photo_url from Supabase
+    const fetchData = async () => {
+      if (!userDoc?.userId) return; // Ensure id is available
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("photo_url")
+        .eq("id", userDoc.userId)
+        .single();
+
+      if (error) {
+        console.log("No photo uploaded yet, using default image");
+      } else {
+        console.log("Photo URL:", data?.photo_url);
+        setPhotoUrl(data?.photo_url || null); // Set photoUrl state
       }
     };
+    fetchData();
+  }, [userDoc]);
 
-    useEffect(() => {
-            // Fetching photo_url from Supabase
-            const fetchData = async () => {
-              if (!userDoc?.userId) return; // Ensure id is available
-              const { data, error } = await supabase
-                .from("profiles")
-                .select("photo_url")
-                .eq("id", userDoc.userId)
-                .single();
-        
-              if (error) {
-                console.log("No photo uploaded yet, using default image");
-              } else {
-                console.log("Photo URL:", data?.photo_url);
-                setPhotoUrl(data?.photo_url || null); // Set photoUrl state
-              }
-            };
-            fetchData();
-          }, [userDoc]);
-
-    useEffect(() => {
-      if (userDoc) {
-        setName(userDoc.name || "");
-        setAchievements(userDoc.achievements || "");
-        setEducationLevel(userDoc.educationLevel || "");
-        setEducationInstitute(userDoc.educationInstitute || "");
-      }
-    }, [userDoc]);
+  useEffect(() => {
+    if (userDoc) {
+      setName(userDoc.name || "");
+      setAchievements(userDoc.achievements || "");
+      setEducationLevel(userDoc.educationLevel || "");
+      setEducationInstitute(userDoc.educationInstitute || "");
+    }
+  }, [userDoc]);
 
   const handleSubmit = async () => {
     if (!educationInstitute.trim() || !educationLevel.trim() || !name.trim()) {
@@ -151,18 +155,19 @@ export default function EditTutorProfile() {
 
     try {
       const userDocRef = await doc(db, "users", userDoc.userId); // Get user document reference
-      await updateDoc(userDocRef, { // Update user document with new profile data
+      await updateDoc(userDocRef, {
+        // Update user document with new profile data
         name: name.trim(),
         educationLevel: educationLevel.trim(),
         educationInstitute: educationInstitute.trim(),
         achievements: achievements.trim(),
       });
 
-      alert("Submitted successfully!");
+      Alert.alert("Success", "Changes applied successfully!");
       router.back();
     } catch (error) {
       console.error("Error submitting edits: ", error);
-      alert("Failed to submit. Please try again.");
+      Alert.alert("Error", "Failed to apply changes. Please try again.");
     }
   };
 
@@ -175,7 +180,23 @@ export default function EditTutorProfile() {
         <View className="flex-row w-11/12 items-center justify-start inset-y-6">
           <TouchableOpacity
             className="items-center h-full justify-center mt-3 mr-2"
-            onPress={() => router.back()}
+            onPress={() => {
+              Alert.alert(
+                "Discard Changes",
+                "This action will discard any changes made except for pictures.",
+                [
+                  {
+                    text: "Cancel",
+                    style: "cancel",
+                  },
+                  {
+                    text: "Discard",
+                    onPress: () => router.back(), // wrap in function!
+                    style: "destructive",
+                  },
+                ]
+              );
+            }}
             activeOpacity={0.7}
           >
             <Image
@@ -188,71 +209,93 @@ export default function EditTutorProfile() {
         </View>
       </View>
 
-      <ScrollView
-        contentContainerStyle={styles.container}
-        style={styles.scrollView}
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        keyboardVerticalOffset={20}
       >
-        <View style={styles.photoContainer}>
-          <Image
-            source={
-              photoUrl
-              ? { uri: photoUrl }
-              : require("../../assets/images/hatLogo.png")
-            } 
-          style={styles.profilePhoto}/>
-        </View>
-        
-        <View style={styles.buttonRow}>
-          <TouchableOpacity style={styles.uploadButton} onPress={handlePickImage}>
-              <Text style={styles.uploadButtonText}>Upload</Text>
-          </TouchableOpacity>
-        
-          <TouchableOpacity style={styles.removeButton} onPress={handleRemoveImage}>
-                <Text style={styles.removeButtonText}>Remove</Text>
-          </TouchableOpacity>
-        </View>
+        <ScrollView
+          contentContainerStyle={styles.container}
+          style={styles.scrollView}
+        >
+          <View style={styles.photoContainer}>
+            <Image
+              source={
+                photoUrl
+                  ? { uri: photoUrl }
+                  : require("../../assets/images/hatLogo.png")
+              }
+              style={styles.profilePhoto}
+              className={`${!photoUrl && "pt-4"}`}
+            />
+          </View>
 
-        <Text style={styles.label}>Name</Text>
-        <TextInput
-          style={styles.input}
-          value={name}
-          onChangeText={setName}
-          autoCapitalize="none"
-          placeholder="Enter your name"
-          placeholderTextColor="#5d5d5d"
-        />
+          <View style={styles.buttonRow}>
+            <TouchableOpacity
+              style={styles.uploadButton}
+              onPress={handlePickImage}
+            >
+              <Text style={styles.uploadButtonText}>Upload Picture</Text>
+            </TouchableOpacity>
 
-        <Text style={styles.label}>Educational Level</Text>
-        <TextInput
-          style={styles.input}
-          value={educationLevel}
-          onChangeText={setEducationLevel}
-          autoCapitalize="none"
-          placeholder="Enter your educational level"
-          placeholderTextColor="#5d5d5d"
-        />
+            <TouchableOpacity
+              style={!photoUrl ? styles.disabledButton : styles.removeButton}
+              onPress={handleRemoveImage}
+              disabled={!photoUrl}
+            >
+              <Text
+                style={
+                  !photoUrl ? styles.disabledText : styles.removeButtonText
+                }
+              >
+                Remove Picture
+              </Text>
+            </TouchableOpacity>
+          </View>
 
-        <Text style={styles.label}>Education Institute Name</Text>
-        <TextInput
-          style={styles.input}
-          value={educationInstitute}
-          onChangeText={setEducationInstitute}
-          autoCapitalize="none"
-          placeholder="Enter your education institute name"
-          placeholderTextColor="#5d5d5d"
-        />
+          <KeyboardAvoidingView>
+            <Text style={styles.label}>Name</Text>
+            <TextInput
+              style={styles.input}
+              value={name}
+              onChangeText={setName}
+              autoCapitalize="none"
+              placeholder="Enter your name"
+              placeholderTextColor="#5d5d5d"
+            />
 
-        <Text style={styles.label}>Achievements</Text>
-        <TextInput
-          style={styles.input}
-          value={achievements}
-          onChangeText={setAchievements}
-          autoCapitalize="none"
-          placeholder="Leave blank if unsure"
-          placeholderTextColor="#5d5d5d"
-        />
+            <Text style={styles.label}>Educational Level</Text>
+            <TextInput
+              style={styles.input}
+              value={educationLevel}
+              onChangeText={setEducationLevel}
+              autoCapitalize="none"
+              placeholder="Enter your educational level"
+              placeholderTextColor="#5d5d5d"
+            />
 
-      </ScrollView>
+            <Text style={styles.label}>Education Institute Name</Text>
+            <TextInput
+              style={styles.input}
+              value={educationInstitute}
+              onChangeText={setEducationInstitute}
+              autoCapitalize="none"
+              placeholder="Enter your education institute name"
+              placeholderTextColor="#5d5d5d"
+            />
+
+            <Text style={styles.label}>Achievements</Text>
+            <TextInput
+              style={styles.input}
+              value={achievements}
+              onChangeText={setAchievements}
+              autoCapitalize="none"
+              placeholder="Leave blank if unsure"
+              placeholderTextColor="#5d5d5d"
+            />
+          </KeyboardAvoidingView>
+        </ScrollView>
+      </KeyboardAvoidingView>
       <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
         <Text style={styles.submitText}>Submit</Text>
       </TouchableOpacity>
@@ -272,7 +315,7 @@ const styles = StyleSheet.create({
   header: {
     fontSize: 28,
     fontFamily: "Asap-Bold",
-    color: "white", 
+    color: "white",
     textAlign: "left",
     marginTop: 10,
   },
@@ -284,7 +327,7 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 16,
     fontFamily: "Asap-Regular",
-    color: "#1A4F82", 
+    color: "#1A4F82",
     marginBottom: 10,
     marginTop: 10,
   },
@@ -298,50 +341,62 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   photoContainer: {
-  alignItems: "center",
-  marginBottom: 20,
-  marginTop: 10,
-},
-profilePhoto: {
-  width: 120,
-  height: 120,
-  borderRadius: 60,
-  borderWidth: 2,
-  borderColor: "#59AEFF",
-  backgroundColor: "white", 
-},
-buttonRow: {
-  flexDirection: "row",
-  justifyContent: "space-between",
-  gap: 12,
-  marginTop: 12,
-},
-uploadButton: {
-  flex: 1,
-  backgroundColor: "#59AEFF", 
-  paddingVertical: 12,
-  borderRadius: 12,
-  alignItems: "center",
-},
-removeButton: {
-  flex: 1,
-  backgroundColor: "#59AEFF", 
-  paddingVertical: 12,
-  borderRadius: 12,
-  alignItems: "center",
-},
+    alignItems: "center",
+    marginBottom: 20,
+    marginTop: 10,
+  },
+  profilePhoto: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    borderWidth: 4,
+    borderColor: "#2C69A2",
+    backgroundColor: "white",
+  },
+  buttonRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    gap: 12,
+    marginTop: 12,
+  },
+  uploadButton: {
+    flex: 1,
+    backgroundColor: "#59AEFF",
+    paddingVertical: 12,
+    borderRadius: 12,
+    alignItems: "center",
+  },
+  removeButton: {
+    flex: 1,
+    backgroundColor: "#59AEFF",
+    paddingVertical: 12,
+    borderRadius: 12,
+    alignItems: "center",
+  },
+  disabledButton: {
+    flex: 1,
+    backgroundColor: "#ebebeb",
+    paddingVertical: 12,
+    borderRadius: 12,
+    alignItems: "center",
+  },
+  disabledText: {
+    color: "#5d5d5d",
+    fontSize: 16,
+    fontFamily: "Asap-Bold",
+  },
   uploadButtonText: {
-    color: "#14317A",  
+    color: "#14317A",
     fontSize: 16,
     fontFamily: "Asap-Bold",
   },
   removeButtonText: {
-    color: "#14317A",  
+    color: "#14317A",
     fontSize: 16,
     fontFamily: "Asap-Bold",
   },
   submitButton: {
-    backgroundColor: "#59AEFF", 
+    backgroundColor: "#59AEFF",
     borderRadius: 12,
     paddingVertical: 12,
     marginVertical: 20,
@@ -349,7 +404,7 @@ removeButton: {
     alignItems: "center",
   },
   submitText: {
-    color: "#14317A", 
+    color: "#14317A",
     fontSize: 18,
     fontFamily: "Asap-Bold",
   },

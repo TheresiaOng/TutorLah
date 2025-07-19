@@ -1,6 +1,6 @@
 import BlueCard from "@/components/blueCard";
-import CardViewer from "@/components/cardViewer";
 import CustomButton from "@/components/customButton";
+import ReviewCard from "@/components/reviewCard";
 import { useAuth } from "@/contexts/AuthProvider";
 import { useChat } from "@/contexts/ChatProvider";
 import { auth, db } from "@/firebase";
@@ -21,7 +21,16 @@ import {
   where,
 } from "firebase/firestore";
 import React, { useEffect, useState } from "react";
-import { Image, ScrollView, Text, TouchableOpacity, View } from "react-native";
+import {
+  Alert,
+  Image,
+  ScrollView,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { FlatList } from "react-native-gesture-handler";
+import TutorCard from "../homeScreen/tutorCard";
 import NullScreen from "../nullScreen";
 
 type Listing = {
@@ -186,11 +195,10 @@ const TutorProfile = () => {
     };
 
     checkFollowStatus();
-  }, []);
+  }, [userIdToView, userDoc]);
 
   const handleFollow = async () => {
     const userId = currentDoc?.userId;
-    const userRef = doc(db, "users", userId);
     const followerId = userDoc?.userId;
 
     const followersDocRef = doc(db, "users", userId, "followers", followerId);
@@ -209,6 +217,52 @@ const TutorProfile = () => {
       await deleteDoc(followingDocRef);
       setFollow(false);
     }
+  };
+
+  const handleDelete = (id: string) => {
+    Alert.alert(
+      "Confirm Deletion",
+      "Are you sure you want to delete this listing? This action is irreversible.",
+      [
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
+        {
+          text: "Delete",
+          onPress: async () => {
+            try {
+              const listingRef = doc(db, "listings", id);
+              await deleteDoc(listingRef);
+              console.log("Listing deleted successfully.");
+              setCurrentListings((prev) =>
+                prev.filter((item) => item.listId !== id)
+              );
+            } catch (error) {
+              console.error("Error deleting listing:", error);
+            }
+          },
+          style: "destructive",
+        },
+      ]
+    );
+  };
+
+  const handleShowMoreListings = () => {
+    router.push({
+      pathname: "/allListingsScreen/allListingsTutor",
+      params: {
+        currentListings: JSON.stringify(currentListings),
+        viewingUserId,
+      },
+    });
+  };
+
+  const handleShowMoreReviews = () => {
+    router.push({
+      pathname: "/allReviewsScreen/allReviewsTutor",
+      params: { currentReviews: JSON.stringify(reviewList) },
+    });
   };
 
   return (
@@ -247,30 +301,41 @@ const TutorProfile = () => {
               resizeMode="cover"
             />
           </View>
-
           <View className="flex-1 flex-col items-start">
             <Text
               numberOfLines={1}
               ellipsizeMode="tail"
-              className="text-4xl flex-wrap text-white font-asap-bold"
+              className="text-4xl flex-wrap inset-y-2 text-white font-asap-bold"
             >
               {currentDoc?.name || "User"}
             </Text>
-            {isOwnProfile && (
-              <CustomButton
-                title="Edit Profile"
-                onPress={() => router.push("../editProfile/editTutorProfile")}
-                role="tutor"
-                extraClassName="h-11 inset-y-4"
-              />
-            )}
-            {!isOwnProfile && userDoc?.role === "tutee" && (
-              <CustomButton
-                title={follow ? "Unfollow" : "Follow"}
-                onPress={handleFollow}
-                role="tutor"
-                extraClassName="h-11 inset-y-4"
-              />
+            {isOwnProfile ? (
+              <View className="flex-row inset-y-4 w-full justify-between">
+                <View className="w-36">
+                  <CustomButton
+                    title="Edit Profile"
+                    onPress={() =>
+                      router.push("../editProfile/editTutorProfile")
+                    }
+                    role="tutor"
+                  />
+                </View>
+                <View className="w-36">
+                  <CustomButton
+                    title="Logout"
+                    onPress={handleLogout}
+                    role="tutor"
+                  />
+                </View>
+              </View>
+            ) : (
+              <View className="flex-row inset-y-4 w-full justify-between">
+                <CustomButton
+                  title={follow ? "Unfollow" : "Follow"}
+                  onPress={handleFollow}
+                  role="tutor"
+                />
+              </View>
             )}
           </View>
         </View>
@@ -308,39 +373,98 @@ const TutorProfile = () => {
             </BlueCard>
           </View>
 
-          {/* Reviews Section */}
-          <View>
-            <View className="flex-col border-primaryBlue border-t-2 pt-2 mx-4 mt-4">
-              <View className="flex-row items-center gap-2">
-                <Text className="color-darkBlue text-2xl font-asap-bold">
-                  Reviews
+          {/* Review Section */}
+          <View className="flex-col border-primaryBlue border-t-2 pt-2 mx-4 mt-4">
+            <View className="flex-row justify-between">
+              <Text className="color-darkBlue text-2xl font-asap-bold">
+                {isOwnProfile
+                  ? `Your Reviews [${reviewList.length}]`
+                  : `Reviews [${reviewList.length}]`}
+              </Text>
+              {reviewList?.length > 3 && (
+                <>
+                  <View className="w-32">
+                    <CustomButton
+                      title="Show All"
+                      onPress={handleShowMoreReviews}
+                      role="tutor"
+                      extraClassName="h-9"
+                    />
+                  </View>
+                </>
+              )}
+            </View>
+            <View className="items-center mb-4">
+              {reviewList?.length > 0 ? (
+                <>
+                  <FlatList
+                    horizontal
+                    data={reviewList.slice(0, 3)}
+                    keyExtractor={(item) => item.id} //every flatlist need a unique key id
+                    renderItem={({ item }) => {
+                      return (
+                        <View className="items-center max-w-sm justify-center">
+                          <ReviewCard item={item} />
+                        </View>
+                      );
+                    }}
+                    className="mt-2 p-2 mb-4 w-full"
+                  />
+                </>
+              ) : (
+                <Text className="p-8 font-asap-regular text-darkGray">
+                  {isOwnProfile
+                    ? "You have no review right now"
+                    : "No review at the moment"}
                 </Text>
-                <Text className="color-darkBlue text-2xl font-asap-bold">
-                  [{reviewList.length}]
-                </Text>
-              </View>
-              <View className="items-center w-full px-4 mb-4">
-                {reviewList.length > 0 ? (
-                  <CardViewer reviews={reviewList} />
-                ) : (
-                  <Text className="p-8 font-asap-regular text-darkGray">
-                    No reviews yet.
-                  </Text>
-                )}
-              </View>
+              )}
             </View>
           </View>
 
           {/* Listing Section */}
           <View className="flex-col border-primaryBlue border-t-2 pt-2 mx-4 mt-4">
-            <Text className="color-darkBlue text-2xl font-asap-bold">
-              {isOwnProfile
-                ? `Your Listings [${currentListings.length}]`
-                : `Listings [${currentListings.length}]`}
-            </Text>
+            <View className="flex-row justify-between">
+              <Text className="color-darkBlue text-2xl font-asap-bold">
+                {isOwnProfile
+                  ? `Your Listings [${currentListings.length}]`
+                  : `Listings [${currentListings.length}]`}
+              </Text>
+              {currentListings?.length > 3 && (
+                <>
+                  <View className="w-32">
+                    <CustomButton
+                      title="Show All"
+                      onPress={handleShowMoreListings}
+                      role="tutor"
+                      extraClassName="h-9"
+                    />
+                  </View>
+                </>
+              )}
+            </View>
             <View className="items-center mb-4">
               {currentListings?.length > 0 ? (
-                <CardViewer listings={currentListings} />
+                <>
+                  <FlatList
+                    horizontal
+                    data={currentListings.slice(0, 3)}
+                    keyExtractor={(item) => item.listId} //every flatlist need a unique key id
+                    renderItem={({ item }) => {
+                      return (
+                        <View className="items-center justify-center">
+                          <TutorCard
+                            item={item}
+                            listId={item.listId}
+                            {...(isOwnProfile && {
+                              onDelete: (id) => handleDelete(id),
+                            })}
+                          />
+                        </View>
+                      );
+                    }}
+                    className="mt-2 p-2 mb-4 w-full"
+                  />
+                </>
               ) : (
                 <Text className="p-8 font-asap-regular text-darkGray">
                   {isOwnProfile
@@ -349,15 +473,6 @@ const TutorProfile = () => {
                 </Text>
               )}
             </View>
-
-            {/* Logout Button */}
-            {isOwnProfile && (
-              <CustomButton
-                title="Logout"
-                onPress={handleLogout}
-                role="tutor"
-              />
-            )}
           </View>
         </ScrollView>
       </View>

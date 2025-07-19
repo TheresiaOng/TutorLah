@@ -9,6 +9,7 @@ type CustomSearchBarProps = {
   onResult: (result: any[]) => void;
   onQueryChange: (query: string) => void;
   onSearchFieldsChange?: (fields: string[]) => void;
+  filter?: boolean;
 };
 
 const CustomSearchBar = ({
@@ -17,6 +18,7 @@ const CustomSearchBar = ({
   onResult,
   onQueryChange,
   onSearchFieldsChange,
+  filter = false,
 }: CustomSearchBarProps) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [dropDownVisible, setDropDownVisible] = useState(false);
@@ -83,18 +85,20 @@ const CustomSearchBar = ({
           autoCapitalize="none"
           autoCorrect={false}
         />
-        <TouchableOpacity
-          onPress={() => {
-            setDropDownVisible(!dropDownVisible);
-            setOpen(true);
-          }}
-        >
-          <Image
-            className="w-6 mr-4"
-            resizeMode="contain"
-            source={require("../assets/images/filter.png")}
-          />
-        </TouchableOpacity>
+        {filter && (
+          <TouchableOpacity
+            onPress={() => {
+              setDropDownVisible(!dropDownVisible);
+              setOpen(true);
+            }}
+          >
+            <Image
+              className="w-6 mr-4"
+              resizeMode="contain"
+              source={require("../assets/images/filter.png")}
+            />
+          </TouchableOpacity>
+        )}
       </View>
       {dropDownVisible && (
         <DropDownPicker
