@@ -7,26 +7,26 @@ import { createClient } from "@supabase/supabase-js";
 import Constants from "expo-constants";
 import { router } from "expo-router";
 import {
-  addDoc,
-  collection,
-  doc,
-  getDoc,
-  getDocs,
-  onSnapshot,
-  query,
-  updateDoc,
-  where,
+    addDoc,
+    collection,
+    doc,
+    getDoc,
+    getDocs,
+    onSnapshot,
+    query,
+    updateDoc,
+    where,
 } from "firebase/firestore";
 import React, { useEffect, useState } from "react";
 import {
-  Alert,
-  Image,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    Alert,
+    Image,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from "react-native";
 
 export default function CreateListingTutor() {
@@ -242,6 +242,7 @@ export default function CreateListingTutor() {
         negotiable,
         reviewCount: Number(reviewCount),
         totalRating: Number(totalRating),
+        photo_url: null,
         education: `${userDoc?.educationInstitute} ${userDoc?.educationLevel}`,
       });
       const q = query(
