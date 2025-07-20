@@ -5,7 +5,7 @@ import { decode } from "base64-arraybuffer";
 import Constants from "expo-constants";
 import * as ImagePicker from "expo-image-picker";
 import { router } from "expo-router";
-import { doc, updateDoc } from "firebase/firestore";
+import { collection, doc, getDocs, query, updateDoc, where } from "firebase/firestore";
 import React, { useEffect, useState } from "react";
 import {
   Alert,
@@ -31,6 +31,25 @@ export default function EditTutorProfile() {
   const supabaseUrl = Constants.expoConfig?.extra?.supabaseUrl;
   const supabaseAnonKey = Constants.expoConfig?.extra?.supabaseAnonKey;
   const supabase = createClient(supabaseUrl!, supabaseAnonKey!);
+
+  const updateListingsPhoto = async (newPhotoUrl: string | null) => { //update profile picture url to all user's listings
+      try {
+        const listingsRef = collection(db, "listings");
+        const q = query(listingsRef, where("userId", "==", userDoc.userId));
+        const snapshot = await getDocs(q);
+  
+        const updates = snapshot.docs.map((docSnap) =>
+          updateDoc(doc(db, "listings", docSnap.id), {
+            photo_url: newPhotoUrl,
+          })
+        );
+  
+        await Promise.all(updates);
+        console.log("All listings updated with new photo_url");
+      } catch (error) {
+        console.log("Error updating listings' photo_url:", error);
+      }
+    };
 
   const handlePickImage = async () => {
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -88,6 +107,7 @@ export default function EditTutorProfile() {
       }
 
       setPhotoUrl(publicUrl);
+      await updateListingsPhoto(publicUrl);
       alert("Profile picture uploaded successfully!");
     }
   };
@@ -111,6 +131,7 @@ export default function EditTutorProfile() {
       }
 
       setPhotoUrl(null);
+      await updateListingsPhoto(null);
       alert("Profile picture removed successfully!");
     } catch (error) {
       console.error("Unexpected error removing profile picture:", error);
@@ -133,6 +154,7 @@ export default function EditTutorProfile() {
       } else {
         console.log("Photo URL:", data?.photo_url);
         setPhotoUrl(data?.photo_url || null); // Set photoUrl state
+        await updateListingsPhoto(data?.photo_url || null); 
       }
     };
     fetchData();

@@ -197,6 +197,7 @@ export default function CreateListingTutee() {
         startTime: startTime.toISOString(),
         endTime: endTime.toISOString(),
         date: sortedDays,
+        photo_url: null,
         education: `${userDoc?.educationInstitute} ${userDoc?.educationLevel}`,
       });
 

@@ -65,19 +65,27 @@ const TutorCard = ({ item, listId, onDelete }: cardProps) => {
         {/* Pressable Name -> Profile */}
         <View className="flex-row items-center">
           <TouchableOpacity
-            onPress={() =>
-              router.push({
-                pathname:
-                  item.role === "tutor"
+            className="flex-row items-center mb-2"
+                onPress={() =>
+                  router.push({
+                    pathname:
+                    item?.userRole === "tutor"
                     ? "/profileScreen/tutorProfile"
                     : "/profileScreen/tuteeProfile",
-                params: { id: item?.userId },
-              })
-            }>
-            <Text className="font-asap-bold text-xl text-darkBlue">
-              {item?.name}
-            </Text>
-          </TouchableOpacity>
+                  params: { id: item?.userId },
+                }) }>
+                  <Image
+                    source={
+                    item?.photo_url
+                    ? { uri: item.photo_url }
+                    : require("../../assets/images/hatLogo.png")
+                  }
+                  className="w-12 h-12 rounded-full mr-3"
+                  resizeMode="cover"/>
+                <Text className="font-asap-bold text-xl text-darkBlue">
+                  {item?.name}
+                </Text>
+             </TouchableOpacity>
           <Text className="ml-2 font-asap-bold text-lg text-primaryOrange">★</Text>
           <Text className="ml-1 font-asap-bold text-base text-darkBlue">
             {item?.reviewCount == 0 || item?.totalRating == 0

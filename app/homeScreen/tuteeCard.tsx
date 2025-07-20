@@ -62,21 +62,27 @@ const TuteeCard = ({ item, listId, onDelete }: cardProps) => {
       <OrangeCard id={item.userId}>
         {/* Pressable Name -> Profile */}
         <TouchableOpacity
-          onPress={() =>
-            router.push({
-              pathname:
-                item?.userRole === "tutor"
-                  ? "/profileScreen/tutorProfile"
-                  : "/profileScreen/tuteeProfile",
-              params: { id: item?.userId },
-            })
+        className="flex-row items-center mb-2"
+        onPress={() =>
+          router.push({
+            pathname:
+              item?.userRole === "tutor"
+                ? "/profileScreen/tutorProfile"
+                : "/profileScreen/tuteeProfile",
+            params: { id: item?.userId },
+          }) }>
+        <Image
+          source={
+            item?.photo_url
+              ? { uri: item.photo_url }
+              : require("../../assets/images/hatLogo.png")
           }
-        >
-          {/* Card details */}
-          <Text className="font-asap-bold text-xl text-darkBrown">
-            {item?.name}
-          </Text>
-        </TouchableOpacity>
+          className="w-12 h-12 rounded-full mr-3"
+          resizeMode="cover"/>
+        <Text className="font-asap-bold text-xl text-darkBrown">
+          {item?.name}
+        </Text>
+      </TouchableOpacity>
         <View className="border-b border-secondaryOrange border-2 mt-2" />
         <View className="flex-row items-start">
           <Text className="font-asap-semibold my-4 w-40 text-darkBrown">
