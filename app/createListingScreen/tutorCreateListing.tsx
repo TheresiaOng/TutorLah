@@ -3,18 +3,30 @@ import CustomDropDown from "@/components/customDropDown";
 import { useAuth } from "@/contexts/AuthProvider";
 import { db } from "@/firebase";
 import DateTimePicker from "@react-native-community/datetimepicker";
+import { createClient } from "@supabase/supabase-js";
+import Constants from "expo-constants";
 import { router } from "expo-router";
-import { addDoc, collection, doc, getDoc, getDocs, onSnapshot, query, updateDoc, where } from "firebase/firestore";
+import {
+  addDoc,
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  onSnapshot,
+  query,
+  updateDoc,
+  where,
+} from "firebase/firestore";
 import React, { useEffect, useState } from "react";
 import {
-    Alert,
-    Image,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  Alert,
+  Image,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 
 export default function CreateListingTutor() {
@@ -37,28 +49,36 @@ export default function CreateListingTutor() {
 
   const { userDoc } = useAuth();
 
-  useEffect(() => { 
-  const userRef = doc(db, "users", userDoc.userId);
+  // Supabase client
+  const supabaseUrl = Constants.expoConfig?.extra?.supabaseUrl;
+  const supabaseAnonKey = Constants.expoConfig?.extra?.supabaseAnonKey;
+  const supabase = createClient(supabaseUrl!, supabaseAnonKey!);
 
-  const unsubscribe = onSnapshot(userRef, async (docSnap) => { //store totalRatings and its count to later find the average rating
-    if (docSnap.exists()) {
-      const reviewIds = docSnap.data().reviewIds || [];
-      setReviewCount(reviewIds.length);
+  const secret = Constants.expoConfig?.extra?.supabaseApiKey;
 
-      let sum = 0;
-      for (const reviewId of reviewIds) {
-        const reviewSnap = await getDoc(doc(db, "reviews", reviewId));
-        if (reviewSnap.exists()) {
-          const ratingStr = reviewSnap.data().ratings;
-          const ratingNum = parseFloat(ratingStr); 
-          if (!isNaN(ratingNum)) sum += ratingNum;
+  useEffect(() => {
+    const userRef = doc(db, "users", userDoc.userId);
+
+    const unsubscribe = onSnapshot(userRef, async (docSnap) => {
+      //store totalRatings and its count to later find the average rating
+      if (docSnap.exists()) {
+        const reviewIds = docSnap.data().reviewIds || [];
+        setReviewCount(reviewIds.length);
+
+        let sum = 0;
+        for (const reviewId of reviewIds) {
+          const reviewSnap = await getDoc(doc(db, "reviews", reviewId));
+          if (reviewSnap.exists()) {
+            const ratingStr = reviewSnap.data().ratings;
+            const ratingNum = parseFloat(ratingStr);
+            if (!isNaN(ratingNum)) sum += ratingNum;
+          }
         }
+        setTotalRating(sum);
       }
-      setTotalRating(sum);
-    }
-  });
-  return () => unsubscribe();
-}, []);
+    });
+    return () => unsubscribe();
+  }, []);
 
   useEffect(() => {
     if (userDoc?.educationInstitute && userDoc?.educationLevel) {
@@ -147,9 +167,58 @@ export default function CreateListingTutor() {
     }
 
     setPosting(true);
-    const formattedSubjects = subjectWords
-      .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-      .join(", ");
+    const formattedSubjects = subjectWords.map(
+      (word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+    );
+    const joinedSubjects = formattedSubjects.join(", ");
+
+    for (const subject of formattedSubjects) {
+      // try to embed each subject
+      try {
+        const res = await fetch(
+          "https://ynikykgyystdyitckguc.supabase.co/functions/v1/embed-subjects",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${secret}`,
+            },
+            body: JSON.stringify({ subject }),
+          }
+        );
+
+        if (!res.ok) {
+          console.warn(`Failed for ${subject}`);
+        }
+
+        // retrieve row based on subject name
+        const { data: existing, error: fetchError } = await supabase
+          .from("subjects")
+          .select("*")
+          .eq("name", subject)
+          .single();
+
+        if (fetchError && fetchError.code !== "PGRST116") {
+          // PGRST116 = no rows found (which is okay)
+          throw fetchError;
+        }
+
+        // update subject count based on role
+        const updatedCount = (existing["tutorcount"] ?? 0) + 1;
+
+        const { error: updateError } = await supabase
+          .from("subjects")
+          .update({
+            tutorcount: updatedCount,
+            updatedat: new Date().toISOString(),
+          })
+          .eq("name", subject);
+
+        if (updateError) throw updateError;
+      } catch (error) {
+        console.error(`Error calling function for ${subject}:`, error);
+      }
+    }
 
     const sortedDays = day
       .slice()
@@ -164,7 +233,7 @@ export default function CreateListingTutor() {
         name: userDoc?.name,
         userId: userDoc?.userId,
         role: userDoc?.role,
-        subjects: formattedSubjects,
+        subjects: joinedSubjects,
         price,
         startTime: startTime.toISOString(),
         endTime: endTime.toISOString(),
@@ -175,18 +244,22 @@ export default function CreateListingTutor() {
         totalRating: Number(totalRating),
         education: `${userDoc?.educationInstitute} ${userDoc?.educationLevel}`,
       });
-        const q = query(collection(db, "listings"), where("userId", "==", userDoc?.userId)); 
-        const querySnapshot = await getDocs(q); 
-        const updatePromises = querySnapshot.docs.map(async (docSnap) => {
+      const q = query(
+        collection(db, "listings"),
+        where("userId", "==", userDoc?.userId)
+      );
+      const querySnapshot = await getDocs(q);
+      const updatePromises = querySnapshot.docs.map(async (docSnap) => {
         const docRef = doc(db, "listings", docSnap.id);
-        return updateDoc(docRef, { //update all reviewCount and totalRating of the user
-        reviewCount: Number(reviewCount),
-        totalRating: Number(totalRating),
+        return updateDoc(docRef, {
+          //update all reviewCount and totalRating of the user
+          reviewCount: Number(reviewCount),
+          totalRating: Number(totalRating),
         });
-    });
-        await Promise.all(updatePromises);
-        console.log("All listings updated successfully.");
-        Alert.alert("Success", "Your listing has been created successfully!");
+      });
+      await Promise.all(updatePromises);
+      console.log("All listings updated successfully.");
+      Alert.alert("Success", "Your listing has been created successfully!");
     } catch (error) {
       Alert.alert("Error", "Failed to create listing. Please try again later.");
       console.error("Error creating or updating listing:", error);

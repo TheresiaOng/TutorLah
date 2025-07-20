@@ -12,7 +12,7 @@ serve(async (req) => {
     return new Response("Only POST allowed", { status: 405 });
   }
 
-  const { subject, role } = await req.json();
+  const { subject } = await req.json();
 
   try {
     const { data: existing, error: fetchError } = await supabase
@@ -26,20 +26,7 @@ serve(async (req) => {
       throw fetchError;
     }
 
-    if (existing) {
-      const updateField = role === "tutor" ? "tutorcount" : "tuteecount";
-      const updatedCount = (existing[updateField] ?? 0) + 1;
-
-      const { error: updateError } = await supabase
-        .from("subjects")
-        .update({
-          [updateField]: updatedCount,
-          updatedat: new Date().toISOString(),
-        })
-        .eq("name", subject);
-
-      if (updateError) throw updateError;
-    } else {
+    if (!existing) {
       const embeddingRes = await fetch("https://api.cohere.ai/v1/embed", {
         method: "POST",
         headers: {
@@ -71,8 +58,8 @@ serve(async (req) => {
         {
           name: subject,
           embedding,
-          tutorcount: role === "tutor" ? 1 : 0,
-          tuteecount: role === "tutee" ? 1 : 0,
+          tutorcount: 0,
+          tuteecount: 0,
           createdat: new Date().toISOString(),
           updatedat: new Date().toISOString(),
         },

@@ -57,7 +57,11 @@ const PersonalQuestions = () => {
     const usersRef = collection(db, "users");
     const docRef = doc(usersRef, userDoc?.userId);
 
-    for (const subject of subjectsToLearn) {
+    const formattedSubjects = subjectsToLearn.map(
+      (word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+    );
+
+    for (const subject of formattedSubjects) {
       // try to embed each subject
       try {
         const res = await fetch(
@@ -68,7 +72,7 @@ const PersonalQuestions = () => {
               "Content-Type": "application/json",
               Authorization: `Bearer ${secret}`,
             },
-            body: JSON.stringify({ subject, role: userDoc?.role }),
+            body: JSON.stringify({ subject }),
           }
         );
 
@@ -145,7 +149,7 @@ const PersonalQuestions = () => {
 
     try {
       await updateDoc(docRef, {
-        subjectToLearn: subjectsToLearn.sort(),
+        subjectToLearn: formattedSubjects.sort(),
         embeddedSubjectToLearn: roundedEmbedding,
         personalised: true,
       });
