@@ -6,7 +6,11 @@ import {
   arrayUnion,
   collection,
   doc,
+  getDoc,
+  getDocs,
+  query,
   updateDoc,
+  where
 } from "firebase/firestore";
 import React, { useState } from "react";
 import {
@@ -25,6 +29,8 @@ export default function CreateReview() {
   const [reviewText, setReviewText] = useState("");
   const [ratings, setRatings] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
+  const [reviewCount, setReviewCount] = useState(0);
+  const [totalRating, setTotalRating] = useState(0);
   const { userDoc } = useAuth();
 
   const handleSubmit = async () => {
@@ -63,6 +69,7 @@ export default function CreateReview() {
                 tuteeName: paidBy,
                 ratings: ratings.trim(),
                 paymentId,
+                tutorId,
               });
 
               const userDocRef = doc(
@@ -83,6 +90,37 @@ export default function CreateReview() {
                 reviewedPaymentIds: arrayUnion(paymentId),
               });
 
+              const tutorDocRef = doc(db, "users", typeof tutorId === "string" ? tutorId : tutorId[0]);
+              const tutorDocSnap = await getDoc(tutorDocRef);
+
+              if (tutorDocSnap.exists()) {
+                const reviewIds = tutorDocSnap.data().reviewIds || [];
+                let count = reviewIds.length;
+                let sum = 0;
+
+              for (const reviewId of reviewIds) {
+                  const reviewSnap = await getDoc(doc(db, "reviews", reviewId));
+                  if (reviewSnap.exists()) {
+                    const ratingStr = reviewSnap.data().ratings;
+                    const ratingNum = parseFloat(ratingStr);
+                    if (!isNaN(ratingNum)) sum += ratingNum;
+                  }
+              }
+              setReviewCount(count);
+              setTotalRating(sum);
+
+              const listingsRef = collection(db, "listings");
+              const q = query(listingsRef, where("userId", "==", tutorId));
+              const querySnapshot = await getDocs(q);
+              const updatePromises = querySnapshot.docs.map(async (docSnap) => {
+              const listingRef = doc(db, "listings", docSnap.id);
+              return updateDoc(listingRef, {
+                reviewCount: Number(count),
+                totalRating: Number(sum),
+              });
+            });
+            await Promise.all(updatePromises);
+            }
               Alert.alert("Success", "Review submitted successfully!");
               router.back();
             } catch (error) {
