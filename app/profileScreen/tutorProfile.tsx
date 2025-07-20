@@ -284,6 +284,7 @@ const TutorProfile = () => {
             </TouchableOpacity>
           )}
 
+          {isOwnProfile && (
           <View
             className={`mr-4 items-center justify-center rounded-full ${
               photoUrl ? "h-20 w-20" : "h-20 w-20 bg-white"
@@ -301,6 +302,8 @@ const TutorProfile = () => {
               resizeMode="cover"
             />
           </View>
+          )}
+          
           <View className="flex-1 flex-col items-start">
             <Text
               numberOfLines={1}
