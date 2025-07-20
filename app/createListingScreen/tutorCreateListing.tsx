@@ -7,26 +7,29 @@ import { createClient } from "@supabase/supabase-js";
 import Constants from "expo-constants";
 import { router } from "expo-router";
 import {
-    addDoc,
-    collection,
-    doc,
-    getDoc,
-    getDocs,
-    onSnapshot,
-    query,
-    updateDoc,
-    where,
+  addDoc,
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  onSnapshot,
+  query,
+  updateDoc,
+  where,
 } from "firebase/firestore";
 import React, { useEffect, useState } from "react";
 import {
-    Alert,
-    Image,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Alert,
+  Image,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 
 export default function CreateListingTutor() {
@@ -46,6 +49,8 @@ export default function CreateListingTutor() {
   const [errorMsg, setErrorMsg] = useState("");
   const [reviewCount, setReviewCount] = useState(0);
   const [totalRating, setTotalRating] = useState(0);
+  const [loadingPriceSuggestion, setLoadingPriceSuggestion] = useState(false);
+  const [AIMessage, setAIMessage] = useState("");
 
   const { userDoc } = useAuth();
 
@@ -138,9 +143,47 @@ export default function CreateListingTutor() {
     );
   };
 
+  useEffect(() => {
+    setErrorMsg("");
+    if (startTime && endTime) {
+      const startMillis = startTime.getTime();
+      const endMillis = endTime.getTime();
+
+      const durationInHours = (endMillis - startMillis) / (1000 * 60 * 60);
+
+      if (durationInHours == 0) {
+        setErrorMsg("");
+        return;
+      }
+
+      if (durationInHours <= 0.99 && durationInHours > 0) {
+        setErrorMsg("Minimum time availability is 1 hour");
+        return;
+      } else if (durationInHours < 0) {
+        setErrorMsg("End time must be later than start time");
+        return;
+      } else {
+        setErrorMsg("");
+      }
+    } else {
+      setErrorMsg("");
+    }
+  }, [startTime, endTime]);
+
   const handlePost = async () => {
-    if (!checkIfAllFieldsFilled()) {
-      setErrorMsg("Please fill in all fields.");
+    setPosting(true);
+
+    const startMillis = startTime.getTime();
+    const endMillis = endTime.getTime();
+
+    const durationInHours = (endMillis - startMillis) / (1000 * 60 * 60);
+
+    if (durationInHours === 0) {
+      Alert.alert(
+        "Timing Error",
+        "Please adjust your time availability with a minimum of 1 hour window."
+      );
+      setPosting(false);
       return;
     }
 
@@ -149,6 +192,7 @@ export default function CreateListingTutor() {
         "Minimum Pricing/hr is S$3",
         "Stripe will impose a S$2.70 tax, please raise your class cost accordingly."
       );
+      setPosting(false);
       return;
     }
 
@@ -163,10 +207,10 @@ export default function CreateListingTutor() {
         "Invalid Subject",
         "Please enter at least one valid subject."
       );
+      setPosting(false);
       return;
     }
 
-    setPosting(true);
     const formattedSubjects = subjectWords.map(
       (word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
     );
@@ -206,10 +250,31 @@ export default function CreateListingTutor() {
         // update subject count based on role
         const updatedCount = (existing["tutorcount"] ?? 0) + 1;
 
+        // Calculate the new average price from this listing
+        const newAvgPrice = parseFloat(price);
+
+        const oldAvg = existing?.avgprice ?? 0;
+        const oldCount = existing?.pricecount ?? 0;
+        const oldMin = existing?.minprice ?? null;
+        const oldMax = existing?.maxprice ?? null;
+
+        const updatedPriceCount = oldCount + 1;
+        const updatedAvgPrice =
+          (oldAvg * oldCount + newAvgPrice) / updatedPriceCount;
+
+        const updatedMinPrice =
+          oldMin !== null ? Math.min(oldMin, newAvgPrice) : newAvgPrice;
+        const updatedMaxPrice =
+          oldMax !== null ? Math.max(oldMax, newAvgPrice) : newAvgPrice;
+
         const { error: updateError } = await supabase
           .from("subjects")
           .update({
             tutorcount: updatedCount,
+            avgprice: Math.round(updatedAvgPrice * 100) / 100,
+            pricecount: updatedPriceCount,
+            minprice: updatedMinPrice,
+            maxprice: updatedMaxPrice,
             updatedat: new Date().toISOString(),
           })
           .eq("name", subject);
@@ -217,6 +282,12 @@ export default function CreateListingTutor() {
         if (updateError) throw updateError;
       } catch (error) {
         console.error(`Error calling function for ${subject}:`, error);
+        Alert.alert(
+          "Error",
+          "An unexpected error occured. Please try again later."
+        );
+        setPosting(false);
+        router.push("/homeScreen/home");
       }
     }
 
@@ -270,9 +341,69 @@ export default function CreateListingTutor() {
     }
   };
 
+  const handlePriceSuggestion = async () => {
+    if (teachingLevel.length == 0 || subjects.trim() == "") {
+      Alert.alert(
+        "Fields Missing",
+        "Please fill Teaching Subjects and Teaching Level fields before asking for price suggestion."
+      );
+      return;
+    }
+
+    setLoadingPriceSuggestion(true);
+    const teachingExperience = userDoc?.yearOfTeaching;
+
+    const rawSubjects = subjects.trim();
+    const subjectWords = rawSubjects
+      .split(",")
+      .map((word) => word.trim())
+      .filter((word) => word.length > 0 && /[a-zA-Z]/.test(word));
+    const formattedSubjects = subjectWords.map(
+      (word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+    );
+
+    try {
+      const res = await fetch(
+        "https://ynikykgyystdyitckguc.supabase.co/functions/v1/price-suggestion",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${secret}`,
+          },
+          body: JSON.stringify({
+            experienceLevel: teachingExperience,
+            teachingLevel,
+            subjects: formattedSubjects,
+            educationalLevel: education,
+            role: userDoc?.role,
+          }),
+        }
+      );
+
+      if (!res.ok) {
+        const errorData = await res.json();
+        const message =
+          errorData.error || "Something went wrong while getting suggestions.";
+        Alert.alert("Suggestion Error", message);
+        setLoadingPriceSuggestion(false);
+        return;
+      }
+
+      const { cohereMessage } = await res.json();
+      console.log("AI Price Suggestion:", cohereMessage);
+      setAIMessage(cohereMessage);
+    } catch (error) {
+      console.error("Error calling price suggestion:", error);
+      Alert.alert("Error", "Unable to fetch AI suggestion. Try again later.");
+    } finally {
+      setLoadingPriceSuggestion(false);
+    }
+  };
+
   return (
     <View style={styles.page}>
-      <View className="border-8 w-full items-center h-1/6 border-primaryBlue bg-primaryBlue">
+      <View className="border-8 w-full items-center h-36 border-primaryBlue bg-primaryBlue">
         <View className="flex-row w-11/12 items-center justify-start inset-y-6">
           <TouchableOpacity
             className="items-center h-full justify-center mt-3 mr-2"
@@ -289,174 +420,272 @@ export default function CreateListingTutor() {
         </View>
       </View>
 
-      <ScrollView
-        contentContainerStyle={styles.container}
-        style={styles.scrollView}
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        keyboardVerticalOffset={20}
       >
-        <Text style={styles.label}>Educational Level</Text>
-        <TextInput
-          style={styles.disabledInput}
-          value={education}
-          editable={false}
-        />
+        <ScrollView
+          contentContainerStyle={styles.container}
+          style={styles.scrollView}
+        >
+          <Text style={styles.label}>Educational Level</Text>
+          <TextInput
+            style={styles.disabledInput}
+            value={education}
+            editable={false}
+          />
 
-        <Text style={styles.label}>Teaching Subjects</Text>
-        <TextInput
-          style={styles.input}
-          placeholderTextColor="#000"
-          value={subjects}
-          onChangeText={handleSubject}
-          autoCapitalize="none"
-          multiline
-          maxLength={1000}
-        />
-        <View className="flex-row justify-between items-center px-4 mb-2">
-          <Text className="text-xs font-asap-medium text-darkBlue">
-            Subject Count ({wordCount}/10)
-          </Text>
-          <Text className="text-xs font-asap-medium text-darkBlue">
-            Separate each subject with a comma (,)
-          </Text>
-        </View>
-
-        {length === 1000 && (
-          <View className="items-center justify-center w-full">
-            <Text className="text-sm font-asap-regular mb-4 text-red-500">
-              You have hit the limit of 1000 characters
+          <Text style={styles.label}>Teaching Subjects</Text>
+          <TextInput
+            style={styles.input}
+            placeholderTextColor="#000"
+            value={subjects}
+            onChangeText={handleSubject}
+            autoCapitalize="none"
+            multiline
+            maxLength={1000}
+          />
+          <View className="flex-row justify-between items-center px-4 mb-2">
+            <Text className="text-xs font-asap-medium text-darkBlue">
+              Subject Count ({wordCount}/10)
+            </Text>
+            <Text className="text-xs font-asap-medium text-darkBlue">
+              Separate each subject with a comma (,)
             </Text>
           </View>
-        )}
 
-        <Text style={styles.label}>Teaching Level</Text>
-        <CustomDropDown
-          options={["primary", "secondary", "poly", "JC", "University/College"]}
-          selected={teachingLevel}
-          multiple={true}
-          onSelect={(values) => {
-            if (Array.isArray(values)) {
-              setTeachingLevel(values);
-            }
-          }}
-        />
+          {length === 1000 && (
+            <View className="items-center justify-center w-full">
+              <Text className="text-sm font-asap-regular mb-4 text-red-500">
+                You have hit the limit of 1000 characters
+              </Text>
+            </View>
+          )}
 
-        <Text style={styles.label}>Available Days</Text>
-        <CustomDropDown
-          options={[
-            "Monday",
-            "Tuesday",
-            "Wednesday",
-            "Thursday",
-            "Friday",
-            "Saturday",
-            "Sunday",
-          ]}
-          selected={day}
-          multiple={true}
-          onSelect={(values) => {
-            if (Array.isArray(values)) {
-              setDay(values);
-            }
-          }}
-        />
-
-        <Text style={styles.label}>Start Time</Text>
-        {!showStartTime ? (
-          <TouchableOpacity
-            onPress={() => {
-              setShowStartTime(true);
-              setShowEndTime(false);
+          <Text style={styles.label}>Teaching Level</Text>
+          <CustomDropDown
+            options={[
+              "Primary",
+              "Secondary",
+              "Poly",
+              "JC",
+              "University/College",
+            ]}
+            selected={teachingLevel}
+            multiple={true}
+            onSelect={(values) => {
+              if (Array.isArray(values)) {
+                setTeachingLevel(values);
+              }
             }}
-          >
-            <Text style={styles.input}>
-              {startTime
-                ? startTime.toLocaleTimeString("en-GB", {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                    hour12: false,
-                  })
-                : "Select Start Time"}
-            </Text>
-          </TouchableOpacity>
-        ) : (
-          <View className="flex-1">
-            <DateTimePicker
-              value={startTime}
-              mode="time"
-              textColor="black"
-              display="spinner"
-              onChange={(event, selectedTime) => {
-                const currentTime = selectedTime || startTime;
-                setStartTime(currentTime);
-              }}
-            />
-            <CustomButton
-              title="Confirm Start Time"
-              role="tutor"
-              onPress={() => setShowStartTime(false)}
-            />
-          </View>
-        )}
+          />
 
-        <Text style={styles.label}>End Time</Text>
-        {!showEndTime ? (
-          <TouchableOpacity
-            onPress={() => {
-              setShowStartTime(false);
-              setShowEndTime(true);
+          <Text style={styles.label}>Available Days</Text>
+          <CustomDropDown
+            options={[
+              "Monday",
+              "Tuesday",
+              "Wednesday",
+              "Thursday",
+              "Friday",
+              "Saturday",
+              "Sunday",
+            ]}
+            selected={day}
+            multiple={true}
+            onSelect={(values) => {
+              if (Array.isArray(values)) {
+                setDay(values);
+              }
             }}
-          >
-            <Text style={styles.input}>
-              {endTime
-                ? endTime.toLocaleTimeString("en-GB", {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                    hour12: false,
-                  })
-                : "Select End Time"}
-            </Text>
-          </TouchableOpacity>
-        ) : (
-          <View className="flex-1">
-            <DateTimePicker
-              value={endTime}
-              mode="time"
-              textColor="black"
-              display="spinner"
-              onChange={(event, selectedTime) => {
-                const currentTime = selectedTime || endTime;
-                setEndTime(currentTime);
+          />
+
+          <Text style={styles.label}>Start Time</Text>
+          {!showStartTime ? (
+            <TouchableOpacity
+              onPress={() => {
+                setShowStartTime(true);
+                setShowEndTime(false);
               }}
-            />
-            <CustomButton
-              title="Confirm End Time"
-              role="tutor"
-              onPress={() => setShowEndTime(false)}
-            />
+            >
+              <Text style={styles.input}>
+                {startTime
+                  ? startTime.toLocaleTimeString("en-GB", {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                      hour12: false,
+                    })
+                  : "Select Start Time"}
+              </Text>
+            </TouchableOpacity>
+          ) : (
+            <View className="flex-1">
+              <DateTimePicker
+                value={startTime}
+                mode="time"
+                textColor="black"
+                display="spinner"
+                onChange={(event, selectedTime) => {
+                  const currentTime = selectedTime || startTime;
+                  setStartTime(currentTime);
+                }}
+              />
+              <CustomButton
+                title="Confirm Start Time"
+                role="tutor"
+                onPress={() => setShowStartTime(false)}
+              />
+            </View>
+          )}
+
+          <Text style={styles.label}>End Time</Text>
+          {!showEndTime ? (
+            <TouchableOpacity
+              onPress={() => {
+                setShowStartTime(false);
+                setShowEndTime(true);
+              }}
+            >
+              <Text style={styles.input}>
+                {endTime
+                  ? endTime.toLocaleTimeString("en-GB", {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                      hour12: false,
+                    })
+                  : "Select End Time"}
+              </Text>
+            </TouchableOpacity>
+          ) : (
+            <View className="flex-1">
+              <DateTimePicker
+                value={endTime}
+                mode="time"
+                textColor="black"
+                display="spinner"
+                onChange={(event, selectedTime) => {
+                  const currentTime = selectedTime || endTime;
+                  setEndTime(currentTime);
+                }}
+              />
+              <CustomButton
+                title="Confirm End Time"
+                role="tutor"
+                onPress={() => setShowEndTime(false)}
+              />
+            </View>
+          )}
+
+          <Text style={styles.label}>Pricing per Hour</Text>
+          <View className="flex-row items-center justify-between">
+            <TouchableOpacity
+              className="mb-3 rounded-3xl p-2 border-2 border-primaryBlue"
+              onPress={handlePriceSuggestion}
+            >
+              {loadingPriceSuggestion ? (
+                <ActivityIndicator size="large" />
+              ) : (
+                <Image
+                  source={require("@/assets/images/blueSparkle.png")}
+                  className="w-10 h-10"
+                  resizeMode="contain"
+                />
+              )}
+            </TouchableOpacity>
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                borderWidth: 2,
+                height: 56,
+                borderColor: "#8e8e93",
+                borderRadius: 24,
+                paddingHorizontal: 15,
+                width: "80%",
+                marginBottom: 12,
+              }}
+            >
+              <Text
+                style={{
+                  fontSize: 18,
+                  fontFamily: "Asap-Regular",
+                  marginRight: 4,
+                }}
+              >
+                S$
+              </Text>
+              <TextInput
+                style={{
+                  flex: 1,
+                  fontFamily: "Asap-Regular",
+                  fontSize: 16,
+                }}
+                placeholderTextColor="#8e8e93"
+                placeholder="Price"
+                value={price}
+                onChangeText={(text) => {
+                  let cleaned = text.replace(/[^0-9.,]/g, "").replace(",", ".");
+                  const parts = cleaned.split(".");
+                  if (parts.length > 2 || parts[1]?.length > 2) return;
+                  setPrice(cleaned);
+                }}
+                keyboardType="numeric"
+                maxLength={10}
+              />
+            </View>
           </View>
-        )}
 
-        <Text style={styles.label}>Pricing per Hour</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="Enter your price per hour"
-          placeholderTextColor="grey"
-          value={price}
-          onChangeText={(text) => setPrice(text)}
-          keyboardType="numeric"
-        />
+          {AIMessage && (
+            <View className="bg-white p-4 rounded-2xl shadow-sm mb-4 mt-2">
+              {/* Explanation + Breakdown */}
+              {AIMessage.split("\n")
+                .filter((line) => line.trim().length > 0)
+                .map((line, idx) => {
+                  const isHeading = line.startsWith("##");
+                  const isBullet = line.trim().startsWith("- ");
 
-        <Text style={styles.label}>Negotiable Pricing</Text>
-        <CustomDropDown
-          options={["Yes", "No"]}
-          selected={negotiable}
-          multiple={false}
-          onSelect={(value) => {
-            if (typeof value === "string") {
-              setNegotiable(value);
-            }
-          }}
-        />
-      </ScrollView>
+                  return (
+                    <Text
+                      key={idx}
+                      className={
+                        isHeading
+                          ? "font-asap-semibold text-lg text-darkPrimaryBlue mt-4 mb-1"
+                          : isBullet
+                          ? "font-asap-regular ml-2 text-base text-gray-700"
+                          : " font-asap-regular text-base text-gray-800"
+                      }
+                    >
+                      {line.replace(/^##\s?/, "")}
+                    </Text>
+                  );
+                })}
+              <TouchableOpacity
+                onPress={() => setAIMessage("")}
+                className="absolute -top-4 -right-4 z-10"
+              >
+                <Image
+                  source={require("@/assets/images/cancel.png")}
+                  className="bg-red-500 rounded-full p-1 w-8 h-8"
+                  resizeMode="contain"
+                />
+              </TouchableOpacity>
+            </View>
+          )}
+
+          <Text style={styles.label}>Negotiable Pricing</Text>
+          <CustomDropDown
+            options={["Yes", "No"]}
+            selected={negotiable}
+            multiple={false}
+            onSelect={(value) => {
+              if (typeof value === "string") {
+                setNegotiable(value);
+              }
+            }}
+          />
+        </ScrollView>
+      </KeyboardAvoidingView>
 
       {errorMsg !== "" && (
         <Text style={{ color: "red", textAlign: "center", marginTop: 20 }}>
@@ -464,13 +693,15 @@ export default function CreateListingTutor() {
         </Text>
       )}
 
-      <TouchableOpacity
-        style={styles.postButton}
-        onPress={handlePost}
-        disabled={posting}
-      >
-        <Text style={styles.postText}>{posting ? "Posting..." : "Post"}</Text>
-      </TouchableOpacity>
+      <View className="mb-12 mx-6 mt-4">
+        <CustomButton
+          title="Post"
+          onPress={handlePost}
+          loading={posting}
+          active={errorMsg == "" && !posting && checkIfAllFieldsFilled()}
+          role="tutor"
+        />
+      </View>
     </View>
   );
 }
