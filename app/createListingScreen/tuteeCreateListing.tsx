@@ -3,6 +3,8 @@ import CustomDropDown from "@/components/customDropDown";
 import { useAuth } from "@/contexts/AuthProvider";
 import { db } from "@/firebase";
 import DateTimePicker from "@react-native-community/datetimepicker";
+import { createClient } from "@supabase/supabase-js";
+import Constants from "expo-constants";
 import { router } from "expo-router";
 import { addDoc, collection } from "firebase/firestore";
 import React, { useEffect, useState } from "react";
@@ -33,6 +35,13 @@ export default function CreateListingTutee() {
   const [errorMsg, setErrorMsg] = useState("");
 
   const { userDoc } = useAuth();
+
+  // Supabase client
+  const supabaseUrl = Constants.expoConfig?.extra?.supabaseUrl;
+  const supabaseAnonKey = Constants.expoConfig?.extra?.supabaseAnonKey;
+  const supabase = createClient(supabaseUrl!, supabaseAnonKey!);
+
+  const secret = Constants.expoConfig?.extra?.supabaseApiKey;
 
   useEffect(() => {
     if (userDoc?.educationInstitute && userDoc?.educationLevel) {
@@ -120,9 +129,58 @@ export default function CreateListingTutee() {
     }
 
     setPosting(true);
-    const formattedSubjects = subjectWords
-      .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-      .join(", ");
+    const formattedSubjects = subjectWords.map(
+      (word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+    );
+    const joinedSubjects = formattedSubjects.join(", ");
+
+    for (const subject of formattedSubjects) {
+      // try to embed each subject
+      try {
+        const res = await fetch(
+          "https://ynikykgyystdyitckguc.supabase.co/functions/v1/embed-subjects",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${secret}`,
+            },
+            body: JSON.stringify({ subject }),
+          }
+        );
+
+        if (!res.ok) {
+          console.warn(`Failed for ${subject}`);
+        }
+
+        // retrieve row based on subject name
+        const { data: existing, error: fetchError } = await supabase
+          .from("subjects")
+          .select("*")
+          .eq("name", subject)
+          .single();
+
+        if (fetchError && fetchError.code !== "PGRST116") {
+          // PGRST116 = no rows found (which is okay)
+          throw fetchError;
+        }
+
+        // update subject count based on role
+        const updatedCount = (existing["tuteecount"] ?? 0) + 1;
+
+        const { error: updateError } = await supabase
+          .from("subjects")
+          .update({
+            tuteecount: updatedCount,
+            updatedat: new Date().toISOString(),
+          })
+          .eq("name", subject);
+
+        if (updateError) throw updateError;
+      } catch (error) {
+        console.error(`Error calling function for ${subject}:`, error);
+      }
+    }
 
     const sortedDays = day
       .slice()
@@ -133,7 +191,7 @@ export default function CreateListingTutee() {
         name: userDoc?.name,
         userId: userDoc?.userId,
         role: userDoc?.role,
-        subjects: formattedSubjects,
+        subjects: joinedSubjects,
         startPrice,
         endPrice,
         startTime: startTime.toISOString(),

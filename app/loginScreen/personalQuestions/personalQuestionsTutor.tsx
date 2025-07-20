@@ -71,7 +71,11 @@ const PersonalQuestions = () => {
     const usersRef = collection(db, "users");
     const docRef = doc(usersRef, userDoc?.userId);
 
-    for (const subject of subjectsToTeach) {
+    const formattedSubjects = subjectsToTeach.map(
+      (word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+    );
+
+    for (const subject of formattedSubjects) {
       try {
         const res = await fetch(
           "https://ynikykgyystdyitckguc.supabase.co/functions/v1/embed-subjects",
@@ -81,7 +85,7 @@ const PersonalQuestions = () => {
               "Content-Type": "application/json",
               Authorization: `Bearer ${secret}`,
             },
-            body: JSON.stringify({ subject, role: userDoc?.role }),
+            body: JSON.stringify({ subject }),
           }
         );
 
@@ -164,7 +168,7 @@ const PersonalQuestions = () => {
       await updateDoc(docRef, {
         yearOfTeaching: yearOfTeaching,
         teachingLevel: sortedTeachingLevel,
-        subjectsToTeach: subjectsToTeach.sort(),
+        subjectsToTeach: formattedSubjects.sort(),
         embeddedSubjectToTeach: roundedEmbedding,
         personalised: true,
       });
