@@ -122,10 +122,11 @@ export default function CreateListingTutor() {
   ];
 
   const levelOrder = [
-    "primary",
-    "secondary",
-    "poly",
+    "Primary",
+    "Secondary",
+    "Poly",
     "JC",
+    "IB",
     "University/College",
   ];
 
@@ -299,6 +300,15 @@ export default function CreateListingTutor() {
       .slice()
       .sort((a, b) => levelOrder.indexOf(a) - levelOrder.indexOf(b));
 
+    const formatTime = (date: Date) => {
+      const hours = String(date.getHours()).padStart(2, "0");
+      const minutes = String(date.getMinutes()).padStart(2, "0");
+      return `${hours}:${minutes}`; // format like "08:30"
+    };
+
+    const formattedStartTime = formatTime(startTime);
+    const formattedEndTime = formatTime(endTime);
+
     try {
       await addDoc(listingRef, {
         name: userDoc?.name,
@@ -306,8 +316,8 @@ export default function CreateListingTutor() {
         role: userDoc?.role,
         subjects: joinedSubjects,
         price,
-        startTime: startTime.toISOString(),
-        endTime: endTime.toISOString(),
+        startTime: formattedStartTime,
+        endTime: formattedEndTime,
         date: sortedDays,
         teachingLevel: sortedTeachingLevels,
         negotiable,
@@ -470,6 +480,7 @@ export default function CreateListingTutor() {
               "Secondary",
               "Poly",
               "JC",
+              "IB",
               "University/College",
             ]}
             selected={teachingLevel}
@@ -481,7 +492,7 @@ export default function CreateListingTutor() {
             }}
           />
 
-          <Text style={styles.label}>Available Days</Text>
+          <Text style={styles.label}>Days Available</Text>
           <CustomDropDown
             options={[
               "Monday",
@@ -625,9 +636,24 @@ export default function CreateListingTutor() {
                 placeholder="Price"
                 value={price}
                 onChangeText={(text) => {
-                  let cleaned = text.replace(/[^0-9.,]/g, "").replace(",", ".");
+                  // Replace comma with dot
+                  let cleaned = text.replace(",", ".");
+
+                  // Allow only numbers and one dot
+                  cleaned = cleaned.replace(/[^0-9.]/g, "");
+
+                  // Prevent multiple dots
                   const parts = cleaned.split(".");
-                  if (parts.length > 2 || parts[1]?.length > 2) return;
+                  if (parts.length > 2) return;
+
+                  const [intPart, decPart] = parts;
+
+                  // Limit integer part to 5 digits (e.g., 99999)
+                  if (intPart.length > 5) return;
+
+                  // Limit to 2 digits after decimal
+                  if (decPart?.length > 2) return;
+
                   setPrice(cleaned);
                 }}
                 keyboardType="numeric"

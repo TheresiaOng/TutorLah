@@ -1,5 +1,5 @@
 import { useAuth } from "@/contexts/AuthProvider";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
 
@@ -21,6 +21,12 @@ const CustomDropDown = ({
     Array.isArray(selected) ? selected : []
   );
   const { userDoc } = useAuth();
+
+  useEffect(() => {
+    if (multiple && Array.isArray(selected)) {
+      setMultiSelected(selected);
+    }
+  }, [selected, multiple]);
 
   const handleDropDown = () => {
     onSelect(multiSelected);
@@ -85,7 +91,9 @@ const CustomDropDown = ({
               ))}
             </ScrollView>
           ) : (
-            <Text className="font-asap-regular text-gray">{selectedLabel}</Text>
+            <Text className="font-asap-regular text-black">
+              {selectedLabel}
+            </Text>
           )}
           <Image
             className="ml-2 w-5 h-5"

@@ -70,11 +70,11 @@ const TutorProfile = () => {
   useEffect(() => {
     // Fetching photo_url from Supabase
     const fetchData = async () => {
-      if (!userDoc?.userId) return; // Ensure id is available
+      if (!userIdToView) return; // Ensure id is available
       const { data, error } = await supabase
         .from("profiles")
         .select("photo_url")
-        .eq("id", userDoc.userId)
+        .eq("id", userIdToView)
         .single();
 
       if (error) {
@@ -85,7 +85,7 @@ const TutorProfile = () => {
       }
     };
     fetchData();
-  }, [userDoc]);
+  }, [userIdToView]);
 
   // Fetching currently viewed user's listings
   useEffect(() => {
@@ -284,7 +284,6 @@ const TutorProfile = () => {
             </TouchableOpacity>
           )}
 
-          {isOwnProfile && (
           <View
             className={`mr-4 items-center justify-center rounded-full ${
               photoUrl ? "h-20 w-20" : "h-20 w-20 bg-white"
@@ -302,8 +301,7 @@ const TutorProfile = () => {
               resizeMode="cover"
             />
           </View>
-          )}
-          
+
           <View className="flex-1 flex-col items-start">
             <Text
               numberOfLines={1}
@@ -424,7 +422,7 @@ const TutorProfile = () => {
             </View>
           </View>
 
-          {/* Listing Section */}
+          {/* Review Section */}
           <View className="flex-col border-primaryBlue border-t-2 pt-2 mx-4 mt-4">
             <View className="flex-row justify-between">
               <Text className="color-darkBlue text-2xl font-asap-bold">
@@ -446,7 +444,7 @@ const TutorProfile = () => {
               )}
             </View>
             <View className="items-center mb-4">
-              {currentListings?.length > 0 ? (
+              {reviewList?.length > 0 ? (
                 <>
                   <FlatList
                     horizontal
@@ -454,7 +452,7 @@ const TutorProfile = () => {
                     keyExtractor={(item) => item.listId} //every flatlist need a unique key id
                     renderItem={({ item }) => {
                       return (
-                        <View className="items-center justify-center">
+                        <View className="items-center max-w-sm justify-center">
                           <TutorCard
                             item={item}
                             listId={item.listId}
@@ -471,8 +469,8 @@ const TutorProfile = () => {
               ) : (
                 <Text className="p-8 font-asap-regular text-darkGray">
                   {isOwnProfile
-                    ? "You have no listing right now"
-                    : "No listing at the moment"}
+                    ? "You have no review right now"
+                    : "No review at the moment"}
                 </Text>
               )}
             </View>

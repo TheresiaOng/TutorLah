@@ -1,6 +1,8 @@
 import Footer from "@/components/footer";
 import { ChatWrapper } from "@/components/streamWrapper";
 import { AuthProvider, useAuth } from "@/contexts/AuthProvider";
+import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
+
 import { useFonts } from "expo-font";
 import { Stack, usePathname } from "expo-router";
 import React from "react";
@@ -67,12 +69,16 @@ export default function RootLayout() {
   }
 
   return (
-    <SafeAreaProvider>
-      <GestureHandlerRootView className="flex-1">
-        <AuthProvider>
-          <ConditionalWrapper />
-        </AuthProvider>
-      </GestureHandlerRootView>
-    </SafeAreaProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <BottomSheetModalProvider>
+        <SafeAreaProvider>
+          <GestureHandlerRootView className="flex-1">
+            <AuthProvider>
+              <ConditionalWrapper />
+            </AuthProvider>
+          </GestureHandlerRootView>
+        </SafeAreaProvider>
+      </BottomSheetModalProvider>
+    </GestureHandlerRootView>
   );
 }
