@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { Image, StyleSheet, TouchableOpacity, View } from "react-native";
-import DropDownPicker from "react-native-dropdown-picker";
 import { TextInput } from "react-native-gesture-handler";
 
 type CustomSearchBarProps = {
@@ -8,8 +7,8 @@ type CustomSearchBarProps = {
   searchFields: string[];
   onResult: (result: any[]) => void;
   onQueryChange: (query: string) => void;
-  onSearchFieldsChange?: (fields: string[]) => void;
   filter?: boolean;
+  onFilterPress?: () => void;
 };
 
 const CustomSearchBar = ({
@@ -17,20 +16,10 @@ const CustomSearchBar = ({
   searchFields,
   onResult,
   onQueryChange,
-  onSearchFieldsChange,
   filter = false,
+  onFilterPress,
 }: CustomSearchBarProps) => {
   const [searchQuery, setSearchQuery] = useState("");
-  const [dropDownVisible, setDropDownVisible] = useState(false);
-  const [open, setOpen] = useState(false);
-  const [value, setValue] = useState([]);
-  const [items, setItems] = useState([
-    { label: "Tutor Only", value: "role:tutor" },
-    { label: "Tutee Only", value: "role:tutee" },
-    { label: "Name", value: "name" },
-    { label: "Subjects", value: "subjects" },
-    { label: "Education", value: "education" },
-  ]);
 
   useEffect(() => {
     onQueryChange(searchQuery);
@@ -86,12 +75,7 @@ const CustomSearchBar = ({
           autoCorrect={false}
         />
         {filter && (
-          <TouchableOpacity
-            onPress={() => {
-              setDropDownVisible(!dropDownVisible);
-              setOpen(true);
-            }}
-          >
+          <TouchableOpacity onPress={onFilterPress}>
             <Image
               className="w-6 mr-4"
               resizeMode="contain"
@@ -100,45 +84,6 @@ const CustomSearchBar = ({
           </TouchableOpacity>
         )}
       </View>
-      {dropDownVisible && (
-        <DropDownPicker
-          placeholder="Filter by"
-          placeholderStyle={{
-            fontFamily: "Asap-Regular",
-            fontSize: 13,
-            color: "#8e8e93",
-          }}
-          open={open}
-          value={value}
-          items={items}
-          setOpen={() => setOpen(true)}
-          setValue={(callback) => {
-            const newValue = callback(value);
-            setValue(newValue);
-            if (onSearchFieldsChange) {
-              onSearchFieldsChange(newValue);
-            }
-          }}
-          setItems={setItems}
-          listMode="SCROLLVIEW"
-          showArrowIcon={false}
-          multiple={true}
-          mode="BADGE"
-          style={{
-            borderColor: "#8e8e93",
-            height: 0,
-            width: "90%",
-          }}
-          dropDownContainerStyle={{
-            borderColor: "#8e8e93",
-            width: "90%",
-          }}
-          textStyle={{
-            fontFamily: "Asap-Regular",
-            fontSize: 13,
-          }}
-        />
-      )}
     </View>
   );
 };

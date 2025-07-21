@@ -13,7 +13,7 @@ import {
   collection,
   deleteDoc,
   doc,
-  updateDoc
+  updateDoc,
 } from "firebase/firestore";
 import React, { useEffect, useState } from "react";
 import {
@@ -194,12 +194,14 @@ export default function LessonCreation() {
 
       if (!stripeAccountId) {
         await deleteDoc(doc(db, "payments", paymentId)); // Rollback payment document creation
-        await updateDoc(doc(db, "users", userDoc.userId), { // Rollback payment ID from user document
-        paymentIds: arrayRemove(paymentId),
-      });
-        await updateDoc(doc(db, "users", otherUserId), { // Rollback payment ID from other user document
-        paymentIds: arrayRemove(paymentId),
-      });
+        await updateDoc(doc(db, "users", userDoc.userId), {
+          // Rollback payment ID from user document
+          paymentIds: arrayRemove(paymentId),
+        });
+        await updateDoc(doc(db, "users", otherUserId), {
+          // Rollback payment ID from other user document
+          paymentIds: arrayRemove(paymentId),
+        });
         setErrorMsg(
           "Stripe account not found. Please create a Stripe account in the Schedule Screen."
         );
@@ -229,13 +231,17 @@ export default function LessonCreation() {
 
       if (!checkoutRes.ok || !checkoutData?.url) {
         await deleteDoc(doc(db, "payments", paymentId)); // Rollback payment document creation
-        await updateDoc(doc(db, "users", userDoc.userId), { // Rollback payment ID from user document
-        paymentIds: arrayRemove(paymentId),
-      });
-        await updateDoc(doc(db, "users", otherUserId), { // Rollback payment ID from other user document
-        paymentIds: arrayRemove(paymentId),
-      });
-        setErrorMsg("Failed to generate PayNow link. Please enure you have set up your Stripe account correctly. If not please create another account in the Schedule Screen.");
+        await updateDoc(doc(db, "users", userDoc.userId), {
+          // Rollback payment ID from user document
+          paymentIds: arrayRemove(paymentId),
+        });
+        await updateDoc(doc(db, "users", otherUserId), {
+          // Rollback payment ID from other user document
+          paymentIds: arrayRemove(paymentId),
+        });
+        setErrorMsg(
+          "Failed to generate PayNow link. Please enure you have set up your Stripe account correctly. If not please create another account in the Schedule Screen."
+        );
         setSubmitting(false);
         return;
       }
@@ -449,15 +455,23 @@ export default function LessonCreation() {
               keyboardType="numeric"
               value={costPerHour}
               onChangeText={(text) => {
-                // Allow only digits and one comma
-                let cleaned = text.replace(/[^0-9,]/g, "");
+                // Replace comma with dot
+                let cleaned = text.replace(",", ".");
 
-                // Prevent multiple commas
-                const parts = cleaned.split(",");
+                // Allow only numbers and one dot
+                cleaned = cleaned.replace(/[^0-9.]/g, "");
+
+                // Prevent multiple dots
+                const parts = cleaned.split(".");
                 if (parts.length > 2) return;
 
-                // Limit to 2 digits after comma
-                if (parts[1]?.length > 2) return;
+                const [intPart, decPart] = parts;
+
+                // Limit integer part to 5 digits (e.g., 99999)
+                if (intPart.length > 5) return;
+
+                // Limit to 2 digits after decimal
+                if (decPart?.length > 2) return;
 
                 setCostPerHour(cleaned);
               }}

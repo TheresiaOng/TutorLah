@@ -258,6 +258,15 @@ export default function CreateListingTutee() {
       .slice()
       .sort((a, b) => dayOrder.indexOf(a) - dayOrder.indexOf(b));
 
+    const formatTime = (date: Date) => {
+      const hours = String(date.getHours()).padStart(2, "0");
+      const minutes = String(date.getMinutes()).padStart(2, "0");
+      return `${hours}:${minutes}`; // format like "08:30"
+    };
+
+    const formattedStartTime = formatTime(startTime);
+    const formattedEndTime = formatTime(endTime);
+
     try {
       await addDoc(listingRef, {
         name: userDoc?.name,
@@ -266,8 +275,8 @@ export default function CreateListingTutee() {
         subjects: joinedSubjects,
         startPrice,
         endPrice,
-        startTime: startTime.toISOString(),
-        endTime: endTime.toISOString(),
+        startTime: formattedStartTime,
+        endTime: formattedEndTime,
         date: sortedDays,
         photo_url: null,
         education: `${userDoc?.educationInstitute} ${userDoc?.educationLevel}`,
@@ -402,7 +411,7 @@ export default function CreateListingTutee() {
             </View>
           )}
 
-          <Text style={styles.label}>Available Days</Text>
+          <Text style={styles.label}>Days Available</Text>
           <CustomDropDown
             options={[
               "Monday",
@@ -545,7 +554,7 @@ export default function CreateListingTutee() {
                   borderColor: "#8e8e93",
                   borderRadius: 24,
                   paddingHorizontal: 15,
-                  width: "80%",
+                  width: "83%",
                   marginBottom: 12,
                 }}
               >
@@ -568,11 +577,24 @@ export default function CreateListingTutee() {
                   placeholder="Price"
                   value={startPrice}
                   onChangeText={(text) => {
-                    let cleaned = text
-                      .replace(/[^0-9.,]/g, "")
-                      .replace(",", ".");
+                    // Replace comma with dot
+                    let cleaned = text.replace(",", ".");
+
+                    // Allow only numbers and one dot
+                    cleaned = cleaned.replace(/[^0-9.]/g, "");
+
+                    // Prevent multiple dots
                     const parts = cleaned.split(".");
-                    if (parts.length > 2 || parts[1]?.length > 2) return;
+                    if (parts.length > 2) return;
+
+                    const [intPart, decPart] = parts;
+
+                    // Limit integer part to 5 digits (e.g., 99999)
+                    if (intPart.length > 5) return;
+
+                    // Limit to 2 digits after decimal
+                    if (decPart?.length > 2) return;
+
                     setStartPrice(cleaned);
                     setEndPrice(cleaned);
                   }}
@@ -592,7 +614,7 @@ export default function CreateListingTutee() {
                     borderColor: "#8e8e93",
                     borderRadius: 24,
                     paddingHorizontal: 15,
-                    width: "30%",
+                    width: "35%",
                     marginBottom: 12,
                   }}
                 >
@@ -615,11 +637,24 @@ export default function CreateListingTutee() {
                     placeholder="From"
                     value={startPrice}
                     onChangeText={(text) => {
-                      let cleaned = text
-                        .replace(/[^0-9.,]/g, "")
-                        .replace(",", ".");
+                      // Replace comma with dot
+                      let cleaned = text.replace(",", ".");
+
+                      // Allow only numbers and one dot
+                      cleaned = cleaned.replace(/[^0-9.]/g, "");
+
+                      // Prevent multiple dots
                       const parts = cleaned.split(".");
-                      if (parts.length > 2 || parts[1]?.length > 2) return;
+                      if (parts.length > 2) return;
+
+                      const [intPart, decPart] = parts;
+
+                      // Limit integer part to 5 digits (e.g., 99999)
+                      if (intPart.length > 5) return;
+
+                      // Limit to 2 digits after decimal
+                      if (decPart?.length > 2) return;
+
                       setStartPrice(cleaned);
                     }}
                     keyboardType="numeric"
@@ -655,7 +690,7 @@ export default function CreateListingTutee() {
                     borderColor: "#8e8e93",
                     borderRadius: 24,
                     paddingHorizontal: 15,
-                    width: "30%",
+                    width: "35%",
                     marginBottom: 12,
                   }}
                 >
@@ -678,11 +713,24 @@ export default function CreateListingTutee() {
                     placeholder="To"
                     value={endPrice}
                     onChangeText={(text) => {
-                      let cleaned = text
-                        .replace(/[^0-9.,]/g, "")
-                        .replace(",", ".");
+                      // Replace comma with dot
+                      let cleaned = text.replace(",", ".");
+
+                      // Allow only numbers and one dot
+                      cleaned = cleaned.replace(/[^0-9.]/g, "");
+
+                      // Prevent multiple dots
                       const parts = cleaned.split(".");
-                      if (parts.length > 2 || parts[1]?.length > 2) return;
+                      if (parts.length > 2) return;
+
+                      const [intPart, decPart] = parts;
+
+                      // Limit integer part to 5 digits (e.g., 99999)
+                      if (intPart.length > 5) return;
+
+                      // Limit to 2 digits after decimal
+                      if (decPart?.length > 2) return;
+
                       setEndPrice(cleaned);
                     }}
                     keyboardType="numeric"

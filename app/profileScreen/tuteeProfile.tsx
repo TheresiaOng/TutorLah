@@ -389,7 +389,7 @@ const TuteeProfile = () => {
                     keyExtractor={(item) => item.listId} //every flatlist need a unique key id
                     renderItem={({ item }) => {
                       return (
-                        <View className="items-center justify-center">
+                        <View className="items-center max-w-sm justify-center">
                           <TuteeCard
                             item={item}
                             listId={item.listId}
