@@ -171,19 +171,24 @@ export default function TutorSchedule() {
           <Text className="font-asap-bold text-3xl text-white">
             Your Schedules
           </Text>
-          <TouchableOpacity
-            onPress={startOnboarding}
-            style={[
-              styles.stripeButton,
-              loading && { backgroundColor: "#999" }, // Disable button when loading
-            ]}
-            disabled={loading}
-          >
-            {loading ? (
-              <ActivityIndicator color="white" />
-            ) : (
-              <Text style={styles.stripeButtonText}>Stripe Account</Text>
-            )}
+            <TouchableOpacity
+              onPress={() => {
+                Alert.alert(
+                  "Stripe Account",
+                  "This will prompt you to edit your stream account and you must complete it fully before creating further classes. Do you wish to continue?",
+                  [{text: "Cancel", style: "cancel",},{text: "Ok", onPress: startOnboarding,},]
+                );
+              }}
+              style={[
+                styles.stripeButton,
+                loading && { backgroundColor: "#999" },
+              ]}
+              disabled={loading}>
+              {loading ? (
+                <ActivityIndicator color="white" />
+              ) : (
+                <Text style={styles.stripeButtonText}>Stripe Account</Text>
+              )}
           </TouchableOpacity>
         </View>
       </View>
