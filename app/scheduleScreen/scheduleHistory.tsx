@@ -120,7 +120,7 @@ export default function ScheduleHistory() {
         ) : (
           lessons.map((lesson) => (
             <View style={styles.card} key={lesson.id}>
-              <Text style={styles.name}>{lesson.paidBy}</Text>
+              <Text style={styles.name}>{lesson.paidTo}</Text>
               <View style={styles.divider} />
 
               <View style={styles.detail}>
