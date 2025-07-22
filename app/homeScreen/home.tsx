@@ -515,11 +515,11 @@ const HomeScreen = () => {
             keyExtractor={(item) => item.listId} //every flatlist need a unique key id
             renderItem={({ item }) => {
               return item.role === "tutee" ? (
-                <View className="items-center w-screen">
+                <View className="items-center px-6 w-screen">
                   <TuteeCard item={item} listId={item.listId} />
                 </View>
               ) : (
-                <View className="items-center w-screen">
+                <View className="items-center px-6 w-screen">
                   <TutorCard item={item} listId={item.listId} />
                 </View>
               );

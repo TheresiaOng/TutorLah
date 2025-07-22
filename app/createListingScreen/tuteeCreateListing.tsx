@@ -51,7 +51,7 @@ export default function CreateListingTutee() {
 
   useEffect(() => {
     if (userDoc?.educationInstitute && userDoc?.educationLevel) {
-      setEducation(`${userDoc.educationInstitute} ${userDoc.educationLevel}`);
+      setEducation(`${userDoc?.educationInstitute} ${userDoc?.educationLevel}`);
     }
   }, [userDoc]);
 

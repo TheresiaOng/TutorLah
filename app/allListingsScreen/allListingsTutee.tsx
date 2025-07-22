@@ -99,7 +99,6 @@ const AllListingsTutee = () => {
         searchFields={searchFields}
         onResult={setSearchResults}
         onQueryChange={setSearchQuery}
-        onSearchFieldsChange={setSearchFields}
       />
 
       <View className="h-5/6 w-full justify-center items-center">
@@ -121,7 +120,7 @@ const AllListingsTutee = () => {
             data={searchQuery.trim() !== "" ? searchResults : listings}
             keyExtractor={(item) => item.listId} //every flatlist need a unique key id
             renderItem={({ item }) => (
-              <View className="items-center w-screen">
+              <View className="items-center px-4 w-screen">
                 <TuteeCard
                   item={item}
                   listId={item.listId}

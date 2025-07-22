@@ -3,7 +3,7 @@ import { StyleSheet, View } from "react-native";
 
 const OrangeCard = ({ className, children }: any) => {
   const defaultStyles =
-    "bg-paleOrange p-2 w-90% my-2 border-paleOrange border-solid border-8 rounded-xl";
+    "bg-paleOrange p-2 w-full my-2 border-paleOrange border-solid border-8 rounded-xl";
   return (
     <View style={styles.shadow} className={`${defaultStyles} ${className}`}>
       {children}

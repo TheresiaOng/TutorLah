@@ -67,7 +67,7 @@ const AllReviewsTutor = () => {
           data={parsedReviews}
           keyExtractor={(item) => item.id} //every flatlist need a unique key id
           renderItem={({ item }) => (
-            <View className="items-center w-screen">
+            <View className="items-center px-4 w-screen">
               <ReviewCard item={item} />
             </View>
           )}

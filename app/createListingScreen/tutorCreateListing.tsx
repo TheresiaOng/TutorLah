@@ -62,7 +62,7 @@ export default function CreateListingTutor() {
   const secret = Constants.expoConfig?.extra?.supabaseApiKey;
 
   useEffect(() => {
-    const userRef = doc(db, "users", userDoc.userId);
+    const userRef = doc(db, "users", userDoc?.userId);
 
     const unsubscribe = onSnapshot(userRef, async (docSnap) => {
       //store totalRatings and its count to later find the average rating
@@ -87,7 +87,7 @@ export default function CreateListingTutor() {
 
   useEffect(() => {
     if (userDoc?.educationInstitute && userDoc?.educationLevel) {
-      setEducation(`${userDoc.educationInstitute} ${userDoc.educationLevel}`);
+      setEducation(`${userDoc?.educationInstitute} ${userDoc?.educationLevel}`);
     }
   }, [userDoc]);
 

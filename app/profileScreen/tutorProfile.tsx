@@ -345,7 +345,7 @@ const TutorProfile = () => {
       {/* Personal Info Card */}
       <View className="h-5/6 w-full items-center">
         <ScrollView className="w-full mb-12">
-          <View className="items-center w-full">
+          <View className="items-center px-4 w-full">
             <BlueCard className="mt-4">
               <View className="flex-row items-start">
                 <Text className="font-asap-semibold my-4 w-40 text-darkBlue">
@@ -404,7 +404,7 @@ const TutorProfile = () => {
                     keyExtractor={(item) => item.id} //every flatlist need a unique key id
                     renderItem={({ item }) => {
                       return (
-                        <View className="items-center max-w-sm justify-center">
+                        <View className="items-center px-4 max-w-sm justify-center">
                           <ReviewCard item={item} />
                         </View>
                       );
@@ -422,7 +422,7 @@ const TutorProfile = () => {
             </View>
           </View>
 
-          {/* Review Section */}
+          {/* Listings Section */}
           <View className="flex-col border-primaryBlue border-t-2 pt-2 mx-4 mt-4">
             <View className="flex-row justify-between">
               <Text className="color-darkBlue text-2xl font-asap-bold">
@@ -444,7 +444,7 @@ const TutorProfile = () => {
               )}
             </View>
             <View className="items-center mb-4">
-              {reviewList?.length > 0 ? (
+              {currentListings?.length > 0 ? (
                 <>
                   <FlatList
                     horizontal
@@ -452,7 +452,7 @@ const TutorProfile = () => {
                     keyExtractor={(item) => item.listId} //every flatlist need a unique key id
                     renderItem={({ item }) => {
                       return (
-                        <View className="items-center max-w-sm justify-center">
+                        <View className="items-center max-w-sm px-4 justify-center">
                           <TutorCard
                             item={item}
                             listId={item.listId}
@@ -469,8 +469,8 @@ const TutorProfile = () => {
               ) : (
                 <Text className="p-8 font-asap-regular text-darkGray">
                   {isOwnProfile
-                    ? "You have no review right now"
-                    : "No review at the moment"}
+                    ? "You have no listing right now"
+                    : "No listing at the moment"}
                 </Text>
               )}
             </View>

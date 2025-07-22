@@ -293,7 +293,7 @@ const TuteeProfile = () => {
       {/* Personal Info Card */}
       <View className="h-5/6 w-full items-center">
         <ScrollView className="w-full mb-12">
-          <View className="items-center w-full">
+          <View className="items-center px-4 w-full">
             <OrangeCard className="mt-4">
               <View className="flex-row items-start">
                 <Text className="font-asap-semibold my-4 w-40 text-darkBrown">
@@ -389,7 +389,7 @@ const TuteeProfile = () => {
                     keyExtractor={(item) => item.listId} //every flatlist need a unique key id
                     renderItem={({ item }) => {
                       return (
-                        <View className="items-center max-w-sm justify-center">
+                        <View className="items-center max-w-sm px-4 justify-center">
                           <TuteeCard
                             item={item}
                             listId={item.listId}
