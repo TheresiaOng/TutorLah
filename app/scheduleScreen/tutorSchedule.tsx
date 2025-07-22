@@ -175,7 +175,7 @@ export default function TutorSchedule() {
               onPress={() => {
                 Alert.alert(
                   "Stripe Account",
-                  "This will prompt you to edit your stream account and you must complete it fully before creating further classes. Do you wish to continue?",
+                  "This will prompt you to edit your stripe account and you must complete it fully before creating further classes. Do you wish to continue?",
                   [{text: "Cancel", style: "cancel",},{text: "Ok", onPress: startOnboarding,},]
                 );
               }}
