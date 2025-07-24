@@ -123,6 +123,15 @@ export default function LessonCreation() {
     );
   }
 
+  function combineDateAndTime(date: Date, time: Date): Date {
+    const merged = new Date(date);
+    merged.setHours(time.getHours());
+    merged.setMinutes(time.getMinutes());
+    merged.setSeconds(time.getSeconds());
+    merged.setMilliseconds(0);
+    return merged;
+  }
+
   async function handleSend() {
     if (!checkIfAllFieldsFilled()) {
       setErrorMsg("Please fill in all fields.");
@@ -158,6 +167,9 @@ export default function LessonCreation() {
         return;
       }
 
+      const finalStart = combineDateAndTime(date, startTime);
+      const finalEnd = combineDateAndTime(date, endTime);
+
       const paymentDoc = await addDoc(paymentRef, {
         paidTo: userDoc.name,
         paidBy: otherUserName,
@@ -165,8 +177,8 @@ export default function LessonCreation() {
         tuteeId: otherUserId,
         subject,
         date: date.toISOString(),
-        startTime: startTime.toISOString(),
-        endTime: endTime.toISOString(),
+        startTime: finalStart.toISOString(),
+        endTime: finalEnd.toISOString(),
         costPerHour,
         totalCost,
         isPaid: true,
