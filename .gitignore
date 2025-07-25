@@ -37,6 +37,8 @@ yarn-error.*
 *.tsbuildinfo
 
 # NEVER PUBLICIZE
+.env
 
 # Deployment Build
+ios/
 android/
