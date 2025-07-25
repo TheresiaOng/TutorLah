@@ -294,11 +294,11 @@ export default function CreateListingTutor() {
 
     const sortedDays = day
       .slice()
-      .sort((a, b) => dayOrder.indexOf(a) - dayOrder.indexOf(b));
+      .sort((a, b) => dayOrder?.indexOf(a) - dayOrder?.indexOf(b));
 
     const sortedTeachingLevels = teachingLevel
       .slice()
-      .sort((a, b) => levelOrder.indexOf(a) - levelOrder.indexOf(b));
+      .sort((a, b) => levelOrder?.indexOf(a) - levelOrder?.indexOf(b));
 
     const formatTime = (date: Date) => {
       const hours = String(date.getHours()).padStart(2, "0");

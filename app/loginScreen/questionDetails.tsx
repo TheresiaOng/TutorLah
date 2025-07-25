@@ -143,7 +143,10 @@ const QuestionDetails = forwardRef<QuestionDetailsRef, QuestionDetailsProps>(
               personalised: false,
             });
 
-            router.push("./verifyEmail");
+            router.push({
+              pathname: "./verifyEmail",
+              params: { email, password },
+            });
             setLoading(false);
           } else {
             router.push("/homeScreen/home");
