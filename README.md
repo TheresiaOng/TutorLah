@@ -17,7 +17,7 @@ An educational app made for qualified tutors and tutees to connect.
 
 Due to the length of the installation guide, please kindly refer to the link below to read the full steps (Starting from page 46 to 51):
 
-https://docs.google.com/document/d/1m_5_OAyLPb0K_hYOp7NtpxMrg0W6UR6xLXq6-KRRj1c/edit?tab=t.0
+[https://docs.google.com/document/d/1m_5_OAyLPb0K_hYOp7NtpxMrg0W6UR6xLXq6-KRRj1c/edit?tab=t.0](https://drive.google.com/file/d/14PfF0BpEWJppVNu35AhpBNcCMeNsh31h/view?usp=sharing)
 ## Acknowledgements
 
  - [Luckiest Guy] by Astigmatic is licensed under the Apache License 2.0 https://www.apache.org/licenses/LICENSE-2.0
